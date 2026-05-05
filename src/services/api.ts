@@ -1,5 +1,20 @@
 const BASE_URL = "http://localhost:5000/api";
 
+// Helper to get token from local storage
+const getAuthHeader = () => {
+  const token = localStorage.getItem("token");
+  return token ? { "Authorization": `Bearer ${token}` } : {};
+};
+
+// Generic handle response helper
+const handleResponse = async (response: Response) => {
+  const data = await response.json();
+  if (!response.ok) {
+    throw new Error(data.message || "Something went wrong");
+  }
+  return data;
+};
+
 export const authApi = {
   signup: async (userData: any) => {
     const response = await fetch(`${BASE_URL}/auth/signup`, {
@@ -7,7 +22,7 @@ export const authApi = {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(userData),
     });
-    return response.json();
+    return handleResponse(response);
   },
 
   login: async (credentials: any) => {
@@ -16,40 +31,52 @@ export const authApi = {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(credentials),
     });
-    return response.json();
+    const data = await handleResponse(response);
+    if (data.token) {
+      localStorage.setItem("token", data.token);
+    }
+    return data;
   },
 
   logout: async () => {
     const response = await fetch(`${BASE_URL}/auth/logout`, {
       method: "POST",
+      headers: { 
+        "Content-Type": "application/json",
+        ...getAuthHeader()
+      },
     });
-    return response.json();
+    localStorage.removeItem("token");
+    return handleResponse(response);
   },
 
-  getProfile: async (token: string) => {
+  getProfile: async () => {
     const response = await fetch(`${BASE_URL}/auth/profile`, {
       method: "GET",
-      headers: { Authorization: `Bearer ${token}` },
+      headers: { 
+        "Content-Type": "application/json",
+        ...getAuthHeader()
+      },
     });
-    return response.json();
+    return handleResponse(response);
   },
 
-  forgetPassword: async (email: string) => {
+  forgetPassword: async (emailOrPhone: string) => {
     const response = await fetch(`${BASE_URL}/auth/forget-password`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email }),
+      body: JSON.stringify({ emailOrPhone }),
     });
-    return response.json();
+    return handleResponse(response);
   },
 
-  verifyOtp: async (data: { email: string; otp: string }) => {
+  verifyOtp: async (data: { emailOrPhone: string; otp: string }) => {
     const response = await fetch(`${BASE_URL}/auth/verify-otp`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),
     });
-    return response.json();
+    return handleResponse(response);
   },
 
   resetPassword: async (data: any) => {
@@ -58,7 +85,7 @@ export const authApi = {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),
     });
-    return response.json();
+    return handleResponse(response);
   },
 };
 
@@ -66,16 +93,20 @@ export const societyApi = {
   create: async (societyData: any) => {
     const response = await fetch(`${BASE_URL}/society/create`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { 
+        "Content-Type": "application/json",
+        ...getAuthHeader()
+      },
       body: JSON.stringify(societyData),
     });
-    return response.json();
+    return handleResponse(response);
   },
 
   getAll: async () => {
     const response = await fetch(`${BASE_URL}/society/get`, {
       method: "GET",
+      headers: { "Content-Type": "application/json" },
     });
-    return response.json();
+    return handleResponse(response);
   },
 };
