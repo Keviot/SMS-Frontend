@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { EyeOff, Eye } from "lucide-react";
 import { Link } from "react-router-dom";
-import AuthLayout from "../layouts/AuthLayout";
+import AuthLayout from "../components/layout/AuthLayout";
 import { authApi } from "../services/api";
 import collab from "../assets/collab.png";
 import toast from "react-hot-toast";

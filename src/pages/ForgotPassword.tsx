@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import AuthLayout from "../layouts/AuthLayout";
+import AuthLayout from "../components/layout/AuthLayout";
 import reset from "../assets/reset.png";
 import { authApi } from "../services/api";
 import toast from "react-hot-toast";
@@ -51,11 +51,10 @@ export default function ForgotPassword() {
           <button
             type="submit"
             disabled={loading || !emailOrPhone}
-            className={`w-full py-4 rounded-xl transition-all shadow-sm active:scale-[0.98] font-bold ${
-              emailOrPhone && !loading
+            className={`w-full py-4 rounded-xl transition-all shadow-sm active:scale-[0.98] font-bold ${emailOrPhone && !loading
                 ? "bg-gradient-to-r from-[#FE512E] to-[#F09633] text-white shadow-lg hover:opacity-90"
                 : "bg-[#f3f3f3] text-gray-400 cursor-not-allowed"
-            }`}
+              }`}
           >
             {loading ? "Sending..." : "Get OTP"}
           </button>

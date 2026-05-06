@@ -4,7 +4,7 @@ import { Link } from "react-router-dom";
 import sms from "../assets/sms.png"
 import collab from "../assets/collab.png";
 import { authApi, societyApi } from "../services/api";
-import AuthLayout from "../layouts/AuthLayout";
+import AuthLayout from "../components/layout/AuthLayout";
 import Modal from "../components/ui/Modal";
 import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";

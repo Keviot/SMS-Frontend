@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Clock } from "lucide-react";
-import AuthLayout from "../layouts/AuthLayout";
+import AuthLayout from "../components/layout/AuthLayout";
 import reset from "../assets/reset.png";
 import { authApi } from "../services/api";
 import toast from "react-hot-toast";
