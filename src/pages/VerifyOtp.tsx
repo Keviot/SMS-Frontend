@@ -93,13 +93,13 @@ export default function VerifyOtp() {
       <div className="flex-1 flex flex-col justify-center">
         <form className="space-y-8" onSubmit={handleVerifyOtp}>
           <div className="space-y-2">
-            <h1 className="text-2xl font-bold text-gray-900">Enter OTP</h1>
+
             <p className="text-gray-500 text-sm">
               Please enter the 6 digit code that send to <span className="font-semibold text-gray-700">{emailOrPhone}</span>.
             </p>
           </div>
 
-          <div className="flex justify-between gap-2">
+          <div className="flex justify-center gap-6.5">
             {otp.map((digit, index) => (
               <input
                 key={index}
@@ -109,7 +109,7 @@ export default function VerifyOtp() {
                 value={digit}
                 onChange={(e) => handleOtpChange(e.target.value, index)}
                 onKeyDown={(e) => handleKeyDown(e, index)}
-                className="w-12 h-14 border border-gray-200 rounded-xl text-center text-xl font-bold focus:border-[#EE641D] focus:ring-2 focus:ring-[#EE641D]/20 outline-none transition-all"
+                className="w-15 h-15 border border-gray-200 rounded-xl text-center text-xl font-bold focus:border-[#EE641D] focus:ring-2 focus:ring-[#EE641D]/20 outline-none transition-all"
               />
             ))}
           </div>
@@ -132,7 +132,10 @@ export default function VerifyOtp() {
           <button
             type="submit"
             disabled={loading || otp.some((d) => !d)}
-            className="w-full py-4 rounded-xl bg-[#EE641D] text-white font-bold shadow-lg hover:opacity-90 transition-all active:scale-[0.98] disabled:bg-gray-100 disabled:text-gray-400 disabled:shadow-none"
+            className={`w-full py-4 rounded-xl transition-all shadow-sm active:scale-[0.98] font-bold ${!otp.some((d) => !d) && !loading
+              ? "bg-[#EE641D] text-white shadow-lg hover:opacity-90"
+              : "bg-[#f3f3f3] text-gray-400 cursor-not-allowed"
+              }`}
           >
             {loading ? "Verifying..." : "Verify"}
           </button>

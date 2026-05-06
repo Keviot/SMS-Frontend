@@ -12,12 +12,18 @@ interface AuthLayoutProps {
 
 export default function AuthLayout({ children, title, illustration = sms, tagline, step = 1 }: AuthLayoutProps) {
   return (
-    <div className="flex h-screen overflow-hidden bg-white font-sans selection:bg-orange-100">
+    <div className="flex flex-col lg:flex-row min-h-screen lg:h-screen lg:overflow-hidden bg-white font-sans selection:bg-orange-100">
+      {/* Mobile Logo */}
+      <div className="lg:hidden p-6 absolute top-0 left-0 z-50">
+        <h1 className="text-3xl font-extrabold tracking-tighter">
+          <span className="text-[#EE641D]">Dash</span><span className="text-[#121212]">Stack</span>
+        </h1>
+      </div>
       {/* Left Side - Branding & Illustration */}
-      <div className="hidden lg:flex flex-col w-1/2 p-12 items-center justify-center border-r border-gray-100">
+      <div className="hidden lg:flex flex-col w-1/2 p-12 items-center justify-center border-r border-gray-100 relative">
         <div className="max-w-2xl w-full flex flex-col items-center">
           {/* Logo */}
-          <div className="self-start mb-22 pl-4 mt-15 ml-15">
+          <div className="absolute top-12 left-12">
             <h1 className="text-4xl font-extrabold tracking-tighter">
               <span className="text-[#EE641D]">Dash</span><span className="text-[#121212]">Stack</span>
             </h1>
@@ -48,7 +54,7 @@ export default function AuthLayout({ children, title, illustration = sms, taglin
       </div>
 
       {/* Right Side - Form Content */}
-      <div className="flex-1 flex items-center justify-center p-6 lg:p-12 relative overflow-hidden bg-[#fdfdfd]">
+      <div className="flex-1 flex items-center justify-center p-4 sm:p-6 lg:p-12 relative bg-[#fdfdfd] min-h-screen lg:min-h-0 overflow-y-auto">
         {/* Blurred Background Pattern Layer */}
         <div
           className="absolute inset-0 z-0 pointer-events-none opacity-100 scale-105"
@@ -63,7 +69,7 @@ export default function AuthLayout({ children, title, illustration = sms, taglin
         {/* Subtle Overlay Pattern */}
         <div className="absolute inset-0 opacity-10 pointer-events-none z-1 bg-[radial-gradient(#EE641D_0.5px,transparent_0.5px)] [background-size:20px_20px]"></div>
 
-        <div className="w-full max-w-[630px] max-h-[90vh] bg-white rounded-3xl p-6 lg:p-10 shadow-[0_10px_50px_-12px_rgba(0,0,0,0.1)] border border-gray-100 relative z-10 backdrop-blur-sm bg-white/95 flex flex-col justify-center overflow-y-auto">
+        <div className="w-full max-w-[630px] lg:max-h-[90vh] bg-white rounded-2xl sm:rounded-3xl p-5 sm:p-6 lg:p-10 shadow-[0_10px_50px_-12px_rgba(0,0,0,0.1)] border border-gray-100 relative z-10 backdrop-blur-sm bg-white/95 flex flex-col justify-center lg:overflow-y-auto overflow-x-hidden my-12 lg:my-0">
           <h2 className="text-3xl font-bold text-gray-900 mb-6">{title}</h2>
           {children}
         </div>

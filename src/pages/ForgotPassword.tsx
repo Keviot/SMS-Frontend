@@ -49,10 +49,13 @@ export default function ForgotPassword() {
             />
           </div>
           <button
-
             type="submit"
             disabled={loading || !emailOrPhone}
-            className="w-full py-4 rounded-xl bg-gradient-to-r from-[#FE512E] to-[#F09633] text-white font-bold shadow-lg hover:opacity-90 transition-all active:scale-[0.98] disabled:bg-gray-100 disabled:text-gray-400 disabled:shadow-none"
+            className={`w-full py-4 rounded-xl transition-all shadow-sm active:scale-[0.98] font-bold ${
+              emailOrPhone && !loading
+                ? "bg-gradient-to-r from-[#FE512E] to-[#F09633] text-white shadow-lg hover:opacity-90"
+                : "bg-[#f3f3f3] text-gray-400 cursor-not-allowed"
+            }`}
           >
             {loading ? "Sending..." : "Get OTP"}
           </button>
