@@ -27,7 +27,7 @@ export default function Modal({ isOpen, onClose, title, children }: ModalProps) 
   return createPortal(
     <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
       {/* Overlay - Centered on whole screen */}
-      <div 
+      <div
         className="fixed inset-0 bg-black/40 backdrop-blur-[2px] transition-opacity"
         onClick={onClose}
       ></div>
@@ -37,7 +37,7 @@ export default function Modal({ isOpen, onClose, title, children }: ModalProps) 
         {/* Header */}
         <div className="px-8 pt-8 pb-4 flex items-center justify-between">
           <h3 className="text-2xl font-bold text-gray-900">{title}</h3>
-          <button 
+          <button
             onClick={onClose}
             className="p-2 hover:bg-gray-100 rounded-full transition-colors group"
           >

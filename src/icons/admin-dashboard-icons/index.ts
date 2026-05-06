@@ -1,0 +1,29 @@
+// Export all SVG icons as React components
+// Using ?react suffix for vite-plugin-svgr
+import AnnouncementSvg from './announcement.svg?react';
+import BuildingSvg from './building.svg?react';
+import DashboardMenu from './dashboardHome.svg?react';
+import EditSvg from './edit.svg?react';
+import EyeSvg from './eye.svg?react';
+import FinancialManagementSvg from './financial-management.svg?react';
+import LogoutSvg from './logout.svg?react';
+import NotificationBingSvg from './notification-bing.svg?react';
+import ResidentManagementSvg from './resident-management.svg?react';
+import SearchBordereSvg from './search-Bordere.svg?react';
+import SecurityGuardSvg from './security-guard.svg?react';
+import SecurityManagementSvg from './security-management.svg?react';
+import TrashSvg from './trash.svg?react';
+
+export const AnnouncementIcon = AnnouncementSvg;
+export const BuildingIcon = BuildingSvg;
+export const DashboardIcon = DashboardMenu;
+export const EditIcon = EditSvg;
+export const EyeIcon = EyeSvg;
+export const FinancialManagementIcon = FinancialManagementSvg;
+export const LogoutIcon = LogoutSvg;
+export const NotificationBingIcon = NotificationBingSvg;
+export const ResidentManagementIcon = ResidentManagementSvg;
+export const SearchBordereIcon = SearchBordereSvg;
+export const SecurityGuardIcon = SecurityGuardSvg;
+export const SecurityManagementIcon = SecurityManagementSvg;
+export const TrashIcon = TrashSvg;
