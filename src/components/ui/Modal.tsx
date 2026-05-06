@@ -1,46 +1,56 @@
-import type { ReactNode } from "react";
+import React, { type ReactNode, useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { X } from "lucide-react";
-import { cn } from "../../lib/cn";
 
-type ModalProps = {
-  open: boolean;
+interface ModalProps {
+  isOpen: boolean;
+  onClose: () => void;
   title: string;
   children: ReactNode;
-  onClose: () => void;
-  className?: string;
-};
+}
 
-export default function Modal({
-  open,
-  title,
-  children,
-  onClose,
-  className,
-}: ModalProps) {
-  if (!open) return null;
+export default function Modal({ isOpen, onClose, title, children }: ModalProps) {
+  const [mounted, setMounted] = useState(false);
 
-  return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 px-4">
+  useEffect(() => {
+    setMounted(true);
+    if (isOpen) {
+      document.body.style.overflow = "hidden";
+    }
+    return () => {
+      document.body.style.overflow = "unset";
+    };
+  }, [isOpen]);
+
+  if (!isOpen || !mounted) return null;
+
+  return createPortal(
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
+      {/* Overlay - Centered on whole screen */}
       <div
-        className={cn(
-          "relative max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-2xl bg-white p-6 shadow-2xl",
-          className
-        )}
-      >
-        <div className="mb-6 flex items-center justify-between gap-4">
-          <h2 className="text-lg font-extrabold text-[#202224]">{title}</h2>
+        className="fixed inset-0 bg-black/40 backdrop-blur-[2px] transition-opacity"
+        onClick={onClose}
+      ></div>
 
+      {/* Modal Container - Centered on whole screen */}
+      <div className="bg-white w-full max-w-[550px] rounded-[32px] shadow-[0_25px_80px_-15px_rgba(0,0,0,0.2)] relative z-[10000] overflow-hidden transform transition-all animate-in fade-in zoom-in slide-in-from-bottom-8 duration-300">
+        {/* Header */}
+        <div className="px-8 pt-8 pb-4 flex items-center justify-between">
+          <h3 className="text-2xl font-bold text-gray-900">{title}</h3>
           <button
-            type="button"
             onClick={onClose}
-            className="grid h-9 w-9 place-items-center rounded-xl bg-[#F5F6FA] text-[#6F7786] transition hover:bg-[#FFEDE6] hover:text-[#FF5630]"
+            className="p-2 hover:bg-gray-100 rounded-full transition-colors group"
           >
-            <X size={18} />
+            <X size={24} className="text-gray-400 group-hover:text-gray-600" />
           </button>
         </div>
 
-        {children}
+        {/* Body */}
+        <div className="px-8 pb-8">
+          {children}
+        </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

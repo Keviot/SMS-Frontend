@@ -1,48 +1,26 @@
-import DashboardLayout from "./components/layout/DashboardLayout";
-import BalanceChart from "./components/dashboard/BalanceChart";
-import ComplaintTable from "./components/dashboard/ComplaintTable";
-import ImportantNumbersCard from "./components/dashboard/ImportantNumbersCard";
-import PendingMaintenanceCard from "./components/dashboard/PendingMaintenanceCard";
-import StatCard from "./components/dashboard/StatCard";
-import UpcomingActivityCard from "./components/dashboard/UpcomingActivityCard";
-import {
-  complaints,
-  importantNumbers,
-  pendingMaintenances,
-  statCards,
-  upcomingActivities,
-} from "./data/dashboard.data";
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
+import { Toaster } from 'react-hot-toast'
+import './App.css'
+import Register from './pages/Register'
+import Login from './pages/Login'
+import ForgotPassword from './pages/ForgotPassword'
+import VerifyOtp from './pages/VerifyOtp'
+import ResetPassword from './pages/ResetPassword'
 
-export default function App() {
+function App() {
   return (
-    <DashboardLayout>
-      {/* Responsive dashboard - no horizontal scroll */}
-      <div className="space-y-[20px]">
-        {/* Row 1: Stat Cards - 4 equal columns, responsive */}
-        <section className="grid grid-cols-1 gap-[20px] sm:grid-cols-2 lg:grid-cols-4">
-          {statCards.map((card) => (
-            <StatCard
-              key={card.title}
-              title={card.title}
-              value={card.value}
-              type={card.type}
-            />
-          ))}
-        </section>
-
-        {/* Row 2: Balance Chart (50%) | Important Numbers (25%) | Pending Maintenances (25%) */}
-        <section className="grid grid-cols-1 gap-[20px] lg:grid-cols-2 xl:grid-cols-[2fr_1fr_1fr]">
-          <BalanceChart />
-          <ImportantNumbersCard data={importantNumbers} />
-          <PendingMaintenanceCard data={pendingMaintenances} />
-        </section>
-
-        {/* Row 3: Complaint List (75%) | Upcoming Activity (25%) */}
-        <section className="grid grid-cols-1 gap-[20px] xl:grid-cols-[3fr_1fr]">
-          <ComplaintTable data={complaints} />
-          <UpcomingActivityCard data={upcomingActivities} />
-        </section>
-      </div>
-    </DashboardLayout>
-  );
+    <Router>
+      <Toaster position="top-right" reverseOrder={false} />
+      <Routes>
+        <Route path="/" element={<Navigate to="/login" replace />} />
+        <Route path="/register" element={<Register />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/verify-otp" element={<VerifyOtp />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
+      </Routes>
+    </Router>
+  )
 }
+
+export default App
