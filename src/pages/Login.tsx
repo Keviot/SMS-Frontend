@@ -4,8 +4,11 @@ import { Link } from "react-router-dom";
 import AuthLayout from "../layouts/AuthLayout";
 import { authApi } from "../services/api";
 import collab from "../assets/collab.png";
+import toast from "react-hot-toast";
+import { useNavigate } from "react-router-dom";
 
 export default function Login() {
+  const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
@@ -24,10 +27,12 @@ export default function Login() {
     try {
       const data = await authApi.login(formData);
       if (data.success || data.token) {
-        alert("Login Successful!");
-        // Redirect to dashboard
+        toast.success("Login Successful!");
+        setTimeout(() => {
+          navigate("/dashboard");
+        }, 1500);
       } else {
-        alert(data.message || "Login Failed.");
+        toast.error(data.message || "Login Failed.");
       }
     } catch (error) {
       console.error("Login Error:", error);
@@ -39,7 +44,7 @@ export default function Login() {
   const isFormValid = formData.email.trim() !== "" && formData.password.trim() !== "";
 
   return (
-    <AuthLayout title="Login" illustration={collab} tagline={<h2 className="text-xl font-bold text-gray-800 px-8 leading-tight">
+    <AuthLayout title="Login" illustration={collab} step={2} tagline={<h2 className="text-xl font-bold text-gray-800 px-8 leading-tight">
       Your Space, Your Place.<br /><span className="text-[#EE641D]">Society Management Made Simple.</span>
     </h2>}>
       <div className="flex-1 flex flex-col justify-center">

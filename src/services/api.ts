@@ -62,28 +62,42 @@ export const authApi = {
   },
 
   forgetPassword: async (emailOrPhone: string) => {
+    const isEmail = /\S+@\S+\.\S+/.test(emailOrPhone);
+    const body = isEmail ? { email: emailOrPhone } : { phoneNumber: emailOrPhone };
     const response = await fetch(`${BASE_URL}/auth/forget-password`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ emailOrPhone }),
+      body: JSON.stringify(body),
     });
     return handleResponse(response);
   },
 
   verifyOtp: async (data: { emailOrPhone: string; otp: string }) => {
+    const isEmail = /\S+@\S+\.\S+/.test(data.emailOrPhone);
+    const body = {
+      ...(isEmail ? { email: data.emailOrPhone } : { phoneNumber: data.emailOrPhone }),
+      otp: data.otp
+    };
     const response = await fetch(`${BASE_URL}/auth/verify-otp`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(data),
+      body: JSON.stringify(body),
     });
     return handleResponse(response);
   },
 
   resetPassword: async (data: any) => {
+    const isEmail = /\S+@\S+\.\S+/.test(data.emailOrPhone);
+    const body = {
+      ...(isEmail ? { email: data.emailOrPhone } : { phoneNumber: data.emailOrPhone }),
+      otp: data.otp,
+      password: data.password,
+      confirmPassword: data.confirmPassword
+    };
     const response = await fetch(`${BASE_URL}/auth/reset-password`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(data),
+      body: JSON.stringify(body),
     });
     return handleResponse(response);
   },
