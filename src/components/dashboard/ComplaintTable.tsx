@@ -1,6 +1,6 @@
 import type { ComplaintStatus, Priority } from "../../data/dashboard.data";
 import { EditIcon, EyeIcon, TrashIcon } from "../../icons/admin-dashboard-icons";
-import Card from "../ui/Card";
+import Card from "../../ui/Card";
 
 type ComplaintRow = {
   id: string;

@@ -1,6 +1,6 @@
 import { Plus } from "lucide-react";
 import { EditIcon, TrashIcon } from "../../icons/admin-dashboard-icons";
-import Card from "../ui/Card";
+import Card from "../../ui/Card";
 
 type ImportantNumber = {
   id: string;

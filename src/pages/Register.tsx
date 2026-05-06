@@ -1,12 +1,8 @@
 import { useState, useEffect } from "react";
 import { EyeOff, Eye, ChevronDown } from "lucide-react";
-import { Link } from "react-router-dom";
-import sms from "../assets/sms.png"
-import collab from "../assets/collab.png";
+import { Link, useNavigate } from "react-router-dom";
 import { authApi, societyApi } from "../services/api";
-import AuthLayout from "../components/layout/AuthLayout";
-import Modal from "../components/ui/Modal";
-import { useNavigate } from "react-router-dom";
+import Modal from "../ui/Modal";
 import toast from "react-hot-toast";
 
 export default function Register() {
@@ -17,7 +13,6 @@ export default function Register() {
 
   const [societies, setSocieties] = useState<string[]>([]);
   const [showSocietyDropdown, setShowSocietyDropdown] = useState(false);
-  const [illustration, setIllustration] = useState(sms);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const [formData, setFormData] = useState({
@@ -119,8 +114,6 @@ export default function Register() {
 
     if (!validate()) return;
 
-    setIllustration(collab);
-
     setLoading(true);
     try {
       const data = await authApi.signup({
@@ -140,7 +133,6 @@ export default function Register() {
       if (data.success) {
         toast.success("Registration Successful!");
 
-        setIllustration(sms)
         setFormData({
           firstname: "",
           lastname: "",
@@ -161,7 +153,6 @@ export default function Register() {
         }, 1500);
       } else {
         toast.error(data.message || "Registration Failed.");
-        setIllustration(sms)
       }
     } catch (error) {
       console.error("Signup Error:", error);
@@ -192,7 +183,7 @@ export default function Register() {
   };
 
   return (
-    <AuthLayout title="Registration" illustration={illustration} step={1}>
+    <>
       <form className="space-y-3.5" onSubmit={handleSubmit}>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
           {/* First Name */}
@@ -445,8 +436,8 @@ export default function Register() {
               name="societyName"
               value={newSociety.societyName}
               onChange={handleModalChange}
-              placeholder="Society Name"
-              className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:border-[#EE641D] outline-none transition-all text-sm"
+              placeholder="Enter Society Name"
+              className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:border-[#EE641D] outline-none transition-all"
               required
             />
           </div>
@@ -457,8 +448,8 @@ export default function Register() {
               name="societyAddress"
               value={newSociety.societyAddress}
               onChange={handleModalChange}
-              placeholder="Society Address"
-              className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:border-[#EE641D] outline-none transition-all text-sm"
+              placeholder="Enter Address"
+              className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:border-[#EE641D] outline-none transition-all"
               required
             />
           </div>
@@ -471,7 +462,7 @@ export default function Register() {
                 value={newSociety.country}
                 onChange={handleModalChange}
                 placeholder="Country"
-                className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:border-[#EE641D] outline-none transition-all text-sm"
+                className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:border-[#EE641D] outline-none transition-all"
                 required
               />
             </div>
@@ -483,7 +474,7 @@ export default function Register() {
                 value={newSociety.state}
                 onChange={handleModalChange}
                 placeholder="State"
-                className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:border-[#EE641D] outline-none transition-all text-sm"
+                className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:border-[#EE641D] outline-none transition-all"
                 required
               />
             </div>
@@ -497,7 +488,7 @@ export default function Register() {
                 value={newSociety.city}
                 onChange={handleModalChange}
                 placeholder="City"
-                className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:border-[#EE641D] outline-none transition-all text-sm"
+                className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:border-[#EE641D] outline-none transition-all"
                 required
               />
             </div>
@@ -509,7 +500,7 @@ export default function Register() {
                 value={newSociety.zipCode}
                 onChange={handleModalChange}
                 placeholder="Zip Code"
-                className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:border-[#EE641D] outline-none transition-all text-sm"
+                className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:border-[#EE641D] outline-none transition-all"
                 required
               />
             </div>
@@ -532,6 +523,6 @@ export default function Register() {
           </div>
         </form>
       </Modal>
-    </AuthLayout>
+    </>
   );
 }

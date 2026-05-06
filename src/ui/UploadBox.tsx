@@ -1,5 +1,5 @@
 import { UploadCloud } from "lucide-react";
-import { cn } from "../../lib/cn";
+import { cn } from "../lib/cn";
 
 type UploadBoxProps = {
   label?: string;

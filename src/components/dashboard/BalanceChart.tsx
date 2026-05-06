@@ -1,6 +1,6 @@
 import { ChevronDown } from "lucide-react";
 import { useState } from "react";
-import Card from "../ui/Card";
+import Card from "../../ui/Card";
 
 const months = [
   "Jan",
@@ -27,7 +27,7 @@ export default function BalanceChart() {
   const width = 100;
   const height = 100;
   const padding = 5;
-  
+
   const points = dataPoints.map((value, index) => {
     const x = (index / (dataPoints.length - 1)) * (width - padding * 2) + padding;
     const y = height - (value / 100) * (height - padding * 2) - padding;
@@ -54,10 +54,10 @@ export default function BalanceChart() {
             <option value="Last month">Last month</option>
             <option value="Last Year">Last Year</option>
           </select>
-          <ChevronDown 
-            size={14} 
+          <ChevronDown
+            size={14}
             strokeWidth={2}
-            className="pointer-events-none absolute right-[10px] top-1/2 -translate-y-1/2 text-[var(--text-tertiary)] lg:right-[12px] lg:w-4 lg:h-4" 
+            className="pointer-events-none absolute right-[10px] top-1/2 -translate-y-1/2 text-[var(--text-tertiary)] lg:right-[12px] lg:w-4 lg:h-4"
           />
         </div>
       </div>

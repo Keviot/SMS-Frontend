@@ -1,13 +1,9 @@
-import type { ReactNode } from "react";
 import { useState } from "react";
+import { Outlet } from "react-router-dom";
 import Sidebar from "./Sidebar";
 import Header from "./Header";
 
-type DashboardLayoutProps = {
-  children: ReactNode;
-};
-
-export default function DashboardLayout({ children }: DashboardLayoutProps) {
+export default function AppLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   return (
@@ -28,7 +24,9 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         <Header onMenuClick={() => setSidebarOpen(true)} />
 
         {/* Content with responsive padding - prevents horizontal scroll */}
-        <main className="overflow-x-hidden p-[15px] sm:p-[20px] lg:p-[30px]">{children}</main>
+        <main className="overflow-x-hidden p-[15px] sm:p-[20px] lg:p-[30px]">
+          <Outlet />
+        </main>
       </div>
     </div>
   );

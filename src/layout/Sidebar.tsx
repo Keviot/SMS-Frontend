@@ -1,7 +1,8 @@
 import { ChevronDown, X } from "lucide-react";
 import { useState } from "react";
-import { adminNavigation, footerNavigation } from "../../constants/navigation";
-import { cn } from "../../lib/cn";
+import { useNavigate, useLocation } from "react-router-dom";
+import { adminNavigation, footerNavigation } from "../constants/navigation";
+import { cn } from "../lib/cn";
 
 type SidebarProps = {
   open: boolean;
@@ -9,7 +10,9 @@ type SidebarProps = {
 };
 
 export default function Sidebar({ open, onClose }: SidebarProps) {
-  const [expanded, setExpanded] = useState<string[]>([]);  // Empty array - all collapsed initially
+  const navigate = useNavigate();
+  const location = useLocation();
+  const [expanded, setExpanded] = useState<string[]>([]);
 
   const toggleExpand = (label: string) => {
     setExpanded((prev) =>
@@ -17,6 +20,15 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
         ? prev.filter((item) => item !== label)
         : [...prev, label]
     );
+  };
+
+  const handleNavClick = (path: string, hasChildren: boolean, label: string) => {
+    if (hasChildren) {
+      toggleExpand(label);
+    } else {
+      navigate(path);
+      if (window.innerWidth < 1024) onClose();
+    }
   };
 
   return (
@@ -27,7 +39,7 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
       )}
     >
       <div className="flex h-[100px] items-center justify-between px-[30px]">
-        <div className="text-[20px] font-black tracking-[-0.6px] text-[var(--text-primary)]">
+        <div className="text-[20px] font-black tracking-[-0.6px] text-[var(--text-primary)] cursor-pointer" onClick={() => navigate('/dashboard')}>
           <span className="text-[var(--primary)]">Dash</span>Stack
         </div>
 
@@ -45,15 +57,16 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
           const Icon = item.icon;
           const hasChildren = Boolean(item.children?.length);
           const isExpanded = expanded.includes(item.label);
+          const isActive = location.pathname === item.path || (hasChildren && item.children.some(child => location.pathname === child.path));
 
           return (
             <div key={item.label} className="mb-1">
               <button
                 type="button"
-                onClick={() => hasChildren && toggleExpand(item.label)}
+                onClick={() => handleNavClick(item.path, hasChildren, item.label)}
                 className={cn(
                   "flex h-[46px] w-full items-center justify-between rounded-[10px] px-[15px] text-[14px] font-semibold transition-all duration-200",
-                  item.active
+                  isActive
                     ? "bg-gradient-to-r from-[var(--primary-gradient-start)] to-[var(--primary-gradient-end)] text-white shadow-[0_10px_18px_rgba(255,107,53,0.22)]"
                     : "text-[var(--text-light)] hover:bg-[var(--accent-peach)] hover:text-[var(--primary)]"
                 )}
@@ -77,13 +90,22 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
 
               {hasChildren && isExpanded && (
                 <div className="space-y-1 py-2 pl-[43px]">
-                  {item.children?.map((child) => (
+                  {item.children?.map((child: any) => (
                     <button
-                      key={child}
+                      key={child.label}
                       type="button"
-                      className="block w-full rounded-lg px-2 py-2 text-left text-[13px] font-medium text-[var(--text-light)] transition hover:bg-[var(--accent-peach)] hover:text-[var(--primary)]"
+                      onClick={() => {
+                        navigate(child.path);
+                        if (window.innerWidth < 1024) onClose();
+                      }}
+                      className={cn(
+                        "block w-full rounded-lg px-2 py-2 text-left text-[13px] font-medium transition",
+                        location.pathname === child.path
+                          ? "text-[var(--primary)] bg-[var(--accent-peach)]"
+                          : "text-[var(--text-light)] hover:bg-[var(--accent-peach)] hover:text-[var(--primary)]"
+                      )}
                     >
-                      {child}
+                      {child.label}
                     </button>
                   ))}
                 </div>

@@ -4,7 +4,7 @@ import {
   TrendingDown,
 } from "lucide-react";
 import { BuildingIcon } from "../../icons/admin-dashboard-icons";
-import Card from "../ui/Card";
+import Card from "../../ui/Card";
 
 type StatCardType = "balance" | "income" | "expense" | "unit";
 

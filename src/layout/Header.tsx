@@ -1,7 +1,7 @@
 import { ChevronDown, Menu, Search, X } from "lucide-react";
 import { useState } from "react";
-import { NotificationBingIcon } from "../../icons/admin-dashboard-icons";
-import NotificationDropdown from "../dashboard/NotificationDropdown";
+import { NotificationBingIcon } from "../icons/admin-dashboard-icons";
+import NotificationDropdown from "../components/dashboard/NotificationDropdown";
 import Button from "../ui/Button";
 import Input from "../ui/Input";
 
@@ -85,11 +85,11 @@ export default function Header({ onMenuClick }: HeaderProps) {
       {searchOpen && (
         <>
           {/* Backdrop to close search */}
-          <div 
+          <div
             className="fixed inset-0 top-[80px] z-40 bg-black/20 sm:hidden"
             onClick={() => setSearchOpen(false)}
           />
-          
+
           {/* Search bar */}
           <div className="fixed inset-x-0 top-[80px] z-50 bg-white p-4 shadow-lg sm:hidden">
             <Input

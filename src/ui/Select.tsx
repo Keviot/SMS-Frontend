@@ -1,5 +1,5 @@
 import type { SelectHTMLAttributes } from "react";
-import { cn } from "../../lib/cn";
+import { cn } from "../lib/cn";
 
 type SelectOption = {
   label: string;
@@ -51,8 +51,8 @@ export default function Select({
         <option value="" className="text-[var(--text-light)]">{placeholder}</option>
 
         {options.map((option) => (
-          <option 
-            key={option.value} 
+          <option
+            key={option.value}
             value={option.value}
             className="text-[var(--text-primary)] bg-white py-[8px]"
           >
