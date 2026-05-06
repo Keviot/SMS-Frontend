@@ -1,5 +1,6 @@
 import { ChevronDown, Menu, Search, X } from "lucide-react";
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import { NotificationBingIcon } from "../icons/admin-dashboard-icons";
 import NotificationDropdown from "../components/dashboard/NotificationDropdown";
 import Button from "../ui/Button";
@@ -61,24 +62,26 @@ export default function Header({ onMenuClick }: HeaderProps) {
           {notificationOpen && <NotificationDropdown />}
         </div>
 
-        <Button
-          variant="ghost"
-          size="md"
-          className="h-[45px] gap-2 rounded-xl p-0 hover:bg-transparent lg:h-[50px] lg:gap-3"
-        >
-          <div className="grid h-[45px] w-[45px] flex-shrink-0 place-items-center rounded-full bg-gradient-to-br from-[var(--primary-gradient-start)] to-[var(--primary-gradient-end)] text-[13px] font-black text-white lg:h-[50px] lg:w-[50px] lg:text-[14px]">
-            MR
-          </div>
+        <Link to="/profile">
+          <Button
+            variant="ghost"
+            size="md"
+            className="h-[45px] gap-2 rounded-xl p-0 hover:bg-transparent lg:h-[50px] lg:gap-3"
+          >
+            <div className="grid h-[45px] w-[45px] flex-shrink-0 place-items-center rounded-full bg-gradient-to-br from-[var(--primary-gradient-start)] to-[var(--primary-gradient-end)] text-[13px] font-black text-white lg:h-[50px] lg:w-[50px] lg:text-[14px]">
+              MR
+            </div>
 
-          <div className="hidden text-left sm:block">
-            <h4 className="text-[13px] font-bold leading-tight text-[var(--text-primary)] lg:text-[14px]">
-              Moni Roy
-            </h4>
-            <p className="mt-0.5 text-[11px] font-medium text-[var(--text-light)] lg:text-[12px]">Admin</p>
-          </div>
+            <div className="hidden text-left sm:block">
+              <h4 className="text-[13px] font-bold leading-tight text-[var(--text-primary)] lg:text-[14px]">
+                Moni Roy
+              </h4>
+              <p className="mt-0.5 text-[11px] font-medium text-[var(--text-light)] lg:text-[12px]">Admin</p>
+            </div>
 
-          <ChevronDown size={16} className="hidden text-[var(--text-light)] sm:block lg:w-[18px] lg:h-[18px]" strokeWidth={2} />
-        </Button>
+            <ChevronDown size={16} className="hidden text-[var(--text-light)] sm:block lg:w-[18px] lg:h-[18px]" strokeWidth={2} />
+          </Button>
+        </Link>
       </div>
 
       {/* Mobile search overlay */}
