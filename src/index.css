@@ -1,1 +1,135 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap');
 @import "tailwindcss";
+
+:root {
+  font-family: 'Poppins', -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  
+  /* Primary & Secondary Colors */
+  --primary: #FE512E;
+  --primary-light: #FF6B35;
+  --primary-gradient-start: #FF5630;
+  --primary-gradient-end: #FF9F1C;
+  --secondary: #F09619;
+  
+  /* Status Colors */
+  --blue: #5678E9;
+  --blue-hover: #4A67D5;
+  --green: #39973D;
+  --green-hover: #2D7A30;
+  --red: #E74C3C;
+  --red-hover: #C0392B;
+  --yellow: #FFC313;
+  
+  /* Text Colors */
+  --text-primary: #202224;
+  --text-secondary: #434A57;
+  --text-tertiary: #4F4F4F;
+  --text-muted: #6F7786;
+  --text-light: #A7A7A7;
+  --text-dark: #111827;
+  
+  /* Background Colors */
+  --bg-white: #FFFFFF;
+  --bg-gray: #F6F8FB;
+  --bg-gray-light: #F8F9FC;
+  --bg-gray-lighter: #F5F6FA;
+  --bg-hover: #EBEEF3;
+  
+  /* Border Colors */
+  --border: #D3D3D3;
+  --border-light: #F3F4F6;
+  --border-medium: #EDF0F5;
+  
+  /* Accent Backgrounds */
+  --accent-orange: #FFF1E9;
+  --accent-blue: #EAF1FF;
+  --accent-peach: #FFF7F3;
+  --accent-cream: #FFE8D9;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  min-width: 320px;
+  min-height: 100vh;
+  background: var(--bg-gray);
+  color: var(--text-primary);
+  overflow-x: hidden;
+  font-family: 'Poppins', -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+button,
+input,
+textarea,
+select {
+  font-family: 'Poppins', -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+button {
+  cursor: pointer;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-gray);
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-light);
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) var(--bg-gray);
+}
+
+/* Select Dropdown Styling */
+select option {
+  background-color: var(--bg-white);
+  color: var(--text-primary);
+  padding: 10px;
+  font-weight: 500;
+}
+
+select option:hover,
+select option:focus,
+select option:checked {
+  background: linear-gradient(90deg, var(--accent-peach) 0%, var(--bg-white) 100%);
+  color: var(--text-primary);
+}
+
+select option:disabled {
+  color: var(--text-light);
+  background-color: var(--bg-gray);
+}
+
+/* SVG Icon Styling */
+svg[class*="Icon"] path,
+svg[class*="icon"] path {
+  transition: fill 0.2s ease-in-out;
+}
+
+/* Ensure SVG icons inherit current color */
+.text-white svg path {
+  fill: white;
+}
+
+button:hover svg path[fill]:not([fill="none"]) {
+  fill: currentColor;
+}
