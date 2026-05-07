@@ -68,10 +68,6 @@ export const adminNavigation = [
 
 export const footerNavigation = [
   {
-    label: "Setting",
-    icon: Settings,
-  },
-  {
     label: "Logout",
     icon: LogoutIcon,
     danger: true,

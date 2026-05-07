@@ -1,9 +1,5 @@
-import {
-  Banknote,
-  IndianRupee,
-  TrendingDown,
-} from "lucide-react";
-import { BuildingIcon } from "../../icons/admin-dashboard-icons";
+
+import { BalanceIcon, BuildingIcon, MoneyRecieveIcon, MoneySendIcon, TotalUnitIcon } from "../../icons/admin-dashboard-icons";
 import Card from "../../ui/Card";
 
 type StatCardType = "balance" | "income" | "expense" | "unit";
@@ -16,39 +12,50 @@ type StatCardProps = {
 
 const statConfig = {
   balance: {
-    icon: IndianRupee,
-    className: "bg-[#FFF1E9] text-[#FF5630]",
+    icon: BalanceIcon,
+    iconBg: "bg-[#FFF1E9]",
+    iconColor: "text-[#FE512E]",
+    edge: "bg-[#FFB37C]",
+    border: "border-t-[#FE512E] border-r-[#FE512E]",
   },
   income: {
-    icon: Banknote,
-    className: "bg-[#EAFBF1] text-[#16A34A]",
+    icon: MoneyRecieveIcon,
+    iconBg: "bg-[#EAFBF1]",
+    iconColor: "text-[#39973D]",
+    edge: "bg-[#95D4A0]",
+    border: "border-t-[#39973D] border-r-[#39973D]",
   },
   expense: {
-    icon: TrendingDown,
-    className: "bg-[#EEF5FF] text-[#3B82F6]",
+    icon: MoneySendIcon,
+    iconBg: "bg-[#EEF4FF]",
+    iconColor: "text-[#5678E9]",
+    edge: "bg-[#AFC2FF]",
+    border: "border-t-[#5678E9] border-r-[#5678E9]",
   },
   unit: {
-    icon: BuildingIcon,
-    className: "bg-[#F3EFFF] text-[#8B5CF6]",
+    icon: TotalUnitIcon,
+    iconBg: "bg-[#FFF0FB]",
+    iconColor: "text-[#EC4899]",
+    edge: "bg-[#F99DE3]",
+    border: "border-t-[#EC4899] border-r-[#EC4899]",
   },
 };
 
 export default function StatCard({ title, value, type }: StatCardProps) {
   const config = statConfig[type];
   const Icon = config.icon;
-  const showCurrency = type !== "unit";
 
   return (
-    <Card className="flex h-[90px] w-full items-start justify-between p-[15px] lg:h-[105px] lg:p-[20px]">
-      <div className="flex-1 min-w-0 pr-2">
-        <p className="text-[12px] font-medium text-[#A7A7A7] lg:text-[14px]">{title}</p>
-        <h3 className="mt-[6px] text-[20px] font-bold leading-none tracking-tight text-[#202224] sm:text-[24px] lg:mt-[8px] lg:text-[32px]">
-          {showCurrency && "₹ "}{value}
+    <Card className={`relative flex h-[105px] items-center justify-between overflow-hidden border-t border-r p-[30px] ${config.border}`}>
+      <span className={`absolute left-0 top-[25px] h-[50px] w-[6px] rounded-r-full ${config.edge}`} />
+      <div className="min-w-0 pr-[12px]">
+        <p className="text-[16px] font-medium leading-[20px] text-[#202224]">{title}</p>
+        <h3 className="mt-[8px] text-[26px] font-semibold leading-[31px] tracking-[-0.4px] text-[#202224]">
+          {type !== "unit" && "₹ "}{value}
         </h3>
       </div>
-
-      <div className={`grid h-[38px] w-[38px] flex-shrink-0 place-items-center rounded-[10px] lg:h-[45px] lg:w-[45px] ${config.className}`}>
-        <Icon size={20} strokeWidth={2} className="lg:w-6 lg:h-6" />
+      <div className={`grid h-[45px] w-[45px] shrink-0 place-items-center rounded-[10px] ${config.iconBg} ${config.iconColor}`}>
+        <Icon className="h-[24px] w-[24px] [&_path]:fill-current" strokeWidth={2.2} />
       </div>
     </Card>
   );

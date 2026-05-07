@@ -1,6 +1,7 @@
 // Export all SVG icons as React components
 // Using ?react suffix for vite-plugin-svgr
 import AnnouncementSvg from './announcement.svg?react';
+import AddSquareSvg from './add-square.svg?react';
 import BuildingSvg from './building.svg?react';
 import DashboardMenu from './dashboardHome.svg?react';
 import EditSvg from './edit.svg?react';
@@ -13,8 +14,14 @@ import SearchBordereSvg from './search-Bordere.svg?react';
 import SecurityGuardSvg from './security-guard.svg?react';
 import SecurityManagementSvg from './security-management.svg?react';
 import TrashSvg from './trash.svg?react';
+import MoneyRecieveSvg from './money-recieve.svg?react';
+import MoneySendSvg from './money-send.svg?react';
+import TotalUnitSvg from './total-unit.svg?react';
+import BalanceSvg from './balance.svg?react';
+
 
 export const AnnouncementIcon = AnnouncementSvg;
+export const AddSquareIcon = AddSquareSvg;
 export const BuildingIcon = BuildingSvg;
 export const DashboardIcon = DashboardMenu;
 export const EditIcon = EditSvg;
@@ -27,3 +34,8 @@ export const SearchBordereIcon = SearchBordereSvg;
 export const SecurityGuardIcon = SecurityGuardSvg;
 export const SecurityManagementIcon = SecurityManagementSvg;
 export const TrashIcon = TrashSvg;
+export const MoneyRecieveIcon = MoneyRecieveSvg;
+export const MoneySendIcon = MoneySendSvg;
+export const TotalUnitIcon = TotalUnitSvg;
+export const BalanceIcon = BalanceSvg;
+

@@ -49,16 +49,15 @@ export default function Header({ onMenuClick }: HeaderProps) {
 
       <div className="flex items-center gap-2 lg:gap-4">
         <div className="relative">
-          <Button
-            variant="outline"
-            size="md"
-            onClick={() => setNotificationOpen((prev) => !prev)}
-            className="relative h-[45px] w-[45px] flex-shrink-0 rounded-full border-[var(--border-light)] p-0 hover:border-[var(--primary-light)] hover:bg-[var(--accent-peach)] lg:h-[50px] lg:w-[50px]"
+          <button
+            type="button"
+            onClick={() => setNotificationOpen((value) => !value)}
+            className="relative grid h-[45px] w-[45px] place-items-center rounded-[10px] border border-[#D8D8D8] bg-white transition hover:border-[#FE512E]/50"
+            aria-label="Open notifications"
           >
-            <NotificationBingIcon className="h-5 w-5 lg:h-6 lg:w-6" />
-            <span className="absolute right-2.5 top-2.5 h-[10px] w-[10px] rounded-full border-2 border-white bg-[var(--red)] lg:right-3 lg:top-3" />
-          </Button>
-
+            <NotificationBingIcon className="h-[22px] w-[22px]" />
+            <span className="absolute right-[12px] top-[11px] h-[8px] w-[8px] rounded-full bg-[#E74C3C] ring-2 ring-white" />
+          </button>
           {notificationOpen && <NotificationDropdown />}
         </div>
 
@@ -85,35 +84,41 @@ export default function Header({ onMenuClick }: HeaderProps) {
       </div>
 
       {/* Mobile search overlay */}
-      {searchOpen && (
-        <>
-          {/* Backdrop to close search */}
-          <div
-            className="fixed inset-0 top-[80px] z-40 bg-black/20 sm:hidden"
-            onClick={() => setSearchOpen(false)}
-          />
+     {/* Mobile search overlay */}
+{searchOpen && (
+  <div className="fixed inset-0 z-40 sm:hidden">
+    {/* Backdrop */}
+    <button
+      type="button"
+      aria-label="Close search"
+      className="absolute inset-0 bg-black/20"
+      onClick={() => setSearchOpen(false)}
+    />
 
-          {/* Search bar */}
-          <div className="fixed inset-x-0 top-[80px] z-50 bg-white p-4 shadow-lg sm:hidden">
-            <Input
-              type="text"
-              placeholder="Search Here"
-              autoFocus
-              leftIcon={<Search size={18} strokeWidth={2} />}
-              rightIcon={
-                <button
-                  type="button"
-                  onClick={() => setSearchOpen(false)}
-                  className="flex-shrink-0"
-                >
-                  <X size={18} strokeWidth={2} />
-                </button>
-              }
-              className="h-[45px] rounded-full border-[var(--border)]"
-            />
-          </div>
-        </>
-      )}
+    {/* Search bar */}
+    <div
+      className="absolute inset-x-0 top-[80px] z-50 bg-white p-4 shadow-lg"
+      onClick={(e) => e.stopPropagation()}
+    >
+      <Input
+        type="text"
+        placeholder="Search Here"
+        autoFocus
+        leftIcon={<Search size={18} strokeWidth={2} />}
+        rightIcon={
+          <button
+            type="button"
+            onClick={() => setSearchOpen(false)}
+            className="flex-shrink-0"
+          >
+            <X size={18} strokeWidth={2} />
+          </button>
+        }
+        className="h-[45px] rounded-full border-[var(--border)]"
+      />
+    </div>
+  </div>
+)}
     </header>
   );
 }

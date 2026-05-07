@@ -1,157 +1,76 @@
 import { ChevronDown } from "lucide-react";
-import { useState } from "react";
 import Card from "../../ui/Card";
 
-const months = [
-  "Jan",
-  "Feb",
-  "Mar",
-  "Apr",
-  "May",
-  "Jun",
-  "July",
-  "Aug",
-  "Sep",
-  "Oct",
-  "Nov",
-  "Dec",
-];
-
-// Sample data points for line chart (0-100 scale)
-const dataPoints = [30, 45, 35, 50, 40, 60, 45, 65, 50, 70, 55, 75];
+const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "July", "Aug", "Sep", "Oct", "Nov", "Dec"];
+const values = [10, 16, 14, 27, 18, 24, 20, 30, 29, 28, 40, 48];
+const max = 50;
 
 export default function BalanceChart() {
-  const [period, setPeriod] = useState("Last Year");
-
-  // Calculate SVG path for line chart
-  const width = 100;
-  const height = 100;
-  const padding = 5;
-
-  const points = dataPoints.map((value, index) => {
-    const x = (index / (dataPoints.length - 1)) * (width - padding * 2) + padding;
-    const y = height - (value / 100) * (height - padding * 2) - padding;
-    return `${x},${y}`;
-  }).join(" ");
+  const points = values
+    .map((value, index) => {
+      const x = 6 + (index / (values.length - 1)) * 88;
+      const y = 92 - (value / max) * 78;
+      return `${x},${y}`;
+    })
+    .join(" ");
 
   return (
-    <Card className="h-[350px] w-full p-[15px] lg:h-[398px] lg:p-[20px]">
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div className="min-w-0">
-          <h2 className="text-[14px] font-semibold text-[var(--text-primary)] sm:text-[16px] lg:text-[18px]">Total Balance</h2>
-          <p className="mt-[8px] text-[22px] font-bold leading-none text-[var(--text-primary)] sm:text-[26px] lg:mt-[10px] lg:text-[34px]">
-            ₹ 55,000
-          </p>
+    <Card className="h-[398px] p-[20px]">
+      <div className="flex items-start justify-between gap-[14px]">
+        <div>
+          <h2 className="text-[20px] font-semibold leading-[24px] text-[#202224]">Total Balance</h2>
+          <p className="mt-[18px] text-[32px] font-semibold leading-[38px] text-[#202224]">55,000</p>
         </div>
 
-        <div className="relative flex-shrink-0">
-          <select
-            value={period}
-            onChange={(e) => setPeriod(e.target.value)}
-            className="h-[36px] appearance-none rounded-[10px] border border-[var(--border)] bg-white pl-[12px] pr-[32px] text-[13px] font-medium text-[var(--text-tertiary)] outline-none transition-colors hover:border-[#FFD5C7] focus:border-[#FF8A00] lg:h-[40px] lg:pl-[15px] lg:pr-[35px] lg:text-[14px]"
-          >
-            <option value="Last week">Last week</option>
-            <option value="Last month">Last month</option>
-            <option value="Last Year">Last Year</option>
-          </select>
-          <ChevronDown
-            size={14}
-            strokeWidth={2}
-            className="pointer-events-none absolute right-[10px] top-1/2 -translate-y-1/2 text-[var(--text-tertiary)] lg:right-[12px] lg:w-4 lg:h-4"
-          />
+        <div className="relative">
+          <button className="flex h-[45px] min-w-[115px] items-center justify-between rounded-[10px] border border-[#D3D3D3] bg-white px-[14px] text-[14px] font-semibold text-[#202224]">
+            Month <ChevronDown size={18} />
+          </button>
+          <div className="absolute right-0 top-[55px] z-10 w-[150px] rounded-[10px] bg-white p-[14px] shadow-[0_18px_45px_rgba(15,23,42,0.12)]">
+            {["Last week", "Last month", "Last Year"].map((item) => (
+              <label key={item} className="mb-[12px] flex items-center gap-[10px] last:mb-0">
+                <span className={`grid h-[17px] w-[17px] place-items-center rounded-full border ${item === "Last month" ? "border-[#FE512E]" : "border-[#C9CDD5]"}`}>
+                  {item === "Last month" && <span className="h-[9px] w-[9px] rounded-full bg-[#FE512E]" />}
+                </span>
+                <span className={`text-[13px] font-medium ${item === "Last month" ? "text-[#202224]" : "text-[#A7A7A7]"}`}>{item}</span>
+              </label>
+            ))}
+          </div>
         </div>
       </div>
 
-      {/* Line Chart */}
-      <div className="mt-[15px] lg:mt-[20px]">
-        <div className="relative h-[200px] lg:h-[240px]">
-          {/* Y-axis labels */}
-          <div className="absolute left-0 top-0 flex h-full flex-col justify-between text-[11px] font-medium text-[var(--text-light)] lg:text-[12px]">
-            <span>50k</span>
-            <span>40k</span>
-            <span>30k</span>
-            <span>20k</span>
-            <span>10k</span>
-            <span>0k</span>
+      <div className="mt-[22px] h-[270px]">
+        <div className="grid h-full grid-cols-[45px_1fr]">
+          <div className="flex h-[220px] flex-col justify-between pt-[3px] text-[15px] font-normal text-[#4F4F4F]">
+            {["50k", "40k", "30k", "20k", "10k", "0k"].map((label) => <span key={label}>{label}</span>)}
           </div>
 
-          {/* Chart area */}
-          <div className="ml-[35px] h-full lg:ml-[40px]">
-            <svg
-              viewBox={`0 0 ${width} ${height}`}
-              className="h-full w-full"
-              preserveAspectRatio="none"
-            >
-              {/* Grid lines */}
-              {[0, 20, 40, 60, 80, 100].map((y) => (
-                <line
-                  key={y}
-                  x1={padding}
-                  y1={height - y}
-                  x2={width - padding}
-                  y2={height - y}
-                  stroke="#F3F4F6"
-                  strokeWidth="0.5"
-                />
+          <div className="min-w-0">
+            <svg viewBox="0 0 100 100" preserveAspectRatio="none" className="h-[220px] w-full overflow-visible">
+              {[14, 29.6, 45.2, 60.8, 76.4, 92].map((y) => (
+                <line key={y} x1="0" x2="100" y1={y} y2={y} stroke="#EDF0F5" strokeWidth="0.45" />
               ))}
-
-              {/* Gradient fill under line */}
               <defs>
-                <linearGradient id="lineGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-                  <stop offset="0%" stopColor="#FFE8D9" stopOpacity="0.8" />
-                  <stop offset="100%" stopColor="#FFE8D9" stopOpacity="0" />
-                </linearGradient>
+                <filter id="chartShadow" x="-20%" y="-20%" width="140%" height="140%">
+                  <feDropShadow dx="0" dy="5" stdDeviation="4" floodColor="#8EA2FF" floodOpacity="0.45" />
+                </filter>
               </defs>
-
-              {/* Fill area under line */}
-              <polygon
-                points={`${padding},${height} ${points} ${width - padding},${height}`}
-                fill="url(#lineGradient)"
-              />
-
-              {/* Line */}
-              <polyline
-                points={points}
-                fill="none"
-                stroke="var(--primary-light)"
-                strokeWidth="2.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-
-              {/* Data points */}
-              {dataPoints.map((value, index) => {
-                const x = (index / (dataPoints.length - 1)) * (width - padding * 2) + padding;
-                const y = height - (value / 100) * (height - padding * 2) - padding;
-                return (
-                  <circle
-                    key={index}
-                    cx={x}
-                    cy={y}
-                    r="2"
-                    fill="var(--primary-light)"
-                  />
-                );
+              <polyline points={points} fill="none" stroke="#8EA2FF" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" filter="url(#chartShadow)" />
+              {values.map((value, index) => {
+                const x = 6 + (index / (values.length - 1)) * 88;
+                const y = 92 - (value / max) * 78;
+                return <circle key={index} cx={x} cy={y} r="1.8" fill="#8EA2FF" stroke="white" strokeWidth="0.8" />;
               })}
+              <g>
+                <rect x="40" y="36" width="13" height="9" rx="2" fill="white" stroke="#EAEFFF" />
+                <text x="46.5" y="42.3" textAnchor="middle" fontSize="4.1" fill="#8EA2FF" fontWeight="600">55,000</text>
+              </g>
             </svg>
+            <div className="grid grid-cols-12 text-center text-[15px] font-normal text-[#4F4F4F]">
+              {months.map((month) => <span key={month}>{month}</span>)}
+            </div>
           </div>
         </div>
-
-        {/* X-axis labels */}
-        <div className="ml-[35px] mt-[8px] grid grid-cols-12 gap-1 lg:ml-[40px] lg:mt-[10px]">
-          {months.map((month) => (
-            <span
-              key={month}
-              className="text-center text-[11px] font-medium text-[var(--text-light)] lg:text-[12px]"
-            >
-              {month}
-            </span>
-          ))}
-        </div>
-
-        <p className="mt-[6px] text-center text-[11px] font-semibold text-[var(--text-light)] lg:mt-[8px] lg:text-[12px]">
-          Month
-        </p>
       </div>
     </Card>
   );
