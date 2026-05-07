@@ -19,6 +19,7 @@ export const authApi = {
   signup: async (userData: any) => {
     const response = await fetch(`${BASE_URL}/auth/signup`, {
       method: "POST",
+      credentials: "include",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(userData),
     });
@@ -28,6 +29,7 @@ export const authApi = {
   login: async (credentials: any) => {
     const response = await fetch(`${BASE_URL}/auth/login`, {
       method: "POST",
+      credentials: "include",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(credentials),
     });
@@ -41,6 +43,7 @@ export const authApi = {
   logout: async () => {
     const response = await fetch(`${BASE_URL}/auth/logout`, {
       method: "POST",
+      credentials: "include",
       headers: { 
         "Content-Type": "application/json",
         ...getAuthHeader()
@@ -53,6 +56,7 @@ export const authApi = {
   getProfile: async () => {
     const response = await fetch(`${BASE_URL}/auth/profile`, {
       method: "GET",
+      credentials: "include",
       headers: { 
         "Content-Type": "application/json",
         ...getAuthHeader()
@@ -66,6 +70,7 @@ export const authApi = {
     const body = isEmail ? { email: emailOrPhone } : { phoneNumber: emailOrPhone };
     const response = await fetch(`${BASE_URL}/auth/forget-password`, {
       method: "POST",
+      credentials: "include",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),
     });
@@ -80,6 +85,7 @@ export const authApi = {
     };
     const response = await fetch(`${BASE_URL}/auth/verify-otp`, {
       method: "POST",
+      credentials: "include",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),
     });
@@ -96,8 +102,22 @@ export const authApi = {
     };
     const response = await fetch(`${BASE_URL}/auth/reset-password`, {
       method: "POST",
+      credentials: "include",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),
+    });
+    return handleResponse(response);
+  },
+
+  updateProfile: async (id: string, userData: any) => {
+    const response = await fetch(`${BASE_URL}/auth/edit-profile/${id}`, {
+      method: "PATCH",
+      credentials: "include",
+      headers: { 
+        "Content-Type": "application/json",
+        ...getAuthHeader()
+      },
+      body: JSON.stringify(userData),
     });
     return handleResponse(response);
   },
@@ -107,6 +127,7 @@ export const societyApi = {
   create: async (societyData: any) => {
     const response = await fetch(`${BASE_URL}/society/create`, {
       method: "POST",
+      credentials: "include",
       headers: { 
         "Content-Type": "application/json",
         ...getAuthHeader()
@@ -119,6 +140,7 @@ export const societyApi = {
   getAll: async () => {
     const response = await fetch(`${BASE_URL}/society/get`, {
       method: "GET",
+      credentials: "include",
       headers: { "Content-Type": "application/json" },
     });
     return handleResponse(response);
