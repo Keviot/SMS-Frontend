@@ -19,6 +19,7 @@ import ComplaintTracking from './pages/admin/ComplaintTracking'
 import SecurityManagement from './pages/admin/SecurityManagement'
 import SecurityGuard from './pages/admin/SecurityGuard'
 import Announcement from './pages/admin/Announcement'
+import Profile from './pages/admin/Profile'
 
 function App() {
   return (
@@ -103,6 +104,7 @@ function App() {
           <Route path="/security-management" element={<SecurityManagement />} />
           <Route path="/security-guard" element={<SecurityGuard />} />
           <Route path="/announcement" element={<Announcement />} />
+          <Route path="/profile" element={<Profile />} />
         </Route>
       </Routes>
     </Router>
