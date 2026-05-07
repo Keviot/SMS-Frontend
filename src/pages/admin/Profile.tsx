@@ -1,7 +1,7 @@
 import { Edit2, Loader2 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import profileBG from "../../assets/profileBG.png";
-import { authApi } from "../../services/api";
+import { authApi, BASE_URL } from "../../services/api";
 import toast from "react-hot-toast";
 
 interface ProfileData {
@@ -32,6 +32,9 @@ export default function Profile() {
     city: "",
     profileImage: ""
   });
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -61,25 +64,47 @@ export default function Profile() {
     fetchProfile();
   }, []);
 
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setSelectedFile(file);
+      setPreviewUrl(URL.createObjectURL(file));
+    }
+  };
+
   const handleUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!userId) return;
 
     setIsSubmitting(true);
     try {
-      const updateData = {
-        firstname: formData.firstName,
-        lastname: formData.lastName,
-        phoneNumber: formData.phoneNumber,
-        email: formData.email,
-        country: formData.country,
-        state: formData.state,
-        city: formData.city
-      };
+      const data = new FormData();
+      data.append("firstname", formData.firstName);
+      data.append("lastname", formData.lastName);
+      data.append("phoneNumber", formData.phoneNumber);
+      data.append("email", formData.email);
+      data.append("country", formData.country);
+      data.append("state", formData.state);
+      data.append("city", formData.city);
+      data.append("selectSociety", formData.society);
 
-      await authApi.updateProfile(userId, updateData);
+      if (selectedFile) {
+        data.append("profileImage", selectedFile);
+      }
+
+      const response = await authApi.updateProfile(userId, data);
+
+      if (response.updatedUser) {
+        setFormData(prev => ({
+          ...prev,
+          profileImage: response.updatedUser.profileImage
+        }));
+      }
+
       toast.success("Profile updated successfully!");
       setIsEditing(false);
+      setSelectedFile(null);
+      setPreviewUrl(null);
     } catch (error: any) {
       toast.error(error.message || "Failed to update profile");
     } finally {
@@ -112,7 +137,7 @@ export default function Profile() {
               {!isEditing && (
                 <button
                   onClick={() => setIsEditing(true)}
-                  className="flex items-center gap-2 bg-[#FE512E] text-white px-6 py-2.5 rounded-lg  font-bold shadow-lg hover:opacity-90 transition-all active:scale-[0.98]"
+                  className="flex items-center gap-2 bg-[#FE512E] text-white px-6 py-2.5 rounded-xl font-bold shadow-lg hover:opacity-90 transition-all active:scale-[0.98]"
                 >
                   <Edit2 size={18} />
                   Edit Profile
@@ -124,24 +149,37 @@ export default function Profile() {
       </div>
 
       <div className="px-6 -mt-44 relative z-10 pb-10">
-        <form onSubmit={handleUpdate} className="max-w-6xl mx-auto bg-white rounded-3xl shadow-[0_10px_40px_rgba(0,0,0,0.04)] border border-gray-100 p-8 flex flex-col md:flex-row gap-16 min-h-[500px]">
+        <form onSubmit={handleUpdate} className="max-w-6xl mx-auto bg-white rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.04)] border border-gray-100 p-8 flex flex-col md:flex-row gap-8 lg:gap-16 min-h-[500px]">
 
           {/* Left Side: Avatar */}
           <div className="flex flex-col items-center text-center pt-8 md:w-1/4">
-            <div className="relative group mr-5">
+            <div className="relative group ">
+              <input
+                type="file"
+                ref={fileInputRef}
+                onChange={handleFileChange}
+                accept="image/*"
+                className="hidden"
+              />
               <img
-                src={formData.profileImage || "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?q=80&w=256&h=256&auto=format&fit=crop"}
+                src={previewUrl || (formData.profileImage ? `${BASE_URL}/${formData.profileImage}` : "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?q=80&w=256&h=256&auto=format&fit=crop")}
                 alt="Profile"
-                className="w-40 h-40 rounded-full object-cover border-4 border-white shadow-2xl"
+                className="w-40 h-40 rounded-full object-cover border-4 border-white transition-all duration-300 group-hover:brightness-90"
               />
               {isEditing && (
-                <button type="button" className="absolute bottom-4 right-2 p-1.5 bg-white rounded-full shadow-md border border-gray-100 hover:bg-gray-50 transition-colors">
-                  <Edit2 size={14} className="text-gray-600" />
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  className="absolute bottom-4 right-2 p-2.5 bg-white text-black rounded-full transition-all transform hover:scale-110 active:scale-95 z-20"
+                >
+                  <Edit2 size={16} />
                 </button>
               )}
             </div>
-            <h2 className="mt-6 text-xl font-semibold text-gray-900">{formData.firstName} {formData.lastName}</h2>
+            <h2 className="mt-4 text-xl font-bold text-gray-900 tracking-tight">{formData.firstName} {formData.lastName}</h2>
           </div>
+
+
 
           {/* Right Side: Form Fields */}
           <div className="flex-1 pt-8 ">
@@ -153,7 +191,7 @@ export default function Profile() {
                   value={formData.firstName}
                   onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
                   disabled={!isEditing}
-                  className="w-full h-11 px-4 py-3.5 rounded-xl border border-gray-900 focus:border-[#EE641D] outline-none transition-all text-gray-800 font-medium disabled:bg-gray-50 disabled:cursor-not-allowed"
+                  className="w-full h-12 px-4 py-3 rounded-lg border border-gray-200 focus:border-[#FE512E] focus:ring-2 focus:ring-[#FE512E]/10 outline-none transition-all text-gray-800 font-medium disabled:bg-gray-50 disabled:cursor-not-allowed"
                 />
               </div>
 
@@ -164,7 +202,7 @@ export default function Profile() {
                   value={formData.lastName}
                   onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
                   disabled={!isEditing}
-                  className="w-full h-11 px-4 py-3.5 rounded-xl border border-gray-900 focus:border-[#EE641D] outline-none transition-all text-gray-800 font-medium disabled:bg-gray-50 disabled:cursor-not-allowed"
+                  className="w-full h-12 px-4 py-3 rounded-lg border border-gray-200 focus:border-[#FE512E] focus:ring-2 focus:ring-[#FE512E]/10 outline-none transition-all text-gray-800 font-medium disabled:bg-gray-50 disabled:cursor-not-allowed"
                 />
               </div>
 
@@ -175,7 +213,7 @@ export default function Profile() {
                   value={formData.phoneNumber}
                   onChange={(e) => setFormData({ ...formData, phoneNumber: e.target.value })}
                   disabled={!isEditing}
-                  className="w-full h-11 px-4 py-3.5 rounded-xl border border-gray-900 focus:border-[#EE641D] outline-none transition-all text-gray-800 font-medium disabled:bg-gray-50 disabled:cursor-not-allowed"
+                  className="w-full h-12 px-4 py-3 rounded-lg border border-gray-200 focus:border-[#FE512E] focus:ring-2 focus:ring-[#FE512E]/10 outline-none transition-all text-gray-800 font-medium disabled:bg-gray-50 disabled:cursor-not-allowed"
                 />
               </div>
 
@@ -186,7 +224,7 @@ export default function Profile() {
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                   disabled={!isEditing}
-                  className="w-full h-11 px-4 py-3.5 rounded-xl border border-gray-900 focus:border-[#EE641D] outline-none transition-all text-gray-800 font-medium disabled:bg-gray-50 disabled:cursor-not-allowed"
+                  className="w-full h-12 px-4 py-3 rounded-lg border border-gray-200 focus:border-[#FE512E] focus:ring-2 focus:ring-[#FE512E]/10 outline-none transition-all text-gray-800 font-medium disabled:bg-gray-50 disabled:cursor-not-allowed"
                 />
               </div>
 
@@ -197,7 +235,7 @@ export default function Profile() {
                   value={formData.society}
                   onChange={(e) => setFormData({ ...formData, society: e.target.value })}
                   disabled={!isEditing}
-                  className="w-full h-11 px-4 py-3.5 rounded-xl border border-gray-900 focus:border-[#EE641D] outline-none transition-all text-gray-800 font-medium disabled:bg-gray-50 disabled:cursor-not-allowed"
+                  className="w-full h-12 px-4 py-3 rounded-lg border border-gray-200 focus:border-[#FE512E] focus:ring-2 focus:ring-[#FE512E]/10 outline-none transition-all text-gray-800 font-medium disabled:bg-gray-50 disabled:cursor-not-allowed"
                 />
               </div>
 
@@ -208,7 +246,7 @@ export default function Profile() {
                   value={formData.country}
                   onChange={(e) => setFormData({ ...formData, country: e.target.value })}
                   disabled={!isEditing}
-                  className="w-full h-11 px-4 py-3.5 rounded-xl border border-gray-900 focus:border-[#EE641D] outline-none transition-all text-gray-800 font-medium disabled:bg-gray-50 disabled:cursor-not-allowed"
+                  className="w-full h-12 px-4 py-3 rounded-lg border border-gray-200 focus:border-[#FE512E] focus:ring-2 focus:ring-[#FE512E]/10 outline-none transition-all text-gray-800 font-medium disabled:bg-gray-50 disabled:cursor-not-allowed"
                 />
               </div>
 
@@ -219,7 +257,7 @@ export default function Profile() {
                   value={formData.state}
                   onChange={(e) => setFormData({ ...formData, state: e.target.value })}
                   disabled={!isEditing}
-                  className="w-full h-11 px-4 py-3.5 rounded-xl border border-gray-900 focus:border-[#EE641D] outline-none transition-all text-gray-800 font-medium disabled:bg-gray-50 disabled:cursor-not-allowed"
+                  className="w-full h-12 px-4 py-3 rounded-lg border border-gray-200 focus:border-[#FE512E] focus:ring-2 focus:ring-[#FE512E]/10 outline-none transition-all text-gray-800 font-medium disabled:bg-gray-50 disabled:cursor-not-allowed"
                 />
               </div>
 
@@ -230,7 +268,7 @@ export default function Profile() {
                   value={formData.city}
                   onChange={(e) => setFormData({ ...formData, city: e.target.value })}
                   disabled={!isEditing}
-                  className="w-full h-11 px-4 py-3.5 rounded-xl border border-gray-900 focus:border-[#EE641D] outline-none transition-all text-gray-800 font-medium disabled:bg-gray-50 disabled:cursor-not-allowed"
+                  className="w-full h-12 px-4 py-3 rounded-lg border border-gray-200 focus:border-[#FE512E] focus:ring-2 focus:ring-[#FE512E]/10 outline-none transition-all text-gray-800 font-medium disabled:bg-gray-50 disabled:cursor-not-allowed"
                 />
               </div>
             </div>
