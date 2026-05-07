@@ -6,6 +6,7 @@ type InputProps = InputHTMLAttributes<HTMLInputElement> & {
   error?: string;
   leftIcon?: ReactNode;
   rightIcon?: ReactNode;
+  inputClassName?: string;
 };
 
 export default function Input({
@@ -14,6 +15,7 @@ export default function Input({
   leftIcon,
   rightIcon,
   className,
+  inputClassName,
   id,
   ...props
 }: InputProps) {
@@ -22,39 +24,29 @@ export default function Input({
   return (
     <div className="w-full">
       {label && (
-        <label
-          htmlFor={inputId}
-          className="mb-[8px] block text-[13px] font-semibold text-[var(--text-primary)]"
-        >
+        <label htmlFor={inputId} className="mb-[8px] block text-[13px] font-semibold text-[#202224]">
           {label}
         </label>
       )}
-
       <div
         className={cn(
-          "flex h-11 items-center gap-2 rounded-[10px] border bg-white px-3 transition-all duration-200",
-          error
-            ? "border-[var(--red)]"
-            : "border-[var(--border)] focus-within:border-[var(--primary)]",
+          "flex h-[45px] items-center gap-[10px] rounded-[10px] border border-[#D3D3D3] bg-white px-[13px] transition focus-within:border-[#FE512E]",
+          error && "border-[#E74C3C]",
           className
         )}
       >
-        {leftIcon && <span className="text-[var(--text-light)]">{leftIcon}</span>}
-
+        {leftIcon && <span className="grid shrink-0 place-items-center text-[#A7A7A7]">{leftIcon}</span>}
         <input
           id={inputId}
-          className="h-full min-w-0 flex-1 bg-transparent text-[14px] font-medium text-[var(--text-primary)] outline-none placeholder:text-[var(--text-light)]"
+          className={cn(
+            "h-full min-w-0 flex-1 bg-transparent text-[14px] font-medium text-[#202224] outline-none placeholder:text-[#A7A7A7]",
+            inputClassName
+          )}
           {...props}
         />
-
-        {rightIcon && <span className="text-[var(--text-light)]">{rightIcon}</span>}
+        {rightIcon && <span className="grid shrink-0 place-items-center text-[#A7A7A7]">{rightIcon}</span>}
       </div>
-
-      {error && (
-        <p className="mt-[6px] text-[12px] font-medium text-[var(--red)]">
-          {error}
-        </p>
-      )}
+      {error && <p className="mt-[6px] text-[12px] font-medium text-[#E74C3C]">{error}</p>}
     </div>
   );
 }
