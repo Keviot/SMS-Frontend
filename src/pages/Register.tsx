@@ -424,7 +424,7 @@ export default function Register() {
 
       {/* Create Society Modal */}
       <Modal
-        isOpen={isModalOpen}
+        open={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         title="Create New Society"
       >

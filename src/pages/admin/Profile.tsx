@@ -162,7 +162,7 @@ export default function Profile() {
                 className="hidden"
               />
               <img
-                src={previewUrl || (formData.profileImage ? `${BASE_URL}/${formData.profileImage}` : "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?q=80&w=256&h=256&auto=format&fit=crop")}
+                src={previewUrl || (formData.profileImage ? `${BASE_URL}/${formData.profileImage}` : "https://cdn-icons-png.flaticon.com/512/149/149071.png")}
                 alt="Profile"
                 className="w-40 h-40 rounded-full object-cover border-4 border-white transition-all duration-300 group-hover:brightness-90"
               />
