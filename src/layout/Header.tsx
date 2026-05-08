@@ -1,5 +1,5 @@
 import { ChevronDown, Menu, Search, X } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { authApi } from "../services/api";
 import { NotificationBingIcon } from "../icons/admin-dashboard-icons";
@@ -46,9 +46,32 @@ export default function Header({ onMenuClick }: HeaderProps) {
   const userName = profile 
     ? `${profile.firstname || ""} ${profile.lastname || ""}`.trim() 
     : "Moni Roy";
+  const notificationRef = useRef<HTMLDivElement | null>(null);
 
-  return (
-    <header className="sticky top-0 z-30 flex h-[80px] items-center justify-between gap-3 border-b border-[var(--border-light)] bg-white px-[15px] sm:px-[20px] lg:h-[100px] lg:px-[25px]">
+  useEffect(() => {
+  if (!notificationOpen) return;
+
+  function handleClickOutside(event: MouseEvent | TouchEvent) {
+    if (
+      notificationRef.current &&
+      !notificationRef.current.contains(event.target as Node)
+    ) {
+      setNotificationOpen(false);
+    }
+  }
+
+  document.addEventListener("mousedown", handleClickOutside);
+  document.addEventListener("touchstart", handleClickOutside);
+
+  return () => {
+    document.removeEventListener("mousedown", handleClickOutside);
+    document.removeEventListener("touchstart", handleClickOutside);
+  };
+}, [notificationOpen]);
+
+ return (
+  <>
+    <header className="fixed left-0 right-0 top-0 z-40 flex h-[80px] items-center justify-between gap-3 border-b border-[var(--border-light)] bg-white px-[15px] sm:px-[20px] lg:left-[280px] lg:h-[100px] lg:px-[25px]">
       <div className="flex flex-1 items-center gap-3 min-w-0">
         <Button
           variant="outline"
@@ -92,18 +115,21 @@ export default function Header({ onMenuClick }: HeaderProps) {
       </div>
 
       <div className="flex items-center gap-2 lg:gap-4">
-        <div className="relative">
-          <button
-            type="button"
-            onClick={() => setNotificationOpen((value) => !value)}
-            className="relative grid h-[45px] w-[45px] place-items-center rounded-[10px] border border-[#D8D8D8] bg-white transition hover:border-[#FE512E]/50"
-            aria-label="Open notifications"
-          >
-            <NotificationBingIcon className="h-[22px] w-[22px]" />
-            <span className="absolute right-[12px] top-[11px] h-[8px] w-[8px] rounded-full bg-[#E74C3C] ring-2 ring-white" />
-          </button>
-          {notificationOpen && <NotificationDropdown />}
-        </div>
+        <div ref={notificationRef} className="relative">
+  <button
+    type="button"
+    onClick={() => setNotificationOpen((value) => !value)}
+    className="relative grid h-[45px] w-[45px] place-items-center rounded-[10px] border border-[#D8D8D8] bg-white transition hover:border-[#FE512E]/50"
+    aria-label="Open notifications"
+  >
+    <NotificationBingIcon className="h-[22px] w-[22px]" />
+    <span className="absolute right-[12px] top-[11px] h-[8px] w-[8px] rounded-full bg-[#E74C3C] ring-2 ring-white" />
+  </button>
+
+  {notificationOpen && (
+    <NotificationDropdown onClose={() => setNotificationOpen(false)} />
+  )}
+  </div>
 
         <Link to="/profile">
           <Button
@@ -138,30 +164,33 @@ export default function Header({ onMenuClick }: HeaderProps) {
             onClick={() => setSearchOpen(false)}
           />
 
-          {/* Search bar */}
-          <div
-            className="absolute inset-x-0 top-[80px] z-50 bg-white p-4 shadow-lg"
-            onClick={(e) => e.stopPropagation()}
+    {/* Search bar */}
+    <div
+      className="absolute inset-x-0 top-[80px] z-50 bg-white p-4 shadow-lg"
+      onClick={(e) => e.stopPropagation()}
+    >
+      <Input
+        type="text"
+        placeholder="Search Here"
+        autoFocus
+        leftIcon={<Search size={18} strokeWidth={2} />}
+        rightIcon={
+          <button
+            type="button"
+            onClick={() => setSearchOpen(false)}
+            className="flex-shrink-0"
           >
-            <Input
-              type="text"
-              placeholder="Search Here"
-              autoFocus
-              leftIcon={<Search size={18} strokeWidth={2} />}
-              rightIcon={
-                <button
-                  type="button"
-                  onClick={() => setSearchOpen(false)}
-                  className="flex-shrink-0"
-                >
-                  <X size={18} strokeWidth={2} />
-                </button>
-              }
-              className="h-[45px] rounded-full border-[var(--border)]"
-            />
-          </div>
-        </div>
-      )}
-    </header>
-  );
+            <X size={18} strokeWidth={2} />
+          </button>
+        }
+        className="h-[45px] rounded-full border-[var(--border)]"
+      />
+    </div>
+  </div>
+)}
+        </header>
+
+    <div className="h-[80px] lg:h-[100px]" />
+  </>
+);
 }
