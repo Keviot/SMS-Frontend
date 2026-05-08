@@ -21,7 +21,7 @@ type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
 
 const variantClasses: Record<ButtonVariant, string> = {
   primary:
-    "bg-gradient-to-r from-[var(--primary-gradient-start)] to-[var(--primary-gradient-end)] text-white shadow-[0_10px_18px_rgba(255,107,53,0.22)] hover:shadow-[0_12px_24px_rgba(255,107,53,0.35)] hover:scale-[1.02]",
+    "bg-gradient-to-r from-[var(--primary-gradient-start)] to-[var(--primary-gradient-end)] text-white shadow-[0_10px_18px_rgba(255,107,53,0.22)]",
   secondary: "bg-[var(--bg-gray)] text-[var(--text-tertiary)] hover:bg-[var(--bg-hover)]",
   outline:
     "border border-[var(--border)] bg-white text-[var(--text-tertiary)] hover:border-[#FFB59C] hover:bg-[var(--accent-peach)] hover:text-[var(--primary-gradient-start)]",

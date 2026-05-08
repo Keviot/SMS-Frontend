@@ -262,3 +262,76 @@ svg[class*="icon"] path {
 button:hover svg path[fill]:not([fill="none"]) {
   fill: currentColor;
 }
+
+.text-primary {
+  color: var(--text-primary);
+}
+
+.text-secondary {
+  color: var(--text-secondary);
+}
+
+.text-tertiary {
+  color: var(--text-tertiary);
+}
+
+.text-muted {
+  color: var(--text-muted);
+}
+
+.text-light {
+  color: var(--text-light);
+}
+
+.text-dark {
+  color: var(--text-dark);
+}
+
+.bg-primary {
+  background-color: var(--primary);
+}
+
+.bg-secondary {
+  background-color: var(--secondary);
+}
+
+.bg-tertiary {
+  background-color: var(--tertiary);
+}
+
+.bg-muted {
+  background-color: var(--muted);
+}
+
+.bg-light {
+  background-color: var(--light);
+}
+
+.bg-dark {
+  background-color: var(--dark);
+}
+
+.bg-blue {
+  background-color: var(--blue);
+}
+
+.bg-blue:hover {
+  background-color: var(--blue-hover);
+}
+
+.bg-white-grey {
+  background-color: #F1F3F9;
+}
+
+.text-white-black {
+  color: #434A57;
+}
+
+
+.bg-gray-light-grey {
+  background-color: #F6F8FB;
+}
+
+.bg-blue-hover {
+  background-color: #5678E9;
+}

@@ -1,3 +1,4 @@
+import type { LucideIcon } from "lucide-react";
 import { cn } from "../lib/cn";
 
 type StatusBadgeVariant =
@@ -18,6 +19,7 @@ type StatusBadgeVariant =
 type StatusBadgeProps = {
   children: string;
   variant: StatusBadgeVariant;
+  icon?: LucideIcon;
 };
 
 const classes: Record<StatusBadgeVariant, string> = {
@@ -30,20 +32,21 @@ const classes: Record<StatusBadgeVariant, string> = {
   done: "bg-[var(--green)] text-white",
   cash: "bg-[#F1F5F9] text-[var(--text-dark)]",
   online: "bg-[var(--blue)] text-white",
-  owner: "bg-[var(--accent-orange)] text-[var(--primary-gradient-start)]",
-  tenant: "bg-[var(--accent-blue)] text-[#2563EB]",
-  occupied: "bg-[var(--green)] text-white",
-  vacate: "bg-[var(--red)] text-white",
+  owner: "bg-[var(--accent-blue)] text-[var(--blue)]",
+  tenant: "bg-[#FFF1F8] text-[#EC4899]",
+  occupied: "bg-[#ECFDF5] text-[#10B981]",
+  vacate: "bg-[#F5F3FF] text-[#8B5CF6]",
 };
 
-export default function StatusBadge({ children, variant }: StatusBadgeProps) {
+export default function StatusBadge({ children, variant, icon: Icon }: StatusBadgeProps) {
   return (
     <span
       className={cn(
-        "inline-flex h-[31px] min-w-[90px] items-center justify-center rounded-full px-[15px] text-[12px] font-semibold",
+        "inline-flex h-[31px] min-w-[100px] items-center justify-center gap-2 rounded-full px-[15px] text-[12px] font-semibold capitalize",
         classes[variant]
       )}
     >
+      {Icon && <Icon size={14} />}
       {children}
     </span>
   );
