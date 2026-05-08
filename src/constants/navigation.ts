@@ -1,4 +1,4 @@
-import { MessageSquareWarning, Settings } from "lucide-react";
+import { MessageSquareWarning } from "lucide-react";
 import {
   AnnouncementIcon,
   BuildingIcon,

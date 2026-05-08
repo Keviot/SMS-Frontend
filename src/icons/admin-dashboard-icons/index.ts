@@ -18,6 +18,12 @@ import MoneyRecieveSvg from './money-recieve.svg?react';
 import MoneySendSvg from './money-send.svg?react';
 import TotalUnitSvg from './total-unit.svg?react';
 import BalanceSvg from './balance.svg?react';
+import NotificationProfileSvg from './notification-profile.svg?react';
+import NoNotificationSvg from './no-notification.svg?react';
+import NotificationOnlineSvg from './notification-online.svg?react';
+import NotificationCashSvg from './notification-cash.svg?react';
+import NotificationGaneshSvg from './notification-ganesh.svg?react'
+
 
 
 export const AnnouncementIcon = AnnouncementSvg;
@@ -38,4 +44,11 @@ export const MoneyRecieveIcon = MoneyRecieveSvg;
 export const MoneySendIcon = MoneySendSvg;
 export const TotalUnitIcon = TotalUnitSvg;
 export const BalanceIcon = BalanceSvg;
+export const NoNotificationIcon = NoNotificationSvg;
+export const NotificationProfilesIcon = NotificationProfileSvg;
+export const NotificationOnlineIcon = NotificationOnlineSvg;
+export const NotificationCashIcon = NotificationCashSvg;
+export const NotificationGaneshIcon = NotificationGaneshSvg;
+
+
 
