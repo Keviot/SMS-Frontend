@@ -3,6 +3,9 @@ import { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { adminNavigation, footerNavigation } from "../constants/navigation";
 import { cn } from "../lib/cn";
+import ConfirmPopup from "../ui/ConfirmPopup";
+import { authApi } from "../services/api";
+import toast from "react-hot-toast";
 
 type SidebarProps = {
   open: boolean;
@@ -13,6 +16,7 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
   const navigate = useNavigate();
   const location = useLocation();
   const [expanded, setExpanded] = useState<string[]>([]);
+  const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
 
   const toggleExpand = (label: string) => {
     setExpanded((prev) =>
@@ -28,6 +32,21 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
     } else {
       navigate(path);
       if (window.innerWidth < 1024) onClose();
+    }
+  };
+
+  const handleLogout = async () => {
+    try {
+      await authApi.logout();
+      toast.success("Logged out successfully");
+      navigate("/login");
+    } catch (error: any) {
+      toast.error(error.message || "Logout failed");
+      // Still navigate as fallback
+      localStorage.removeItem("token");
+      navigate("/login");
+    } finally {
+      setIsLogoutModalOpen(false);
     }
   };
 
@@ -123,6 +142,11 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
             <button
               key={item.label}
               type="button"
+              onClick={() => {
+                if (item.label === "Logout") {
+                  setIsLogoutModalOpen(true);
+                }
+              }}
               className={cn(
                 "mb-1 flex h-[46px] w-full items-center gap-[10px] rounded-[10px] px-[15px] text-[14px] font-semibold transition hover:bg-[var(--bg-gray-lighter)]",
                 item.danger ? "text-[var(--red)]" : "text-[var(--text-light)]"
@@ -134,6 +158,15 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
           );
         })}
       </div>
+
+      <ConfirmPopup
+        open={isLogoutModalOpen}
+        title="Logout"
+        message="Are you sure you want to logout?"
+        confirmText="Logout"
+        onConfirm={handleLogout}
+        onCancel={() => setIsLogoutModalOpen(false)}
+      />
     </aside>
   );
 }

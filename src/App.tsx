@@ -13,6 +13,7 @@ import collab from './assets/collab.png'
 import reset from './assets/reset.png'
 
 import ResidentManagement from './pages/admin/ResidentManagement'
+import ResidentForm from './pages/admin/ResidentForm'
 import FinancialManagement from './pages/admin/FinancialManagement/Income'
 import FacilityManagement from './pages/admin/FacilityManagement'
 import ComplaintTracking from './pages/admin/ComplaintTracking'
@@ -98,6 +99,7 @@ function App() {
         <Route element={<AppLayout />}>
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/resident-management" element={<ResidentManagement />} />
+          <Route path="/resident-management/add" element={<ResidentForm />} />
           <Route path="/financial-management" element={<FinancialManagement />} />
           <Route path="/facility-management" element={<FacilityManagement />} />
           <Route path="/complaint-tracking" element={<ComplaintTracking />} />

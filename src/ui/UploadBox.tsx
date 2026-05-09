@@ -7,6 +7,8 @@ type UploadBoxProps = {
   fileSize?: string;
   progress?: number;
   error?: string;
+  onChange?: (file: File) => void;
+  accept?: string;
 };
 
 export default function UploadBox({
@@ -15,7 +17,16 @@ export default function UploadBox({
   fileSize,
   progress,
   error,
+  onChange,
+  accept = "image/*",
 }: UploadBoxProps) {
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file && onChange) {
+      onChange(file);
+    }
+  };
+
   return (
     <div className="w-full">
       {label && (
@@ -26,10 +37,17 @@ export default function UploadBox({
 
       <div
         className={cn(
-          "rounded-xl border border-dashed bg-white p-4 transition-all duration-200",
+          "relative rounded-xl border border-dashed bg-white transition-all duration-200",
           error ? "border-[#EF4444]" : "border-[#DFE4EC] hover:border-[#FF8A00]"
         )}
       >
+        <input
+          type="file"
+          className="absolute inset-0 z-10 cursor-pointer opacity-0"
+          onChange={handleFileChange}
+          accept={accept}
+        />
+        <div className="p-4">
         {fileName ? (
           <div>
             <div className="flex items-center justify-between gap-4">
@@ -70,6 +88,7 @@ export default function UploadBox({
           </div>
         )}
       </div>
+    </div>
 
       <p
         className={cn(

@@ -148,3 +148,17 @@ export const societyApi = {
     return handleResponse(response);
   },
 };
+
+export const residentApi = {
+  create: async (residentData: FormData) => {
+    const response = await fetch(`${API_URL}/resident/create`, {
+      method: "POST",
+      credentials: "include",
+      headers: {
+        ...getAuthHeader(),
+      },
+      body: residentData,
+    });
+    return handleResponse(response);
+  },
+};

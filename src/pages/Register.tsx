@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { EyeOff, Eye, ChevronDown } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { authApi, societyApi } from "../services/api";
-import Modal from "../ui/Modal";
+import CreateSocietyModal from "../components/modals/CreateSocietyModal";
 import toast from "react-hot-toast";
 
 export default function Register() {
@@ -30,14 +30,6 @@ export default function Register() {
   });
 
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [newSociety, setNewSociety] = useState({
-    societyName: "",
-    societyAddress: "",
-    country: "",
-    city: "",
-    state: "",
-    zipCode: "",
-  });
 
   // Fetch societies on mount
   useEffect(() => {
@@ -161,20 +153,18 @@ export default function Register() {
     }
   };
 
-  const handleModalChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setNewSociety(prev => ({ ...prev, [name]: value }));
-  };
-
-  const handleCreateSociety = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleCreateSociety = async (newSocietyData: any) => {
     try {
-      const data = await societyApi.create(newSociety);
-      // Since handleResponse in api.ts throws on error, if we reach here, it's successful
-      setSocieties(prev => [...prev, newSociety.societyName]);
-      setFormData(prev => ({ ...prev, selectSociety: newSociety.societyName }));
-      setIsModalOpen(false);
-      setNewSociety({ societyName: "", societyAddress: "", country: "", state: "", city: "", zipCode: "" });
+      const data = await societyApi.create({
+        societyName: newSocietyData.name,
+        societyAddress: newSocietyData.address,
+        country: newSocietyData.country,
+        state: newSocietyData.state,
+        city: newSocietyData.city,
+        zipCode: newSocietyData.zipCode
+      });
+      setSocieties(prev => [...prev, newSocietyData.name]);
+      setFormData(prev => ({ ...prev, selectSociety: newSocietyData.name }));
       toast.success(data.message || "Society created successfully!");
     } catch (error: any) {
       console.error("Error creating society:", error);
@@ -422,107 +412,11 @@ export default function Register() {
         </p>
       </form>
 
-      {/* Create Society Modal */}
-      <Modal
+      <CreateSocietyModal
         open={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        title="Create New Society"
-      >
-        <form onSubmit={handleCreateSociety} className="space-y-4">
-          <div className="space-y-1.5">
-            <label className="text-sm font-semibold text-gray-700">Society Name<span className="text-red-500">*</span></label>
-            <input
-              type="text"
-              name="societyName"
-              value={newSociety.societyName}
-              onChange={handleModalChange}
-              placeholder="Enter Society Name"
-              className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:border-[#EE641D] outline-none transition-all"
-              required
-            />
-          </div>
-          <div className="space-y-1.5">
-            <label className="text-sm font-semibold text-gray-700">Society Address<span className="text-red-500">*</span></label>
-            <input
-              type="text"
-              name="societyAddress"
-              value={newSociety.societyAddress}
-              onChange={handleModalChange}
-              placeholder="Enter Address"
-              className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:border-[#EE641D] outline-none transition-all"
-              required
-            />
-          </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-1.5">
-              <label className="text-sm font-semibold text-gray-700">Country<span className="text-red-500">*</span></label>
-              <input
-                type="text"
-                name="country"
-                value={newSociety.country}
-                onChange={handleModalChange}
-                placeholder="Country"
-                className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:border-[#EE641D] outline-none transition-all"
-                required
-              />
-            </div>
-            <div className="space-y-1.5">
-              <label className="text-sm font-semibold text-gray-700">State<span className="text-red-500">*</span></label>
-              <input
-                type="text"
-                name="state"
-                value={newSociety.state}
-                onChange={handleModalChange}
-                placeholder="State"
-                className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:border-[#EE641D] outline-none transition-all"
-                required
-              />
-            </div>
-          </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-1.5">
-              <label className="text-sm font-semibold text-gray-700">City<span className="text-red-500">*</span></label>
-              <input
-                type="text"
-                name="city"
-                value={newSociety.city}
-                onChange={handleModalChange}
-                placeholder="City"
-                className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:border-[#EE641D] outline-none transition-all"
-                required
-              />
-            </div>
-            <div className="space-y-1.5">
-              <label className="text-sm font-semibold text-gray-700">Zip Code<span className="text-red-500">*</span></label>
-              <input
-                type="text"
-                name="zipCode"
-                value={newSociety.zipCode}
-                onChange={handleModalChange}
-                placeholder="Zip Code"
-                className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:border-[#EE641D] outline-none transition-all"
-                required
-              />
-            </div>
-          </div>
-          <div className="flex gap-4 pt-4">
-            <button
-              type="button"
-              onClick={() => setIsModalOpen(false)}
-              className="flex-1 px-4 py-3 rounded-xl border border-gray-200 text-gray-600 font-semibold hover:bg-gray-50 transition-all"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              className="flex-1 px-4 py-3 rounded-xl bg-gradient-to-r from-[#FE512E] to-[#F09633] text-white font-semibold shadow-lg hover:opacity-90 transition-all active:scale-[0.98]"
-
-            >
-              Save
-            </button>
-          </div>
-        </form>
-      </Modal>
+        onSave={handleCreateSociety}
+      />
     </>
   );
 }
