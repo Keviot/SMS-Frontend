@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
-import pattern from "@/assets/pattern.png";
-import sms from "@/assets/sms.png";
+import pattern from "../assets/images/pattern.png";
+import sms from "../assets/images/sms.png";
 
 interface AuthLayoutProps {
   children: ReactNode;

@@ -148,16 +148,29 @@ export const societyApi = {
     return handleResponse(response);
   },
 };
-
 export const residentApi = {
-  create: async (residentData: FormData) => {
+  create: async (residentData: any) => {
+    const isFormData = residentData instanceof FormData;
     const response = await fetch(`${API_URL}/resident/create`, {
       method: "POST",
       credentials: "include",
       headers: {
+        ...(isFormData ? {} : { "Content-Type": "application/json" }),
         ...getAuthHeader(),
       },
-      body: residentData,
+      body: isFormData ? residentData : JSON.stringify(residentData),
+    });
+    return handleResponse(response);
+  },
+
+  getAll: async () => {
+    const response = await fetch(`${API_URL}/resident/get`, {
+      method: "GET",
+      credentials: "include",
+      headers: { 
+        "Content-Type": "application/json",
+        ...getAuthHeader()
+      },
     });
     return handleResponse(response);
   },

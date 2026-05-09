@@ -1,7 +1,7 @@
 import { createPortal } from "react-dom";
 import type { ReactNode } from "react";
 import { X } from "lucide-react";
-import { cn } from "../lib/cn";
+import { cn } from "../../lib/cn";
 
 type AppModalProps = {
   open: boolean;
@@ -37,7 +37,7 @@ export default function AppModal({
   const modalContent = (
     <div
       className={cn(
-        "fixed inset-0 z-[999] flex items-center justify-center bg-black/50 px-4 transition-opacity",
+        "fixed inset-0 z-999 flex items-center justify-center bg-black/50 px-4 transition-opacity",
         overlayClassName
       )}
       onClick={(e) => {

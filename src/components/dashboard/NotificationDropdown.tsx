@@ -6,7 +6,7 @@ import {
   NotificationOnlineIcon,
   NotificationCashIcon,
   NotificationGaneshIcon,
-} from "../../icons/admin-dashboard-icons";
+} from "../../assets/icons/admin-dashboard-icons";
 
 type NotificationItem = {
   id: string | number;

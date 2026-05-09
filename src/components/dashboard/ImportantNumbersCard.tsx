@@ -3,12 +3,12 @@ import {
   AddSquareIcon,
   EditIcon,
   TrashIcon,
-} from "../../icons/admin-dashboard-icons";
+} from "../../assets/icons/admin-dashboard-icons";
 import Card from "../../ui/Card";
 import ConfirmPopup from "../../ui/ConfirmPopup";
 import ImportantNumberFormModal, {
   type ImportantNumberFormValues,
-} from "./popups/ImportantNumberFormModal";
+} from "../modals/ImportantNumberFormModal";
 
 type ImportantNumber = {
   id: string;
@@ -86,9 +86,9 @@ export default function ImportantNumbersCard({
         current.map((item) =>
           item.id === selectedNumber.id
             ? {
-                ...item,
-                ...values,
-              }
+              ...item,
+              ...values,
+            }
             : item
         )
       );
@@ -181,10 +181,10 @@ export default function ImportantNumbersCard({
         initialValues={
           selectedNumber
             ? {
-                name: selectedNumber.name,
-                phone: selectedNumber.phone,
-                work: selectedNumber.work,
-              }
+              name: selectedNumber.name,
+              phone: selectedNumber.phone,
+              work: selectedNumber.work,
+            }
             : undefined
         }
         onClose={closeFormModal}

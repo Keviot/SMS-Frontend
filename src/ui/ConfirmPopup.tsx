@@ -1,4 +1,4 @@
-import AppModal from "./AppModal";
+import AppModal from "../components/modals/AppModal";
 
 type ConfirmPopupProps = {
   open: boolean;

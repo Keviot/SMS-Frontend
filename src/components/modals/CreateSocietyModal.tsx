@@ -1,5 +1,5 @@
 import { useState } from "react";
-import AppModal from "../../ui/AppModal";
+import AppModal from "./AppModal";
 import FormInput from "../../ui/FormInput";
 import Button from "../../ui/Button";
 

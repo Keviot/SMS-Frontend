@@ -1,5 +1,5 @@
 
-import { BalanceIcon, MoneyRecieveIcon, MoneySendIcon, TotalUnitIcon } from "../../icons/admin-dashboard-icons";
+import { BalanceIcon, MoneyRecieveIcon, MoneySendIcon, TotalUnitIcon } from "../../assets/icons/admin-dashboard-icons";
 import Card from "../../ui/Card";
 
 type StatCardType = "balance" | "income" | "expense" | "unit";
@@ -49,8 +49,8 @@ export default function StatCard({ title, value, type }: StatCardProps) {
     <Card className="relative flex h-[105px] items-center justify-between overflow-hidden rounded-[15px] border border-[#F4F4F4] bg-white p-[30px] shadow-none">
       <span className={`absolute left-0 top-[25px] h-[50px] w-[6px] rounded-r-full ${config.edge}`} />
       <span
-  className={`pointer-events-none absolute right-0 top-0 z-[1] h-full w-[125px] rounded-tr-[15px] border-r border-t ${config.corner}`}
-/>
+        className={`pointer-events-none absolute right-0 top-0 z-[1] h-full w-[125px] rounded-tr-[15px] border-r border-t ${config.corner}`}
+      />
       <div className="min-w-0 pr-[12px]">
         <p className="text-[16px] font-medium leading-[20px] text-[#202224]">{title}</p>
         <h3 className="mt-[8px] text-[26px] font-semibold leading-[31px] tracking-[-0.4px] text-[#202224]">

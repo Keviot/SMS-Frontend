@@ -18,6 +18,7 @@ type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
   size?: ButtonSize;
   leftIcon?: ReactNode;
   rightIcon?: ReactNode;
+  loading?: boolean;
 };
 
 const variantClasses: Record<ButtonVariant, string> = {
@@ -46,6 +47,8 @@ export default function Button({
   leftIcon,
   rightIcon,
   className,
+  loading,
+  disabled,
   ...props
 }: ButtonProps) {
   return (
@@ -56,11 +59,18 @@ export default function Button({
         sizeClasses[size],
         className
       )}
+      disabled={disabled || loading}
       {...props}
     >
-      {leftIcon}
-      {children}
-      {rightIcon}
+      {loading ? (
+        <div className="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent" />
+      ) : (
+        <>
+          {leftIcon}
+          {children}
+          {rightIcon}
+        </>
+      )}
     </button>
   );
 }

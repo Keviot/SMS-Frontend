@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
-import AppModal from "../../../ui/AppModal";
-import FormInput from "../../../ui/FormInput";
-import PopupActions from "../../../ui/PopupActions";
+import AppModal from "./AppModal";
+import FormInput from "../../ui/FormInput";
+import PopupActions from "../../ui/PopupActions";
 
 export type ImportantNumberFormValues = {
   name: string;

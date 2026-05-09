@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
-import type { ComplaintStatus, Priority } from "../../../data/dashboard.data";
-import AppModal from "../../../ui/AppModal";
-import FormInput from "../../../ui/FormInput";
-import FormTextarea from "../../../ui/FormTextarea";
-import OptionButton from "../../../ui/OptionButton";
+import type { ComplaintStatus, Priority } from "../../data/dashboard.data";
+import AppModal from "./AppModal";
+import FormInput from "../../ui/FormInput";
+import FormTextarea from "../../ui/FormTextarea";
+import OptionButton from "../../ui/OptionButton";
 
 export type ComplaintFormValues = {
   complainerName: string;
