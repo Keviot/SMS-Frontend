@@ -1,7 +1,7 @@
 import { ChevronDown, Menu, Search, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { authApi } from "../services/api";
+import { authApi, BASE_URL } from "../services/api";
 import { NotificationBingIcon } from "../assets/icons/admin-dashboard-icons";
 import NotificationDropdown from "../components/dashboard/NotificationDropdown";
 import Button from "../ui/Button";
@@ -42,10 +42,13 @@ export default function Header({ onMenuClick }: HeaderProps) {
 
   const userInitials = profile
     ? `${profile.firstname?.[0] || ""}${profile.lastname?.[0] || ""}`.toUpperCase()
-    : "MR";
+    : "FL";
   const userName = profile
     ? `${profile.firstname || ""} ${profile.lastname || ""}`.trim()
-    : "Moni Roy";
+    : "First Lastname";
+  const profileImageUrl = profile?.profileImage
+    ? `${BASE_URL}/${profile.profileImage}`
+    : null;
   const notificationRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
@@ -181,10 +184,32 @@ export default function Header({ onMenuClick }: HeaderProps) {
             <Button
               variant="ghost"
               size="md"
-              className="h-11 w-11 gap-2 rounded-xl p-0 hover:bg-transparent lg:h-[50px] lg:gap-3"
+              className="h-[45px] gap-2 rounded-xl p-0 hover:bg-transparent lg:h-[50px] lg:gap-3"
             >
-              <div className="grid h-11 w-11 flex-shrink-0 place-items-center rounded-full bg-linear-gradient-to-br from-[var(--primary-gradient-start)] to-[var(--primary-gradient-end)] text-[13px] font-black text-white lg:h-[50px] lg:w-[50px] lg:text-[14px]">
-                {userInitials}
+              <div className="h-[45px] w-[45px] flex-shrink-0 overflow-hidden rounded-full lg:h-[50px] lg:w-[50px]">
+                {profileImageUrl ? (
+                  <img
+                    src={profileImageUrl}
+                    alt={userName}
+                    className="h-full w-full object-cover"
+                    onError={(e) => {
+                      // Fallback to initials if image fails to load
+                      const target = e.currentTarget;
+                      target.style.display = 'none';
+                      if (target.parentElement) {
+                        target.parentElement.innerHTML = `
+                        <div class="grid h-full w-full place-items-center bg-gradient-to-br from-[var(--primary-gradient-start)] to-[var(--primary-gradient-end)] text-[13px] font-black text-white lg:text-[14px]">
+                          ${userInitials}
+                        </div>
+                      `;
+                      }
+                    }}
+                  />
+                ) : (
+                  <div className="grid h-full w-full place-items-center bg-gradient-to-br from-[var(--primary-gradient-start)] to-[var(--primary-gradient-end)] text-[13px] font-black text-white lg:text-[14px]">
+                    {userInitials}
+                  </div>
+                )}
               </div>
 
               <div className="hidden text-left sm:block">

@@ -21,6 +21,7 @@ import SecurityManagement from './features/securityManagement/pages/SecurityMana
 import SecurityGuard from './features/securityManagement/pages/SecurityGuard'
 import Announcement from './features/announcement/pages/Announcement'
 import Profile from './features/profile/pages/Profile'
+import Income from './pages/admin/FinancialManagement/Income'
 
 function App() {
   return (
@@ -100,7 +101,7 @@ function App() {
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/resident-management" element={<ResidentManagement />} />
           <Route path="/resident-management/add" element={<ResidentForm />} />
-          <Route path="/financial-management" element={<FinancialManagement />} />
+          <Route path="/financial-management/income" element={<Income />} />
           <Route path="/facility-management" element={<FacilityManagement />} />
           <Route path="/complaint-tracking" element={<ComplaintTracking />} />
           <Route path="/security-management" element={<SecurityManagement />} />
