@@ -5,6 +5,7 @@ type ButtonVariant =
   | "primary"
   | "secondary"
   | "outline"
+  | "danger-outline"
   | "ghost"
   | "danger"
   | "success";
@@ -25,6 +26,8 @@ const variantClasses: Record<ButtonVariant, string> = {
   secondary: "bg-[var(--bg-gray)] text-[var(--text-tertiary)] hover:bg-[var(--bg-hover)]",
   outline:
     "border border-[var(--border)] bg-white text-[var(--text-tertiary)] hover:border-[#FFB59C] hover:bg-[var(--accent-peach)] hover:text-[var(--primary-gradient-start)]",
+  "danger-outline":
+    "border border-[#E74C3C] bg-white text-[#E74C3C] hover:bg-[#FFF5F5]",
   ghost: "bg-transparent text-[var(--text-tertiary)] hover:bg-[var(--bg-gray)] hover:text-[var(--text-primary)]",
   danger: "bg-[var(--red)] text-white hover:bg-[var(--red-hover)]",
   success: "bg-[var(--green)] text-white hover:bg-[var(--green-hover)]",

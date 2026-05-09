@@ -18,8 +18,8 @@ export default function FormInput({
   type = "text",
   onChange,
   className = "",
-  labelClassName = "mb-[5px] block text-[12px] font-semibold leading-[15px] text-[#202224]",
-  inputClassName = "h-[51px] w-full rounded-[7px] border border-[#D3D3D3] bg-white px-[10px] text-[12px] font-normal leading-[15px] text-[#202224] outline-none transition placeholder:text-[#A7A7A7] focus:border-[#FE512E]",
+  labelClassName = "mb-1 block text-xs font-semibold leading-[15px] text-[#202224]",
+  inputClassName = "h-10 w-full rounded-[7px] border border-[#D3D3D3] bg-white px-[10px] text-[12px] font-normal leading-[15px] text-[#202224] outline-none transition placeholder:text-[#A7A7A7] focus:border-[#FE512E] ",
 }: FormInputProps) {
   return (
     <div className={`h-[96px] w-full ${className}`}>

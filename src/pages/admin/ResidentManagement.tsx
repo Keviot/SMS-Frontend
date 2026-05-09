@@ -1,9 +1,10 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { User, Building2, Plus, Check } from "lucide-react";
 import DataTable, { type DataTableColumn } from "../../ui/DataTable";
 import StatusBadge from "../../ui/StatusBadge";
 import Button from "../../ui/Button";
-import Modal from "../../ui/Modal";
+import AppModal from "../../ui/AppModal";
 import { cn } from "../../lib/cn";
 import { EditIcon, EyeIcon } from "../../icons/admin-dashboard-icons";
 
@@ -98,6 +99,7 @@ const mockResidents: Resident[] = [
 ];
 
 export default function ResidentManagement() {
+  const navigate = useNavigate();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedStatus, setSelectedStatus] = useState<"occupied" | "vacate">("occupied");
   const [agreed, setAgreed] = useState(false);
@@ -247,7 +249,12 @@ export default function ResidentManagement() {
         />
       </div>
 
-      <Modal open={isModalOpen} title="Residence Status" onClose={() => setIsModalOpen(false)}>
+      <AppModal 
+        open={isModalOpen} 
+        title="Residence Status" 
+        onClose={() => setIsModalOpen(false)}
+        centerTitle={true}
+      >
         <div className="flex flex-col gap-6">
           <div className="grid grid-cols-2 gap-4">
             <div 
@@ -300,15 +307,23 @@ export default function ResidentManagement() {
           </div>
 
           <div className="grid grid-cols-2 gap-4 mt-2">
-            <Button variant="outline" onClick={() => setIsModalOpen(false)} className="h-12 rounded-xl text-base font-bold">
+            <Button variant="danger-outline" onClick={() => setIsModalOpen(false)} className="h-12 rounded-xl text-base font-bold">
               Cancel
             </Button>
-            <Button onClick={() => setIsModalOpen(false)} className="h-12 rounded-xl text-base font-bold">
+            <Button 
+              onClick={() => {
+                setIsModalOpen(false);
+                if (selectedStatus === "occupied") {
+                  navigate("/resident-management/add");
+                }
+              }} 
+              className="h-12 rounded-xl text-base font-bold"
+            >
               Save
             </Button>
           </div>
         </div>
-      </Modal>
+      </AppModal>
     </div>
   );
 }

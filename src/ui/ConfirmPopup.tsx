@@ -23,21 +23,21 @@ export default function ConfirmPopup({
     <AppModal
       open={open}
       title={title}
-      widthClassName="w-[410px]"
-      panelClassName="!h-[192px]"
+      widthClassName="w-full max-w-[410px]"
       showHeaderDivider
+      centerTitle
     >
-      <div className="mt-[20px] h-[20px] w-full">
-        <p className="text-[12px] font-normal leading-[15px] text-[#A7A7A7]">
+      <div className="mt-4 mb-8 text-center">
+        <p className="text-[14px] font-medium leading-relaxed text-[#A7A7A7]">
           {message}
         </p>
       </div>
 
-      <div className="mt-[20px] grid h-[51px] grid-cols-2 gap-[20px]">
+      <div className="grid grid-cols-2 gap-4">
         <button
           type="button"
           onClick={onCancel}
-          className="h-[51px] rounded-[10px] border border-[#D3D3D3] bg-white text-[14px] font-medium leading-[17px] text-[#202224]"
+          className="h-12 rounded-xl border border-[#D3D3D3] bg-white text-[16px] font-bold text-[#202224] transition hover:bg-gray-50"
         >
           {cancelText}
         </button>
@@ -45,7 +45,7 @@ export default function ConfirmPopup({
         <button
           type="button"
           onClick={onConfirm}
-          className="h-[51px] rounded-[10px] bg-[#E74C3C] text-[14px] font-semibold leading-[17px] text-white"
+          className="h-12 rounded-xl bg-[#E74C3C] text-[16px] font-bold text-white transition hover:bg-[#C0392B] shadow-lg shadow-red-500/20"
         >
           {confirmText}
         </button>
