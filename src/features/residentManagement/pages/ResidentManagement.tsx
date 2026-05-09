@@ -295,6 +295,7 @@ export default function ResidentManagement() {
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         onSuccess={fetchResidents}
+        residents={residents}
       />
     </div>
   );

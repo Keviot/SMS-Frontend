@@ -3,16 +3,17 @@ import { Check} from "lucide-react";
 import Modal from "../../ui/Modal";
 import Button from "../../ui/Button";
 import { cn } from "../../lib/cn";
-import { residentApi } from "../../services/api";
+import { residentApi, authApi } from "../../services/api";
 import toast from "react-hot-toast";
 
 interface ResidenceStatusModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSuccess: () => void;
+  residents: any[];
 }
 
-export default function ResidenceStatusModal({ isOpen, onClose, onSuccess }: ResidenceStatusModalProps) {
+export default function ResidenceStatusModal({ isOpen, onClose, onSuccess, residents }: ResidenceStatusModalProps) {
   const [modalStep, setModalStep] = useState<1 | 2 | 3>(1);
   const [selectedStatus, setSelectedStatus] = useState<"occupied" | "vacate">("occupied");
   const [agreed, setAgreed] = useState(false);
@@ -42,18 +43,46 @@ export default function ResidenceStatusModal({ isOpen, onClose, onSuccess }: Res
 
   const handleCreateVacant = async () => {
     try {
+      if (!vacateData.wing || !vacateData.unit) {
+        toast.error("Please select wing and unit");
+        return;
+      }
+
       setIsSubmitting(true);
-      await residentApi.create({
+
+      // 1. Get profile for society ID
+      const profile = await authApi.getProfile();
+      const user = profile.user;
+      const societyId = user?.society || (user?.societies && user.societies[0]?._id);
+
+      if (!societyId) {
+        toast.error("Society ID not found");
+        return;
+      }
+
+      // 2. Find resident ID from the list
+      // The unitNumber in the list is "Wing Unit", e.g., "A 1001"
+      const targetUnitNumber = `${vacateData.wing} ${vacateData.unit}`;
+      const existingResident = residents.find(r => r.unitNumber === targetUnitNumber);
+
+      if (!existingResident) {
+        toast.error("Resident not found in this unit. Cannot vacate a non-existent record.");
+        return;
+      }
+
+      // 3. Call updateStatus API
+      await residentApi.updateStatus(existingResident.id, {
         wing: vacateData.wing,
         unit: vacateData.unit,
-        unitStatus: "Vacant",
-        residentStatus: "Tenant",
+        society: societyId,
+        unitStatus: "Vacant"
       });
+
       toast.success("Unit marked as vacant");
       onSuccess();
       resetModal();
     } catch (error: any) {
-      toast.error(error.message || "Failed to create vacant unit");
+      toast.error(error.message || "Failed to vacate unit");
     } finally {
       setIsSubmitting(false);
     }
