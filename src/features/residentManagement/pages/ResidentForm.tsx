@@ -6,7 +6,7 @@ import FormInput from "../../../ui/FormInput";
 import Select from "../../../ui/Select";
 import UploadBox from "../../../ui/UploadBox";
 import { cn } from "../../../lib/cn";
-import { residentApi } from "../../../services/api";
+import { residentApi, authApi } from "../../../services/api";
 import toast from "react-hot-toast";
 
 export default function ResidentForm() {
@@ -65,9 +65,22 @@ export default function ResidentForm() {
     try {
       setIsSubmitting(true);
 
+      // Fetch profile to get society ID
+      const profile = await authApi.getProfile();
+      const user = profile.user;
+
+      // Get society ID - handle direct field or societies array for admins
+      const societyId = user?.society || (user?.societies && user.societies[0]?._id);
+
+      if (!societyId) {
+        toast.error("Society ID not found in profile. Please ensure your account is linked to a society.");
+        return;
+      }
+
       // Build JSON object instead of FormData to match Postman/Backend requirements
       const payload = {
         ...formData,
+        society: societyId,
         residentStatus: activeTab.charAt(0).toUpperCase() + activeTab.slice(1),
         unitStatus: "Occupied",
         memberCount: memberCount,

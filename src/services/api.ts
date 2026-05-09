@@ -174,6 +174,33 @@ export const residentApi = {
         });
         return handleResponse(response);
     },
+
+    updateStatus: async (id: string, data: any) => {
+        const response = await fetch(`${API_URL}/resident/update-status/${id}`, {
+            method: "PUT",
+            credentials: "include",
+            headers: {
+                "Content-Type": "application/json",
+                ...getAuthHeader()
+            },
+            body: JSON.stringify(data),
+        });
+        return handleResponse(response);
+    },
+
+    editResident: async (id: string, residentData: any) => {
+        const isFormData = residentData instanceof FormData;
+        const response = await fetch(`${API_URL}/resident/edit/${id}`, {
+            method: "PUT",
+            credentials: "include",
+            headers: {
+                ...(isFormData ? {} : { "Content-Type": "application/json" }),
+                ...getAuthHeader()
+            },
+            body: isFormData ? residentData : JSON.stringify(residentData),
+        });
+        return handleResponse(response);
+    },
 };
 
 // Financial Management API
