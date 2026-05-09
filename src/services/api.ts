@@ -149,29 +149,172 @@ export const societyApi = {
     },
 };
 export const residentApi = {
-  create: async (residentData: any) => {
-    const isFormData = residentData instanceof FormData;
-    const response = await fetch(`${API_URL}/resident/create`, {
-      method: "POST",
-      credentials: "include",
-      headers: {
-        ...(isFormData ? {} : { "Content-Type": "application/json" }),
-        ...getAuthHeader(),
-      },
-      body: isFormData ? residentData : JSON.stringify(residentData),
-    });
-    return handleResponse(response);
-  },
+    create: async (residentData: any) => {
+        const isFormData = residentData instanceof FormData;
+        const response = await fetch(`${API_URL}/resident/create`, {
+            method: "POST",
+            credentials: "include",
+            headers: {
+                ...(isFormData ? {} : { "Content-Type": "application/json" }),
+                ...getAuthHeader(),
+            },
+            body: isFormData ? residentData : JSON.stringify(residentData),
+        });
+        return handleResponse(response);
+    },
 
-  getAll: async () => {
-    const response = await fetch(`${API_URL}/resident/get`, {
-      method: "GET",
-      credentials: "include",
-      headers: { 
-        "Content-Type": "application/json",
-        ...getAuthHeader()
-      },
-    });
-    return handleResponse(response);
-  },
+    getAll: async () => {
+        const response = await fetch(`${API_URL}/resident/get`, {
+            method: "GET",
+            credentials: "include",
+            headers: {
+                "Content-Type": "application/json",
+                ...getAuthHeader()
+            },
+        });
+        return handleResponse(response);
+    },
+};
+
+// Financial Management API
+export const financialApi = {
+    // Maintenance APIs
+
+    // Verify password before opening form
+    verifyMaintenancePassword: async (password: string) => {
+        const response = await fetch(`${API_URL}/maintenance/verify-password`, {
+            method: "POST",
+            credentials: "include",
+            headers: {
+                "Content-Type": "application/json",
+                ...getAuthHeader()
+            },
+            body: JSON.stringify({ password }),
+        });
+        return handleResponse(response);
+    },
+
+    // Set maintenance amount and penalty rules (requires password)
+    setMaintenanceSetup: async (data: {
+        password: string;
+        maintenanceAmount: number;
+        penaltyAmount: number;
+        maintenanceDueDate: string;
+        penaltyAppliedAfterDay: number;
+        society: string;
+    }) => {
+        const response = await fetch(`${API_URL}/maintenance/maintenance-setup`, {
+            method: "POST",
+            credentials: "include",
+            headers: {
+                "Content-Type": "application/json",
+                ...getAuthHeader()
+            },
+            body: JSON.stringify(data),
+        });
+        return handleResponse(response);
+    },
+
+    // Bill a specific resident for maintenance
+    createMaintenanceBill: async (data: {
+        resident: string;
+        maintenanceSetup: string;
+        date: string;
+        amount: number;
+        penalty?: number;
+        payment: string;
+        status?: string;
+    }) => {
+        const response = await fetch(`${API_URL}/maintenance`, {
+            method: "POST",
+            credentials: "include",
+            headers: {
+                "Content-Type": "application/json",
+                ...getAuthHeader()
+            },
+            body: JSON.stringify(data),
+        });
+        return handleResponse(response);
+    },
+
+    // Get all maintenance bills with resident details
+    getMaintenanceRecords: async () => {
+        const response = await fetch(`${API_URL}/maintenance`, {
+            method: "GET",
+            credentials: "include",
+            headers: {
+                "Content-Type": "application/json",
+                ...getAuthHeader()
+            },
+        });
+        return handleResponse(response);
+    },
+
+    // Other Income APIs
+
+    // Get all other income records
+    getOtherIncome: async () => {
+        const response = await fetch(`${API_URL}/income/get-income`, {
+            method: "GET",
+            credentials: "include",
+            headers: {
+                "Content-Type": "application/json",
+                ...getAuthHeader()
+            },
+        });
+        return handleResponse(response);
+    },
+
+    // Add new other income
+    addOtherIncome: async (data: {
+        title: string;
+        amount: number;
+        date: string;
+        dueDate: string;
+        description: string;
+    }) => {
+        const response = await fetch(`${API_URL}/income/add-income`, {
+            method: "POST",
+            credentials: "include",
+            headers: {
+                "Content-Type": "application/json",
+                ...getAuthHeader()
+            },
+            body: JSON.stringify(data),
+        });
+        return handleResponse(response);
+    },
+
+    // Edit other income
+    editOtherIncome: async (id: string, data: {
+        title: string;
+        amount: number;
+        date: string;
+        dueDate: string;
+        description: string;
+    }) => {
+        const response = await fetch(`${API_URL}/income/edit-income/${id}`, {
+            method: "PUT",
+            credentials: "include",
+            headers: {
+                "Content-Type": "application/json",
+                ...getAuthHeader()
+            },
+            body: JSON.stringify(data),
+        });
+        return handleResponse(response);
+    },
+
+    // Delete other income
+    deleteOtherIncome: async (id: string) => {
+        const response = await fetch(`${API_URL}/income/delete-income/${id}`, {
+            method: "DELETE",
+            credentials: "include",
+            headers: {
+                "Content-Type": "application/json",
+                ...getAuthHeader()
+            },
+        });
+        return handleResponse(response);
+    },
 };

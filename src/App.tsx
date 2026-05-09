@@ -14,14 +14,14 @@ import reset from './assets/images/reset.png'
 
 import ResidentManagement from './features/residentManagement/pages/ResidentManagement'
 import ResidentForm from './features/residentManagement/pages/ResidentForm'
-import FinancialManagement from './features/financialManagement/pages/Income'
 import FacilityManagement from './features/facilityManagement/pages/FacilityManagement'
 import ComplaintTracking from './features/complaintTracking/pages/ComplaintTracking'
 import SecurityManagement from './features/securityManagement/pages/SecurityManagement'
 import SecurityGuard from './features/securityManagement/pages/SecurityGuard'
 import Announcement from './features/announcement/pages/Announcement'
 import Profile from './features/profile/pages/Profile'
-import Income from './pages/admin/FinancialManagement/Income'
+import Income from './features/financialManagement/pages/Income'
+
 
 function App() {
   return (
