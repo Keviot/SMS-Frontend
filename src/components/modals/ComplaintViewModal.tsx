@@ -1,5 +1,5 @@
-import AppModal from "../../../ui/AppModal";
-import type { ComplaintStatus, Priority } from "../../../data/dashboard.data";
+import AppModal from "./AppModal";
+import type { ComplaintStatus, Priority } from "../../data/dashboard.data";
 
 export type ComplaintViewData = {
   id: string;
@@ -54,8 +54,8 @@ function MetaItem({
       <div className="mt-[8px] flex h-[31px] w-full items-center justify-center">
         {badgeClassName ? (
           <span
-  className={`inline-flex h-[31px] items-center justify-center rounded-full px-[10px] text-[14px] font-normal leading-none sm:px-[12px] sm:text-[16px] ${badgeClassName} ${badgeClassExtra}`}
->
+            className={`inline-flex h-[31px] items-center justify-center rounded-full px-[10px] text-[14px] font-normal leading-none sm:px-[12px] sm:text-[16px] ${badgeClassName} ${badgeClassExtra}`}
+          >
             {value}
           </span>
         ) : (
@@ -90,7 +90,7 @@ export default function ComplaintViewModal({
           type="button"
           aria-label="Close view complaint"
           onClick={onClose}
-          className="-mt-[4px] grid h-[24px] w-[24px] place-items-center text-[30px] font-light leading-none text-[#202224]"
+          className="-mt-1 grid h-[24px] w-[24px] place-items-center text-[30px] font-light leading-none text-[#202224]"
         >
           ×
         </button>
@@ -147,34 +147,34 @@ export default function ComplaintViewModal({
 
         {/* Bottom Meta Row - no outer box, only vertical dividers */}
         <div className="mt-[25px] grid h-[55px] w-full max-w-[364px] grid-cols-[22%_22%_31%_25%]">
-  <MetaItem
-    label="Wing"
-    value={complaint.wing ?? "A"}
-    className="border-r border-[#F4F4F4] pr-[12px]"
-  />
+          <MetaItem
+            label="Wing"
+            value={complaint.wing ?? "A"}
+            className="border-r border-[#F4F4F4] pr-[12px]"
+          />
 
-  <MetaItem
-    label="Unit"
-    value={complaint.unit ?? "1002"}
-    className="border-r border-[#F4F4F4] px-[12px]"
-  />
+          <MetaItem
+            label="Unit"
+            value={complaint.unit ?? "1002"}
+            className="border-r border-[#F4F4F4] px-[12px]"
+          />
 
-  <MetaItem
-    label="Priority"
-    value={complaint.priority}
-    badgeClassName={priorityClasses[complaint.priority]}
-    badgeClassExtra="min-w-[78px]"
-    className="border-r border-[#F4F4F4] px-[12px]"
-  />
+          <MetaItem
+            label="Priority"
+            value={complaint.priority}
+            badgeClassName={priorityClasses[complaint.priority]}
+            badgeClassExtra="min-w-[78px]"
+            className="border-r border-[#F4F4F4] px-[12px]"
+          />
 
-  <MetaItem
-    label="Status"
-    value={complaint.status}
-    badgeClassName={statusClasses[complaint.status]}
-    badgeClassExtra="min-w-[62px]"
-    className="pl-[12px]"
-  />
-</div>
+          <MetaItem
+            label="Status"
+            value={complaint.status}
+            badgeClassName={statusClasses[complaint.status]}
+            badgeClassExtra="min-w-[62px]"
+            className="pl-[12px]"
+          />
+        </div>
       </div>
     </AppModal>
   );

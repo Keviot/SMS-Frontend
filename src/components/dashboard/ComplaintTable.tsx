@@ -1,14 +1,18 @@
 import { useState } from "react";
 import type { ComplaintStatus, Priority } from "../../data/dashboard.data";
-import { EditIcon, EyeIcon, TrashIcon } from "../../icons/admin-dashboard-icons";
+import {
+  EditIcon,
+  EyeIcon,
+  TrashIcon,
+} from "../../assets/icons/admin-dashboard-icons";
 import Card from "../../ui/Card";
 import ConfirmPopup from "../../ui/ConfirmPopup";
 import ComplaintFormModal, {
   type ComplaintFormValues,
-} from "./popups/ComplaintFormModal";
+} from "../modals/ComplaintFormModal";
 import ComplaintViewModal, {
   type ComplaintViewData,
-} from "./popups/ComplaintViewModal";
+} from "../modals/ComplaintViewModal";
 
 type ComplaintRow = {
   id: string;
@@ -135,15 +139,15 @@ export default function ComplaintTable({ data }: ComplaintTableProps) {
       current.map((item) =>
         item.id === editingComplaint.id
           ? {
-              ...item,
-              complainerName: values.complainerName,
-              complaintName: values.complaintName,
-              description: values.description,
-              wing: values.wing,
-              unit: values.unit,
-              priority: values.priority,
-              status: values.status,
-            }
+            ...item,
+            complainerName: values.complainerName,
+            complaintName: values.complaintName,
+            description: values.description,
+            wing: values.wing,
+            unit: values.unit,
+            priority: values.priority,
+            status: values.status,
+          }
           : item
       )
     );
@@ -179,7 +183,7 @@ export default function ComplaintTable({ data }: ComplaintTableProps) {
 
         <div className="mt-[15px] h-[286px] overflow-auto rounded-[10px]">
           <table className="w-full min-w-[830px] border-collapse">
-            <thead className="sticky top-0 z-[1]">
+            <thead className="sticky top-0 z-1">
               <tr className="h-[50px] bg-[#F0F3FF]">
                 {[
                   "Complainer Name",
@@ -191,9 +195,8 @@ export default function ComplaintTable({ data }: ComplaintTableProps) {
                 ].map((heading, index, arr) => (
                   <th
                     key={heading}
-                    className={`px-[18px] text-left text-[12px] font-semibold text-[#202224] ${
-                      index === 0 ? "rounded-l-[10px]" : ""
-                    } ${index === arr.length - 1 ? "rounded-r-[10px]" : ""}`}
+                    className={`px-[18px] text-left text-[12px] font-semibold text-[#202224] ${index === 0 ? "rounded-l-[10px]" : ""
+                      } ${index === arr.length - 1 ? "rounded-r-[10px]" : ""}`}
                   >
                     {heading}
                   </th>
@@ -290,14 +293,14 @@ export default function ComplaintTable({ data }: ComplaintTableProps) {
         initialValues={
           editingComplaint
             ? {
-                complainerName: editingComplaint.complainerName,
-                complaintName: editingComplaint.complaintName,
-                description: editingComplaint.description ?? editDescription,
-                wing: editingComplaint.wing ?? "A",
-                unit: editingComplaint.unit ?? "1001",
-                priority: editingComplaint.priority,
-                status: editingComplaint.status,
-              }
+              complainerName: editingComplaint.complainerName,
+              complaintName: editingComplaint.complaintName,
+              description: editingComplaint.description ?? editDescription,
+              wing: editingComplaint.wing ?? "A",
+              unit: editingComplaint.unit ?? "1001",
+              priority: editingComplaint.priority,
+              status: editingComplaint.status,
+            }
             : undefined
         }
         onClose={closeEditModal}

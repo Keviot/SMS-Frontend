@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Clock } from "lucide-react";
-import { authApi } from "../services/api";
+import { authApi } from "../../../services/api";
 import toast from "react-hot-toast";
 
 export default function VerifyOtp() {

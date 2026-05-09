@@ -1,8 +1,7 @@
 import { useState } from "react";
 import { EyeOff, Eye } from "lucide-react";
 import { Link } from "react-router-dom";
-import { authApi } from "../services/api";
-import collab from "../assets/collab.png";
+import { authApi } from "../../../services/api";
 import toast from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
 

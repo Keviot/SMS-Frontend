@@ -1,12 +1,12 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { User, Building2, Plus, Check } from "lucide-react";
-import DataTable, { type DataTableColumn } from "../../ui/DataTable";
-import StatusBadge from "../../ui/StatusBadge";
-import Button from "../../ui/Button";
-import AppModal from "../../ui/AppModal";
-import { cn } from "../../lib/cn";
-import { EditIcon, EyeIcon } from "../../icons/admin-dashboard-icons";
+import { useState, useEffect } from "react";
+import { User, Building2, Plus, Loader2 } from "lucide-react";
+import DataTable, { type DataTableColumn } from "../../../ui/DataTable";
+import StatusBadge from "../../../ui/StatusBadge";
+import Button from "../../../ui/Button";
+import ResidenceStatusModal from "../../../components/modals/ResidenceStatusModal";
+import { EditIcon, EyeIcon } from "../../../assets/icons/admin-dashboard-icons";
+import { residentApi, BASE_URL } from "../../../services/api";
+import toast from "react-hot-toast";
 
 interface Resident {
   id: string;
@@ -99,10 +99,44 @@ const mockResidents: Resident[] = [
 ];
 
 export default function ResidentManagement() {
-  const navigate = useNavigate();
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedStatus, setSelectedStatus] = useState<"occupied" | "vacate">("occupied");
-  const [agreed, setAgreed] = useState(false);
+  const [residents, setResidents] = useState<Resident[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const fetchResidents = async () => {
+    try {
+      setLoading(true);
+      const data = await residentApi.getAll();
+      const mapped = data.map((r: any) => ({
+        id: r._id,
+        fullName: r.name || "-",
+        unitNumber: `${r.wing || "-"} ${r.unit || "-"}`,
+        unitStatus: r.unitStatus?.toLowerCase() === "vacant" ? "vacate" : "occupied",
+        residentStatus: r.residentStatus?.toLowerCase() || "tenant",
+        phoneNumber: r.phoneNumber || "--",
+        member: r.memberCount || 0,
+        vehicle: r.vehicles?.length || 0,
+        avatar: r.profileImage ? `${BASE_URL}/${r.profileImage}` : `https://i.pravatar.cc/150?u=${r._id}`
+      }));
+      setResidents(mapped);
+    } catch (error: any) {
+      toast.error(error.message || "Failed to fetch residents");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchResidents();
+  }, []);
+
+  const handleSaveStatus = () => {
+    // Logic moved to ResidenceStatusModal
+  };
+
+  const handleCreateVacant = async () => {
+    // Logic moved to ResidenceStatusModal
+  };
 
   const columns: DataTableColumn<Resident>[] = [
     {
@@ -233,97 +267,35 @@ export default function ResidentManagement() {
       <div className="rounded-2xl bg-white p-6 mt-0">
         <div className="mb-5 flex flex-wrap items-center justify-between gap-4">
           <h2 className="text-xl font-bold text-gray-900">Resident Tenant and Owner Details</h2>
-          <Button 
-            leftIcon={<Plus size={18} />} 
+          <Button
+            leftIcon={<Plus size={18} />}
             className="h-13 w-74 rounded-2xl px-6 text-base"
-            onClick={() => setIsModalOpen(true)}
+            onClick={() => {
+              setIsModalOpen(true);
+            }}
           >
             Add New Resident details
           </Button>
         </div>
 
-        <DataTable
-          columns={columns}
-          data={mockResidents}
-          getRowKey={(row) => row.id}
-        />
+        {loading ? (
+          <div className="flex h-64 items-center justify-center">
+            <Loader2 className="h-10 w-10 animate-spin text-[#FF6B35]" />
+          </div>
+        ) : (
+          <DataTable
+            columns={columns}
+            data={residents}
+            getRowKey={(row) => row.id}
+          />
+        )}
       </div>
 
-      <AppModal 
-        open={isModalOpen} 
-        title="Residence Status" 
+      <ResidenceStatusModal
+        isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        centerTitle={true}
-      >
-        <div className="flex flex-col gap-6">
-          <div className="grid grid-cols-2 gap-4">
-            <div 
-              onClick={() => setSelectedStatus("occupied")}
-              className={cn(
-                "flex items-center gap-3 p-4 border rounded-xl cursor-pointer transition-all", 
-                selectedStatus === "occupied" ? "border-[#FF6B35] bg-[#FFF8F5]" : "border-[#F1F1F1] bg-white"
-              )}
-            >
-              <div className={cn(
-                "w-5 h-5 rounded-full border-2 flex items-center justify-center", 
-                selectedStatus === "occupied" ? "border-[#FF6B35]" : "border-[#D9D9D9]"
-              )}>
-                {selectedStatus === "occupied" && <div className="w-2.5 h-2.5 rounded-full bg-[#FF6B35]" />}
-              </div>
-              <span className={cn("font-bold text-base", selectedStatus === "occupied" ? "text-[#FF6B35]" : "text-[#A7A7A7]")}>
-                Occupied
-              </span>
-            </div>
-            
-            <div 
-              onClick={() => setSelectedStatus("vacate")}
-              className={cn(
-                "flex items-center gap-3 p-4 border rounded-xl cursor-pointer transition-all", 
-                selectedStatus === "vacate" ? "border-[#FF6B35] bg-[#FFF8F5]" : "border-[#F1F1F1] bg-white"
-              )}
-            >
-              <div className={cn(
-                "w-5 h-5 rounded-full border-2 flex items-center justify-center", 
-                selectedStatus === "vacate" ? "border-[#FF6B35]" : "border-[#D9D9D9]"
-              )}>
-                {selectedStatus === "vacate" && <div className="w-2.5 h-2.5 rounded-full bg-[#FF6B35]" />}
-              </div>
-              <span className={cn("font-bold text-base", selectedStatus === "vacate" ? "text-[#FF6B35]" : "text-[#A7A7A7]")}>
-                Vacate
-              </span>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-2 cursor-pointer select-none" onClick={() => setAgreed(!agreed)}>
-             <div className={cn(
-               "w-5 h-5 rounded border flex items-center justify-center transition-all", 
-               agreed ? "bg-[#FF6B35] border-[#FF6B35]" : "border-[#D9D9D9]"
-             )}>
-                {agreed && <Check size={14} className="text-white" />}
-             </div>
-             <p className="text-sm text-[#4D4D4D]">
-               By submitting, you agree to select <span className="capitalize">{selectedStatus}</span>
-             </p>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4 mt-2">
-            <Button variant="danger-outline" onClick={() => setIsModalOpen(false)} className="h-12 rounded-xl text-base font-bold">
-              Cancel
-            </Button>
-            <Button 
-              onClick={() => {
-                setIsModalOpen(false);
-                if (selectedStatus === "occupied") {
-                  navigate("/resident-management/add");
-                }
-              }} 
-              className="h-12 rounded-xl text-base font-bold"
-            >
-              Save
-            </Button>
-          </div>
-        </div>
-      </AppModal>
+        onSuccess={fetchResidents}
+      />
     </div>
   );
 }

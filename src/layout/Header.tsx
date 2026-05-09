@@ -2,7 +2,7 @@ import { ChevronDown, Menu, Search, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { authApi, BASE_URL } from "../services/api";
-import { NotificationBingIcon } from "../icons/admin-dashboard-icons";
+import { NotificationBingIcon } from "../assets/icons/admin-dashboard-icons";
 import NotificationDropdown from "../components/dashboard/NotificationDropdown";
 import Button from "../ui/Button";
 import Input from "../ui/Input";
@@ -40,14 +40,14 @@ export default function Header({ onMenuClick }: HeaderProps) {
     .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
     .join(" ") || "Dashboard";
 
-  const userInitials = profile 
-    ? `${profile.firstname?.[0] || ""}${profile.lastname?.[0] || ""}`.toUpperCase() 
+  const userInitials = profile
+    ? `${profile.firstname?.[0] || ""}${profile.lastname?.[0] || ""}`.toUpperCase()
     : "FL";
-  const userName = profile 
-    ? `${profile.firstname || ""} ${profile.lastname || ""}`.trim() 
+  const userName = profile
+    ? `${profile.firstname || ""} ${profile.lastname || ""}`.trim()
     : "First Lastname";
-  const profileImageUrl = profile?.profileImage 
-    ? `${BASE_URL}/${profile.profileImage}` 
+  const profileImageUrl = profile?.profileImage
+    ? `${BASE_URL}/${profile.profileImage}`
     : null;
   const notificationRef = useRef<HTMLDivElement | null>(null);
 
@@ -80,7 +80,7 @@ export default function Header({ onMenuClick }: HeaderProps) {
             variant="outline"
             size="md"
             onClick={onMenuClick}
-            className="h-[45px] w-[45px] flex-shrink-0 rounded-xl p-0 lg:hidden"
+            className="h-[45px] w-[45px] flex shrink-0 rounded-xl p-0 lg:hidden"
           >
             <Menu size={21} />
           </Button>
@@ -93,7 +93,7 @@ export default function Header({ onMenuClick }: HeaderProps) {
                   type="text"
                   placeholder="Search Here"
                   leftIcon={<Search size={18} strokeWidth={2} />}
-                  className="h-[45px] rounded-full border-[var(--border)] lg:h-[50px]"
+                  className="h-[45px] rounded-full border-border-light lg:h-[50px]"
                 />
               </div>
 
@@ -102,7 +102,7 @@ export default function Header({ onMenuClick }: HeaderProps) {
                 variant="outline"
                 size="md"
                 onClick={() => setSearchOpen(!searchOpen)}
-                className="h-[45px] w-[45px] flex-shrink-0 rounded-full p-0 sm:hidden"
+                className="h-[45px] w-[45px] flex shrink-0 rounded-full p-0 sm:hidden"
               >
                 <Search size={20} strokeWidth={2} />
               </Button>
@@ -110,16 +110,16 @@ export default function Header({ onMenuClick }: HeaderProps) {
           ) : (
             /* Breadcrumbs */
             <div className="hidden sm:flex items-center gap-2 text-[14px] font-medium">
-              <Link 
-                to="/dashboard" 
-                className="text-[var(--text-light)] hover:text-[var(--primary)] transition-colors"
+              <Link
+                to="/dashboard"
+                className="text-text-light hover:text-primary transition-colors"
               >
                 Home
               </Link>
               {pathParts.map((part, index) => {
                 const path = `/${pathParts.slice(0, index + 1).join("/")}`;
                 const isLast = index === pathParts.length - 1;
-                
+
                 // Map segments to friendly names
                 const nameMap: Record<string, string> = {
                   "resident-management": "Resident Management",
@@ -143,15 +143,15 @@ export default function Header({ onMenuClick }: HeaderProps) {
 
                 return (
                   <div key={path} className="flex items-center gap-2">
-                    <span className="text-[var(--text-light)]">{">"}</span>
+                    <span className="text-text-light">{">"}</span>
                     {isLast ? (
-                      <span className="text-[var(--blue)] font-semibold">
+                      <span className="text-blue font-semibold">
                         {friendlyName}
                       </span>
                     ) : (
-                      <Link 
-                        to={path} 
-                        className="text-[var(--text-light)] hover:text-[var(--primary)] transition-colors"
+                      <Link
+                        to={path}
+                        className="text-text-light hover:text-primary transition-colors"
                       >
                         {friendlyName}
                       </Link>
@@ -168,11 +168,11 @@ export default function Header({ onMenuClick }: HeaderProps) {
             <button
               type="button"
               onClick={() => setNotificationOpen((value) => !value)}
-              className="relative grid h-[45px] w-[45px] place-items-center rounded-[10px] border border-[#D8D8D8] bg-white transition hover:border-[#FE512E]/50"
+              className="relative grid h-11 w-11 place-items-center rounded-xl border border-[#D8D8D8] bg-white transition hover:border-[#FE512E]/50"
               aria-label="Open notifications"
             >
-              <NotificationBingIcon className="h-[22px] w-[22px]" />
-              <span className="absolute right-[12px] top-[11px] h-[8px] w-[8px] rounded-full bg-[#E74C3C] ring-2 ring-white" />
+              <NotificationBingIcon className="h-6 w-6" />
+              <span className="absolute right-3 top-2 h-2 w-2 rounded-full bg-[#E74C3C] ring-2 ring-white" />
             </button>
 
             {notificationOpen && (
@@ -180,37 +180,37 @@ export default function Header({ onMenuClick }: HeaderProps) {
             )}
           </div>
 
-        <Link to="/profile">
-          <Button
-            variant="ghost"
-            size="md"
-            className="h-[45px] gap-2 rounded-xl p-0 hover:bg-transparent lg:h-[50px] lg:gap-3"
-          >
-            <div className="h-[45px] w-[45px] flex-shrink-0 overflow-hidden rounded-full lg:h-[50px] lg:w-[50px]">
-              {profileImageUrl ? (
-                <img
-                  src={profileImageUrl}
-                  alt={userName}
-                  className="h-full w-full object-cover"
-                  onError={(e) => {
-                    // Fallback to initials if image fails to load
-                    const target = e.currentTarget;
-                    target.style.display = 'none';
-                    if (target.parentElement) {
-                      target.parentElement.innerHTML = `
+          <Link to="/profile">
+            <Button
+              variant="ghost"
+              size="md"
+              className="h-[45px] gap-2 rounded-xl p-0 hover:bg-transparent lg:h-[50px] lg:gap-3"
+            >
+              <div className="h-[45px] w-[45px] flex-shrink-0 overflow-hidden rounded-full lg:h-[50px] lg:w-[50px]">
+                {profileImageUrl ? (
+                  <img
+                    src={profileImageUrl}
+                    alt={userName}
+                    className="h-full w-full object-cover"
+                    onError={(e) => {
+                      // Fallback to initials if image fails to load
+                      const target = e.currentTarget;
+                      target.style.display = 'none';
+                      if (target.parentElement) {
+                        target.parentElement.innerHTML = `
                         <div class="grid h-full w-full place-items-center bg-gradient-to-br from-[var(--primary-gradient-start)] to-[var(--primary-gradient-end)] text-[13px] font-black text-white lg:text-[14px]">
                           ${userInitials}
                         </div>
                       `;
-                    }
-                  }}
-                />
-              ) : (
-                <div className="grid h-full w-full place-items-center bg-gradient-to-br from-[var(--primary-gradient-start)] to-[var(--primary-gradient-end)] text-[13px] font-black text-white lg:text-[14px]">
-                  {userInitials}
-                </div>
-              )}
-            </div>
+                      }
+                    }}
+                  />
+                ) : (
+                  <div className="grid h-full w-full place-items-center bg-gradient-to-br from-[var(--primary-gradient-start)] to-[var(--primary-gradient-end)] text-[13px] font-black text-white lg:text-[14px]">
+                    {userInitials}
+                  </div>
+                )}
+              </div>
 
               <div className="hidden text-left sm:block">
                 <h4 className="text-[13px] font-bold leading-tight text-[var(--text-primary)] lg:text-[14px]">
@@ -249,12 +249,12 @@ export default function Header({ onMenuClick }: HeaderProps) {
                   <button
                     type="button"
                     onClick={() => setSearchOpen(false)}
-                    className="flex-shrink-0"
+                    className="flex shrink-0"
                   >
                     <X size={18} strokeWidth={2} />
                   </button>
                 }
-                className="h-[45px] rounded-full border-[var(--border)]"
+                className="h-11 rounded-full border-[var(--border)]"
               />
             </div>
           </div>

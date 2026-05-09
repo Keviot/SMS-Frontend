@@ -8,7 +8,7 @@ import {
   ResidentManagementIcon,
   SecurityGuardIcon,
   SecurityManagementIcon,
-} from "../icons/admin-dashboard-icons";
+} from "../assets/icons/admin-dashboard-icons";
 
 export const adminNavigation = [
   {

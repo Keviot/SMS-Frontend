@@ -1,7 +1,7 @@
 import { Edit2, Loader2 } from "lucide-react";
 import { useEffect, useState, useRef } from "react";
-import profileBG from "../../assets/profileBG.png";
-import { authApi, BASE_URL } from "../../services/api";
+import profileBG from "../../../assets/images/profileBG.png";
+import { authApi, BASE_URL } from "../../../services/api";
 import toast from "react-hot-toast";
 
 interface ProfileData {

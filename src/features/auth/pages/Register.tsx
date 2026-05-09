@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
 import { EyeOff, Eye, ChevronDown } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
-import { authApi, societyApi } from "../services/api";
-import CreateSocietyModal from "../components/modals/CreateSocietyModal";
+import { authApi, societyApi } from "../../../services/api";
+import CreateSocietyModal from "../../../components/modals/CreateSocietyModal";
 import toast from "react-hot-toast";
 
 export default function Register() {
