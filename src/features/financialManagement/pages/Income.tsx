@@ -4,8 +4,7 @@ import DataTable, { type DataTableColumn } from "../../../ui/DataTable";
 import StatusBadge from "../../../ui/StatusBadge";
 import Button from "../../../ui/Button";
 import { cn } from "../../../lib/cn";
-import { EyeIcon } from "../../../icons/admin-dashboard-icons";
-import { financialApi } from "../../../services/api";
+import { authApi, financialApi } from "../../../services/api";
 import SetMaintenancePasswordModal from "../../../components/financial/SetMaintenancePasswordModal";
 import AddMaintenanceDetailModal, {
     type MaintenanceDetailData,
@@ -17,6 +16,7 @@ import CreateOtherIncomeModal, {
 } from "../../../components/financial/CreateOtherIncomeModal";
 import DeleteConfirmModal from "../../../components/financial/DeleteConfirmModal";
 import toast from "react-hot-toast";
+import { EyeIcon } from "../../../assets/icons/admin-dashboard-icons";
 
 interface MaintenanceRecord {
     id: string;
@@ -222,14 +222,33 @@ export default function Income() {
 
     const handleAddMaintenanceSubmit = async (data: MaintenanceDetailData) => {
         try {
-            // Call API to set maintenance setup with password
-            await financialApi.setMaintenanceSetup({
+            // Get user profile to get society ID
+            const profile = await authApi.getProfile();
+            const societyId = profile.data.society;
+
+            if (!societyId) {
+                toast.error("Society information not found. Please contact administrator.");
+                return;
+            }
+
+            // Convert date to ISO string for backend
+            const dueDate = new Date(data.maintenanceDueDate);
+            const isoDate = dueDate.toISOString();
+
+            const payload = {
                 password: maintenancePassword,
                 maintenanceAmount: parseFloat(data.maintenanceAmount),
                 penaltyAmount: parseFloat(data.penaltyAmount),
-                maintenanceDueDate: data.maintenanceDueDate,
+                maintenanceDueDate: isoDate,
                 penaltyAppliedAfterDay: parseInt(data.penaltyAppliedAfterDay),
-            });
+                society: societyId,
+            };
+
+            // Debug: Log the payload
+            console.log("Sending maintenance setup payload:", payload);
+
+            // Call API to set maintenance setup with password
+            await financialApi.setMaintenanceSetup(payload);
 
             toast.success("Maintenance setup created successfully!");
             setShowAddMaintenanceModal(false);
@@ -724,8 +743,8 @@ export default function Income() {
                                                     setShowMonthDropdown(false);
                                                 }}
                                                 className={`block w-full px-3 py-2 text-left text-xs font-medium transition-colors ${selectedMonth === item
-                                                        ? "bg-[#F6F8FB] text-[#202224]"
-                                                        : "text-[#6F7786] hover:bg-[#F6F8FB] hover:text-[#202224]"
+                                                    ? "bg-[#F6F8FB] text-[#202224]"
+                                                    : "text-[#6F7786] hover:bg-[#F6F8FB] hover:text-[#202224]"
                                                     }`}
                                             >
                                                 {item}
