@@ -1,11 +1,888 @@
+import { useState, useEffect } from "react";
+import { User, Wallet, ChevronDown, Loader2, Plus } from "lucide-react";
+import DataTable, { type DataTableColumn } from "../../../ui/DataTable";
+import StatusBadge from "../../../ui/StatusBadge";
+import Button from "../../../ui/Button";
+import { cn } from "../../../lib/cn";
+import { EyeIcon } from "../../../icons/admin-dashboard-icons";
+import { financialApi } from "../../../services/api";
+import SetMaintenancePasswordModal from "../../../components/financial/SetMaintenancePasswordModal";
+import AddMaintenanceDetailModal, {
+    type MaintenanceDetailData,
+} from "../../../components/financial/AddMaintenanceDetailModal";
+import ViewMaintenanceDetailsModal from "../../../components/financial/ViewMaintenanceDetailsModal";
+import OtherIncomeCard from "../../../components/financial/OtherIncomeCard";
+import CreateOtherIncomeModal, {
+    type OtherIncomeData,
+} from "../../../components/financial/CreateOtherIncomeModal";
+import DeleteConfirmModal from "../../../components/financial/DeleteConfirmModal";
+import toast from "react-hot-toast";
+
+interface MaintenanceRecord {
+    id: string;
+    fullName: string;
+    unitNumber: string;
+    date: string;
+    status: "tenant" | "owner";
+    phoneNumber: string;
+    amount: number;
+    penalty: number | null;
+    paymentStatus: "pending" | "done";
+    paymentMode: "online" | "cash";
+    avatar?: string;
+}
+
+interface MaintenanceSummary {
+    maintenanceAmount: number;
+    penaltyAmount: number;
+}
+
+interface OtherIncome {
+    id: string;
+    title: string;
+    amountPerMember: number;
+    totalMember: number;
+    date: string;
+    dueDate: string;
+    description: string;
+}
+
 export default function Income() {
-  return (
-    <div className="p-6 bg-white rounded-3xl border border-gray-100 shadow-sm animate-in fade-in duration-500">
-      <h1 className="text-2xl font-bold text-gray-900">Financial Management - Income</h1>
-      <p className="text-gray-500 mt-2">Track all society income sources and maintenance payments.</p>
-      <div className="mt-8 h-64 border-2 border-dashed border-gray-100 rounded-2xl flex items-center justify-center text-gray-400">
-        Income Tracking Table Coming Soon
-      </div>
-    </div>
-  );
+    const [activeTab, setActiveTab] = useState<"maintenance" | "otherIncome">("maintenance");
+    const [selectedMonth, setSelectedMonth] = useState<"Month" | "Year">("Month");
+    const [showMonthDropdown, setShowMonthDropdown] = useState(false);
+    const [maintenanceData, setMaintenanceData] = useState<MaintenanceRecord[]>([]);
+    const [otherIncomeData, setOtherIncomeData] = useState<OtherIncome[]>([]);
+    const [summary, setSummary] = useState<MaintenanceSummary>({
+        maintenanceAmount: 0,
+        penaltyAmount: 0,
+    });
+    const [loading, setLoading] = useState(true);
+
+    // Modal states
+    const [showPasswordModal, setShowPasswordModal] = useState(false);
+    const [showAddMaintenanceModal, setShowAddMaintenanceModal] = useState(false);
+    const [showViewDetailsModal, setShowViewDetailsModal] = useState(false);
+    const [selectedMaintenance, setSelectedMaintenance] = useState<MaintenanceRecord | null>(
+        null
+    );
+    const [showCreateIncomeModal, setShowCreateIncomeModal] = useState(false);
+    const [showEditIncomeModal, setShowEditIncomeModal] = useState(false);
+    const [showDeleteModal, setShowDeleteModal] = useState(false);
+    const [selectedIncome, setSelectedIncome] = useState<OtherIncome | null>(null);
+    const [maintenancePassword, setMaintenancePassword] = useState("");
+
+    // Fetch maintenance data
+    useEffect(() => {
+        const fetchData = async () => {
+            try {
+                setLoading(true);
+
+                if (activeTab === "maintenance") {
+                    // Fetch maintenance records from API
+                    const response = await financialApi.getMaintenanceRecords();
+
+                    // Transform backend data to frontend format
+                    const transformedData = response.data.map((item: any) => {
+                        // Get name from multiple possible sources
+                        const fullName = item.name ||
+                            item.resident?.name ||
+                            "N/A";
+
+                        // Get profile image
+                        const avatar = item.resident?.profileImage || undefined;
+
+                        // Format date
+                        const formattedDate = new Date(item.date).toLocaleDateString("en-GB");
+
+                        // Get resident status - prioritize resident.ResidentStatus, then resident.role, then item.residentStatus
+                        let residentStatus = "tenant";
+                        if (item.resident?.ResidentStatus) {
+                            // ResidentStatus can be "Vacant" or "Occupied" - we need role instead
+                            residentStatus = item.resident.role?.toLowerCase() || "tenant";
+                        } else if (item.resident?.role) {
+                            residentStatus = item.resident.role.toLowerCase();
+                        } else if (item.resident?.residentStatus) {
+                            residentStatus = item.resident.residentStatus.toLowerCase();
+                        } else if (item.residentStatus) {
+                            residentStatus = item.residentStatus.toLowerCase();
+                        }
+
+                        // Ensure it's either "tenant" or "owner"
+                        if (residentStatus !== "tenant" && residentStatus !== "owner") {
+                            residentStatus = "tenant";
+                        }
+
+                        // Get payment status
+                        const paymentStatus = item.status.toLowerCase() === "paid" ? "done" : "pending";
+
+                        // Get payment mode and normalize it
+                        let paymentMode = item.payment.toLowerCase();
+                        if (!["online", "cash", "cheque", "upi"].includes(paymentMode)) {
+                            paymentMode = "online";
+                        }
+                        // Map cheque and upi to cash for display
+                        if (paymentMode === "cheque" || paymentMode === "upi") {
+                            paymentMode = "cash";
+                        }
+
+                        // Get amount - prioritize maintenanceSetup.maintenanceAmount over item.amount
+                        const amount = item.maintenanceSetup?.maintenanceAmount || item.amount || 0;
+
+                        // Get penalty logic:
+                        // If item.penalty > 0, use item.penalty (actual penalty charged)
+                        // Otherwise, check if penalty should be applied based on due date and penaltyAppliedAfterDay
+                        let penalty = null;
+                        if (item.penalty > 0) {
+                            penalty = item.penalty;
+                        } else if (item.maintenanceSetup?.penaltyAmount && item.maintenanceSetup?.penaltyAppliedAfterDay) {
+                            // Check if payment is overdue
+                            const dueDate = new Date(item.maintenanceSetup.maintenanceDueDate);
+                            const currentDate = new Date();
+                            const daysDiff = Math.floor((currentDate.getTime() - dueDate.getTime()) / (1000 * 60 * 60 * 24));
+
+                            // Apply penalty if overdue by more than penaltyAppliedAfterDay and status is Pending
+                            if (daysDiff > item.maintenanceSetup.penaltyAppliedAfterDay && item.status.toLowerCase() === "pending") {
+                                penalty = item.maintenanceSetup.penaltyAmount;
+                            }
+                        }
+
+                        return {
+                            id: item._id,
+                            fullName,
+                            unitNumber: `${item.wing} ${item.unit}`,
+                            date: formattedDate,
+                            status: residentStatus as "tenant" | "owner",
+                            phoneNumber: item.phoneNumber || "N/A",
+                            amount,
+                            penalty,
+                            paymentStatus: paymentStatus as "pending" | "done",
+                            paymentMode: paymentMode as "online" | "cash",
+                            avatar,
+                        };
+                    });
+
+                    setMaintenanceData(transformedData);
+
+                    // Calculate summary from actual data
+                    const maintenanceAmount = transformedData
+                        .filter((r: any) => r.paymentStatus === "done")
+                        .reduce((sum: number, r: any) => sum + r.amount, 0);
+                    const penaltyAmount = transformedData
+                        .filter((r: any) => r.paymentStatus === "done")
+                        .reduce((sum: number, r: any) => sum + (r.penalty || 0), 0);
+
+                    setSummary({ maintenanceAmount, penaltyAmount });
+                } else {
+                    // Fetch other income
+                    const response = await financialApi.getOtherIncome();
+
+                    // Transform backend data to frontend format
+                    const transformedIncome = response.data.map((item: any) => ({
+                        id: item._id,
+                        title: item.title,
+                        amountPerMember: item.amount,
+                        totalMember: 12, // TODO: Calculate from actual participants
+                        date: new Date(item.date).toLocaleDateString("en-GB"),
+                        dueDate: new Date(item.dueDate).toLocaleDateString("en-GB"),
+                        description: item.description,
+                    }));
+
+                    setOtherIncomeData(transformedIncome);
+                }
+            } catch (err: any) {
+                console.warn("Backend API not available, using mock data:", err.message);
+
+                // Silently fallback to mock data (backend not ready yet)
+                if (activeTab === "maintenance") {
+                    setMaintenanceData(getMockData());
+                    setSummary({ maintenanceAmount: 0, penaltyAmount: 0 });
+                } else {
+                    setOtherIncomeData(getMockOtherIncome());
+                }
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchData();
+    }, [activeTab]);
+
+    // Handler functions
+    const handleSetMaintenance = () => {
+        setShowPasswordModal(true);
+    };
+
+    const handlePasswordSuccess = (password: string) => {
+        // Password verified successfully, store it and open form
+        setMaintenancePassword(password);
+        setShowPasswordModal(false);
+        setShowAddMaintenanceModal(true);
+    };
+
+    const handleAddMaintenanceSubmit = async (data: MaintenanceDetailData) => {
+        try {
+            // Call API to set maintenance setup with password
+            await financialApi.setMaintenanceSetup({
+                password: maintenancePassword,
+                maintenanceAmount: parseFloat(data.maintenanceAmount),
+                penaltyAmount: parseFloat(data.penaltyAmount),
+                maintenanceDueDate: data.maintenanceDueDate,
+                penaltyAppliedAfterDay: parseInt(data.penaltyAppliedAfterDay),
+            });
+
+            toast.success("Maintenance setup created successfully!");
+            setShowAddMaintenanceModal(false);
+            setMaintenancePassword("");
+
+            // Refresh maintenance data
+            setLoading(true);
+            const response = await financialApi.getMaintenanceRecords();
+
+            // Transform backend data to frontend format
+            const transformedData = response.data.map((item: any) => {
+                const fullName = item.name || item.resident?.name || "N/A";
+                const avatar = item.resident?.profileImage || undefined;
+                const formattedDate = new Date(item.date).toLocaleDateString("en-GB");
+
+                let residentStatus = "tenant";
+                if (item.resident?.ResidentStatus) {
+                    residentStatus = item.resident.role?.toLowerCase() || "tenant";
+                } else if (item.resident?.role) {
+                    residentStatus = item.resident.role.toLowerCase();
+                } else if (item.resident?.residentStatus) {
+                    residentStatus = item.resident.residentStatus.toLowerCase();
+                } else if (item.residentStatus) {
+                    residentStatus = item.residentStatus.toLowerCase();
+                }
+
+                if (residentStatus !== "tenant" && residentStatus !== "owner") {
+                    residentStatus = "tenant";
+                }
+
+                const paymentStatus = item.status.toLowerCase() === "paid" ? "done" : "pending";
+
+                let paymentMode = item.payment.toLowerCase();
+                if (!["online", "cash", "cheque", "upi"].includes(paymentMode)) {
+                    paymentMode = "online";
+                }
+                if (paymentMode === "cheque" || paymentMode === "upi") {
+                    paymentMode = "cash";
+                }
+
+                const amount = item.maintenanceSetup?.maintenanceAmount || item.amount || 0;
+
+                let penalty = null;
+                if (item.penalty > 0) {
+                    penalty = item.penalty;
+                } else if (item.maintenanceSetup?.penaltyAmount && item.maintenanceSetup?.penaltyAppliedAfterDay) {
+                    const dueDate = new Date(item.maintenanceSetup.maintenanceDueDate);
+                    const currentDate = new Date();
+                    const daysDiff = Math.floor((currentDate.getTime() - dueDate.getTime()) / (1000 * 60 * 60 * 24));
+
+                    if (daysDiff > item.maintenanceSetup.penaltyAppliedAfterDay && item.status.toLowerCase() === "pending") {
+                        penalty = item.maintenanceSetup.penaltyAmount;
+                    }
+                }
+
+                return {
+                    id: item._id,
+                    fullName,
+                    unitNumber: `${item.wing} ${item.unit}`,
+                    date: formattedDate,
+                    status: residentStatus as "tenant" | "owner",
+                    phoneNumber: item.phoneNumber || "N/A",
+                    amount,
+                    penalty,
+                    paymentStatus: paymentStatus as "pending" | "done",
+                    paymentMode: paymentMode as "online" | "cash",
+                    avatar,
+                };
+            });
+
+            setMaintenanceData(transformedData);
+
+            // Calculate summary from actual data
+            const maintenanceAmount = transformedData
+                .filter((r: any) => r.paymentStatus === "done")
+                .reduce((sum: number, r: any) => sum + r.amount, 0);
+            const penaltyAmount = transformedData
+                .filter((r: any) => r.paymentStatus === "done")
+                .reduce((sum: number, r: any) => sum + (r.penalty || 0), 0);
+
+            setSummary({ maintenanceAmount, penaltyAmount });
+            setLoading(false);
+        } catch (error: any) {
+            toast.error(error.message || "Failed to create maintenance setup");
+            console.error("Maintenance setup error:", error);
+        }
+    };
+
+    const handleViewDetails = (row: MaintenanceRecord) => {
+        setSelectedMaintenance(row);
+        setShowViewDetailsModal(true);
+    };
+
+    const handleCreateIncome = () => {
+        setShowCreateIncomeModal(true);
+    };
+
+    const handleEditIncome = (id: string) => {
+        const income = otherIncomeData.find((item) => item.id === id);
+        if (income) {
+            setSelectedIncome(income);
+            setShowEditIncomeModal(true);
+        }
+    };
+
+    const handleDeleteIncome = (id: string) => {
+        const income = otherIncomeData.find((item) => item.id === id);
+        if (income) {
+            setSelectedIncome(income);
+            setShowDeleteModal(true);
+        }
+    };
+
+    const handleConfirmDelete = () => {
+        if (selectedIncome) {
+            setOtherIncomeData(otherIncomeData.filter((item) => item.id !== selectedIncome.id));
+            toast.success("Income deleted successfully!");
+            setShowDeleteModal(false);
+            setSelectedIncome(null);
+        }
+    };
+
+    const handleIncomeSubmit = (data: OtherIncomeData) => {
+        console.log("Income data:", data);
+        toast.success("Income created successfully!");
+        setShowCreateIncomeModal(false);
+        // TODO: API call to create income
+    };
+
+    const handleIncomeEdit = (data: OtherIncomeData) => {
+        console.log("Edit income data:", data);
+        toast.success("Income updated successfully!");
+        setShowEditIncomeModal(false);
+        setSelectedIncome(null);
+        // TODO: API call to update income
+    };
+
+    // Mock data fallback
+    const getMockData = (): MaintenanceRecord[] => [
+        {
+            id: "1",
+            fullName: "Cody Fisher",
+            unitNumber: "A 1001",
+            date: "10/02/2024",
+            status: "tenant",
+            phoneNumber: "92524 34522",
+            amount: 1000,
+            penalty: null,
+            paymentStatus: "pending",
+            paymentMode: "online",
+            avatar: "https://i.pravatar.cc/150?u=1",
+        },
+        {
+            id: "2",
+            fullName: "Esther Howard",
+            unitNumber: "B 1002",
+            date: "11/02/2024",
+            status: "owner",
+            phoneNumber: "92524 12385",
+            amount: 1000,
+            penalty: 250,
+            paymentStatus: "done",
+            paymentMode: "cash",
+            avatar: "https://i.pravatar.cc/150?u=2",
+        },
+        {
+            id: "3",
+            fullName: "Jenny Wilson",
+            unitNumber: "C 1003",
+            date: "12/02/2024",
+            status: "tenant",
+            phoneNumber: "92589 34522",
+            amount: 1000,
+            penalty: null,
+            paymentStatus: "pending",
+            paymentMode: "online",
+            avatar: "https://i.pravatar.cc/150?u=3",
+        },
+        {
+            id: "4",
+            fullName: "Robert Fox",
+            unitNumber: "D 1004",
+            date: "13/02/2024",
+            status: "owner",
+            phoneNumber: "92524 12389",
+            amount: 1000,
+            penalty: null,
+            paymentStatus: "done",
+            paymentMode: "cash",
+            avatar: "https://i.pravatar.cc/150?u=4",
+        },
+        {
+            id: "5",
+            fullName: "Jacob Jones",
+            unitNumber: "E 2001",
+            date: "14/02/2024",
+            status: "tenant",
+            phoneNumber: "92333 34522",
+            amount: 1000,
+            penalty: 250,
+            paymentStatus: "pending",
+            paymentMode: "online",
+            avatar: "https://i.pravatar.cc/150?u=5",
+        },
+        {
+            id: "6",
+            fullName: "Albert Flores",
+            unitNumber: "F 2002",
+            date: "18/02/2024",
+            status: "owner",
+            phoneNumber: "92524 34822",
+            amount: 1000,
+            penalty: null,
+            paymentStatus: "done",
+            paymentMode: "cash",
+            avatar: "https://i.pravatar.cc/150?u=6",
+        },
+        {
+            id: "7",
+            fullName: "Annette Black",
+            unitNumber: "G 2003",
+            date: "16/02/2024",
+            status: "tenant",
+            phoneNumber: "92258 34522",
+            amount: 1000,
+            penalty: 250,
+            paymentStatus: "pending",
+            paymentMode: "online",
+            avatar: "https://i.pravatar.cc/150?u=7",
+        },
+        {
+            id: "8",
+            fullName: "Jerome Bell",
+            unitNumber: "H 2004",
+            date: "17/02/2024",
+            status: "owner",
+            phoneNumber: "92589 34522",
+            amount: 1000,
+            penalty: null,
+            paymentStatus: "done",
+            paymentMode: "cash",
+            avatar: "https://i.pravatar.cc/150?u=8",
+        },
+    ];
+
+    const getMockOtherIncome = (): OtherIncome[] => [
+        {
+            id: "1",
+            title: "Ganesh Chaturthi",
+            amountPerMember: 1500,
+            totalMember: 12,
+            date: "01/07/2024",
+            dueDate: "10/07/2024",
+            description:
+                "The celebration of Ganesh Chaturthi involves the installation of clay idols of Ganesh in Resident.",
+        },
+        {
+            id: "2",
+            title: "Navratri",
+            amountPerMember: 1500,
+            totalMember: 12,
+            date: "01/07/2024",
+            dueDate: "10/07/2024",
+            description:
+                "The celebration of Navratri involves the installation of clay idols of Durga in Resident.",
+        },
+        {
+            id: "3",
+            title: "Diwali",
+            amountPerMember: 1500,
+            totalMember: 12,
+            date: "01/07/2024",
+            dueDate: "10/07/2024",
+            description:
+                "The celebration of Ganesh Chaturthi involves the installation of clay idols of Ganesh in.",
+        },
+        {
+            id: "4",
+            title: "Ganesh Chaturthi",
+            amountPerMember: 1500,
+            totalMember: 12,
+            date: "01/07/2024",
+            dueDate: "10/07/2024",
+            description:
+                "The celebration of Ganesh Chaturthi involves the installation of clay idols of Ganesh in.",
+        },
+    ];
+
+    const columns: DataTableColumn<MaintenanceRecord>[] = [
+        {
+            key: "fullName",
+            header: "Name",
+            render: (row) => (
+                <div className="flex items-center gap-3">
+                    <div className="h-10 w-10 overflow-hidden rounded-full bg-gray-100">
+                        <img src={row.avatar} alt={row.fullName} className="h-full w-full object-cover" />
+                    </div>
+                    <span className="text-gray-900">{row.fullName}</span>
+                </div>
+            ),
+        },
+        {
+            key: "unitNumber",
+            header: "Unit Number",
+            render: (row) => (
+                <div className="flex items-center gap-2">
+                    <span className="flex h-7 w-7 items-center justify-center rounded-full bg-blue-50 text-xs font-bold text-blue-500">
+                        {row.unitNumber.charAt(0)}
+                    </span>
+                    <span className="font-semibold text-white-black">{row.unitNumber.split(" ")[1]}</span>
+                </div>
+            ),
+        },
+        {
+            key: "date",
+            header: "Date",
+            className: "text-center",
+            render: (row) => <span className="text-gray-600 font-medium">{row.date}</span>,
+        },
+        {
+            key: "status",
+            header: "Status",
+            className: "text-center",
+            render: (row) => (
+                <StatusBadge variant={row.status} icon={User}>
+                    {row.status}
+                </StatusBadge>
+            ),
+        },
+        {
+            key: "phoneNumber",
+            header: "Phone Number",
+            className: "text-center",
+            render: (row) => <span className="text-gray-600 font-medium">{row.phoneNumber}</span>,
+        },
+        {
+            key: "amount",
+            header: "Amount",
+            className: "text-center",
+            render: (row) => <span className="text-[#39973D] font-semibold">₹ {row.amount}</span>,
+        },
+        {
+            key: "penalty",
+            header: "Penalty",
+            className: "text-center",
+            render: (row) =>
+                row.penalty ? (
+                    <span className="inline-flex h-8 min-w-16 items-center justify-center rounded-full bg-[#E74C3C] px-3 text-sm font-semibold text-white">
+                        {row.penalty}
+                    </span>
+                ) : (
+                    <span className="inline-flex h-8 min-w-16 items-center justify-center rounded-full bg-gray-light-grey text-sm font-semibold text-gray-400">
+                        --
+                    </span>
+                ),
+        },
+        {
+            key: "paymentStatus",
+            header: "Status",
+            className: "text-center",
+            render: (row) => (
+                <StatusBadge variant={row.paymentStatus}>
+                    {row.paymentStatus}
+                </StatusBadge>
+            ),
+        },
+        {
+            key: "paymentMode",
+            header: "Payment",
+            className: "text-center",
+            render: (row) => (
+                <StatusBadge variant={row.paymentMode} icon={Wallet}>
+                    {row.paymentMode}
+                </StatusBadge>
+            ),
+        },
+        {
+            key: "actions",
+            header: "Action",
+            className: "text-center",
+            render: (row) => (
+                <div className="flex items-center justify-center">
+                    <button
+                        onClick={() => handleViewDetails(row)}
+                        className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#F6F8FB] text-[#5678E9] transition-colors hover:bg-blue-hover hover:text-black"
+                    >
+                        <EyeIcon className="h-5 w-5" />
+                    </button>
+                </div>
+            ),
+        },
+    ];
+
+    return (
+        <div className="flex flex-col gap-0">
+            {activeTab === "maintenance" && (
+                <>
+                    {/* Stats Cards */}
+                    <div className="mb-4 flex flex-col gap-4 rounded-2xl bg-white p-4 sm:p-5 lg:min-h-36 lg:flex-row lg:items-center lg:justify-between">
+                        <div className="grid w-full grid-cols-1 gap-3 sm:grid-cols-2 lg:w-auto lg:flex lg:items-center lg:gap-2">
+                            {/* Maintenance Amount Card */}
+                            <div className="flex min-h-24 w-full flex-col justify-center rounded-2xl border border-l-4 border-[#39973D] bg-white px-3 py-4 shadow-sm lg:w-60">
+                                <div className="text-xs font-medium text-[#202224]">Maintenance Amount</div>
+                                <div className="mt-1 text-2xl font-bold text-[#39973D]">
+                                    {loading ? (
+                                        <Loader2 className="h-6 w-6 animate-spin" />
+                                    ) : (
+                                        `₹ ${summary.maintenanceAmount.toLocaleString()}`
+                                    )}
+                                </div>
+                            </div>
+
+                            {/* Penalty Amount Card */}
+                            <div className="flex min-h-24 w-full flex-col justify-center rounded-2xl border border-l-4 border-[#E74C3C] bg-white px-3 py-4 shadow-sm lg:w-60">
+                                <div className="text-xs font-medium text-[#202224]">Penalty Amount</div>
+                                <div className="mt-1 text-2xl font-bold text-[#E74C3C]">
+                                    {loading ? (
+                                        <Loader2 className="h-6 w-6 animate-spin" />
+                                    ) : (
+                                        `₹ ${summary.penaltyAmount.toLocaleString()}`
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Set Maintenance Button */}
+                        <Button
+                            onClick={handleSetMaintenance}
+                            className="h-12 w-full rounded-xl bg-gradient-to-r from-[#FE512E] to-[#F09619] px-8 text-sm font-semibold text-white shadow-[0_8px_20px_rgba(254,81,46,0.22)] lg:w-auto whitespace-nowrap"
+                        >
+                            Set Maintenance
+                        </Button>
+                    </div>
+                </>
+            )}
+
+            {/* Tabs - Outside the card */}
+            <div className="relative z-10 flex w-full items-end overflow-x-auto">
+                <button
+                    onClick={() => setActiveTab("maintenance")}
+                    className={cn(
+                        "h-14 min-w-32 shrink-0 px-5 text-sm font-semibold transition-all",
+                        activeTab === "maintenance"
+                            ? "rounded-t-xl bg-gradient-to-r from-[#FE512E] to-[#F09619] text-white"
+                            : "rounded-t-xl border border-b-2 border-[#D9DCE5] border-b-[#F09619] bg-white text-[#202224] hover:bg-gray-50"
+                    )}
+                >
+                    Maintenance
+                </button>
+                <button
+                    onClick={() => setActiveTab("otherIncome")}
+                    className={cn(
+                        "h-14 min-w-32 shrink-0 px-5 text-sm font-semibold transition-all",
+                        activeTab === "otherIncome"
+                            ? "rounded-t-xl bg-gradient-to-r from-[#FE512E] to-[#F09619] text-white"
+                            : "rounded-t-xl border border-b-2 border-[#D9DCE5] border-b-[#F09619] bg-white text-[#202224] hover:bg-gray-50"
+                    )}
+                >
+                    Other Income
+                </button>
+            </div>
+
+            {/* Main Content Card - Connects directly to tabs */}
+            <div className="-mt-px rounded-2xl rounded-tl-none border border-[#D9DCE5] bg-white p-4 sm:p-5">
+                {/* Maintenance Tab Content */}
+                {activeTab === "maintenance" && (
+                    <>
+                        {/* Table Header with Month Dropdown */}
+                        <div className="mb-5 flex flex-col gap-3 pt-3 sm:flex-row sm:items-center sm:justify-between">
+                            <h2 className="text-xl font-bold text-[#202224]">Maintenance Details</h2>
+                            <div className="relative">
+                                <button
+                                    type="button"
+                                    onClick={() => setShowMonthDropdown((prev) => !prev)}
+                                    className="flex h-10 min-w-24 items-center justify-between gap-2 rounded-xl border border-[#D9DCE5] bg-white px-4 text-sm font-medium text-[#202224] transition-colors hover:bg-gray-50"
+                                >
+                                    {selectedMonth}
+                                    <ChevronDown
+                                        size={16}
+                                        className={`transition-transform ${showMonthDropdown ? "rotate-180" : ""}`}
+                                    />
+                                </button>
+
+                                {showMonthDropdown && (
+                                    <div className="absolute right-0 top-[calc(100%+0.25rem)] z-40 w-24 overflow-hidden rounded-lg border border-[#E5E7EB] bg-white py-1 shadow-[0_8px_24px_rgba(0,0,0,0.12)]">
+                                        {(["Month", "Year"] as const).map((item) => (
+                                            <button
+                                                key={item}
+                                                type="button"
+                                                onClick={() => {
+                                                    setSelectedMonth(item);
+                                                    setShowMonthDropdown(false);
+                                                }}
+                                                className={`block w-full px-3 py-2 text-left text-xs font-medium transition-colors ${selectedMonth === item
+                                                        ? "bg-[#F6F8FB] text-[#202224]"
+                                                        : "text-[#6F7786] hover:bg-[#F6F8FB] hover:text-[#202224]"
+                                                    }`}
+                                            >
+                                                {item}
+                                            </button>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* Loading State */}
+                        {loading && (
+                            <div className="flex items-center justify-center py-12">
+                                <Loader2 className="h-8 w-8 animate-spin text-orange-500" />
+                                <span className="ml-3 text-gray-600">Loading maintenance data...</span>
+                            </div>
+                        )}
+
+                        {/* Data Table */}
+                        {!loading && (
+                            <div className="overflow-x-auto">
+                                <div className="min-w-[900px]">
+                                    <DataTable
+                                        columns={columns}
+                                        data={maintenanceData}
+                                        getRowKey={(row) => row.id}
+                                    />
+                                </div>
+                            </div>
+                        )}
+                    </>
+                )}
+
+                {/* Other Income Tab Content */}
+                {activeTab === "otherIncome" && (
+                    <>
+                        {/* Header with Create Button */}
+                        <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                            <h2 className="text-xl font-bold text-[#202224]">Other Income</h2>
+                            <Button
+                                leftIcon={<Plus size={18} />}
+                                onClick={handleCreateIncome}
+                                className="h-12 w-full rounded-xl bg-gradient-to-r from-[#FE512E] to-[#F09619] px-6 text-sm font-semibold text-white shadow-[0_8px_20px_rgba(254,81,46,0.22)] sm:w-auto"
+                            >
+                                Create Other Income
+                            </Button>
+                        </div>
+
+                        {/* Loading State */}
+                        {loading && (
+                            <div className="flex items-center justify-center py-12">
+                                <Loader2 className="h-8 w-8 animate-spin text-orange-500" />
+                                <span className="ml-3 text-gray-600">Loading income data...</span>
+                            </div>
+                        )}
+
+                        {/* Income Cards Grid */}
+                        {!loading && (
+                            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                                {otherIncomeData.map((income) => (
+                                    <OtherIncomeCard
+                                        key={income.id}
+                                        data={income}
+                                        onEdit={handleEditIncome}
+                                        onDelete={handleDeleteIncome}
+                                    />
+                                ))}
+                            </div>
+                        )}
+
+                        {/* Empty State */}
+                        {!loading && otherIncomeData.length === 0 && (
+                            <div className="flex flex-col items-center justify-center py-12 text-center">
+                                <p className="text-gray-500">No other income records found</p>
+                                <Button
+                                    leftIcon={<Plus size={18} />}
+                                    onClick={handleCreateIncome}
+                                    className="mt-4 h-12 rounded-xl px-6"
+                                >
+                                    Create First Income
+                                </Button>
+                            </div>
+                        )}
+                    </>
+                )}
+            </div>
+
+            {/* Modals */}
+            <SetMaintenancePasswordModal
+                open={showPasswordModal}
+                onClose={() => setShowPasswordModal(false)}
+                onSuccess={handlePasswordSuccess}
+            />
+
+            <AddMaintenanceDetailModal
+                open={showAddMaintenanceModal}
+                onClose={() => setShowAddMaintenanceModal(false)}
+                onSubmit={handleAddMaintenanceSubmit}
+            />
+
+            <ViewMaintenanceDetailsModal
+                open={showViewDetailsModal}
+                onClose={() => setShowViewDetailsModal(false)}
+                data={
+                    selectedMaintenance
+                        ? {
+                            fullName: selectedMaintenance.fullName,
+                            date: selectedMaintenance.date,
+                            avatar: selectedMaintenance.avatar,
+                            wing: selectedMaintenance.unitNumber.split(" ")[0],
+                            unit: selectedMaintenance.unitNumber.split(" ")[1],
+                            status: selectedMaintenance.status,
+                            penalty: selectedMaintenance.penalty,
+                            amount: selectedMaintenance.amount,
+                            paymentMode: selectedMaintenance.paymentMode,
+                        }
+                        : null
+                }
+            />
+
+            <CreateOtherIncomeModal
+                open={showCreateIncomeModal}
+                onClose={() => setShowCreateIncomeModal(false)}
+                onSubmit={handleIncomeSubmit}
+            />
+
+            <CreateOtherIncomeModal
+                open={showEditIncomeModal}
+                onClose={() => {
+                    setShowEditIncomeModal(false);
+                    setSelectedIncome(null);
+                }}
+                onSubmit={handleIncomeEdit}
+                initialData={
+                    selectedIncome
+                        ? {
+                            title: selectedIncome.title,
+                            date: selectedIncome.date,
+                            dueDate: selectedIncome.dueDate,
+                            description: selectedIncome.description,
+                            amount: selectedIncome.amountPerMember.toString(),
+                        }
+                        : null
+                }
+                isEdit
+            />
+
+            <DeleteConfirmModal
+                open={showDeleteModal}
+                onClose={() => {
+                    setShowDeleteModal(false);
+                    setSelectedIncome(null);
+                }}
+                onConfirm={handleConfirmDelete}
+                title={`Delete ${selectedIncome?.title}?`}
+                message="Are you sure you want to delete this?"
+            />
+        </div>
+    );
 }

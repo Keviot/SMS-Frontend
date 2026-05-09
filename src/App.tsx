@@ -11,16 +11,15 @@ import AppLayout from './layout/AppLayout'
 import AuthLayout from './layout/AuthLayout'
 import collab from './assets/collab.png'
 import reset from './assets/reset.png'
-
 import ResidentManagement from './pages/admin/ResidentManagement'
 import ResidentForm from './pages/admin/ResidentForm'
-import FinancialManagement from './pages/admin/FinancialManagement/Income'
 import FacilityManagement from './pages/admin/FacilityManagement'
 import ComplaintTracking from './pages/admin/ComplaintTracking'
 import SecurityManagement from './pages/admin/SecurityManagement'
 import SecurityGuard from './pages/admin/SecurityGuard'
 import Announcement from './pages/admin/Announcement'
 import Profile from './pages/admin/Profile'
+import Income from './pages/admin/FinancialManagement/Income'
 
 function App() {
   return (
@@ -100,7 +99,7 @@ function App() {
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/resident-management" element={<ResidentManagement />} />
           <Route path="/resident-management/add" element={<ResidentForm />} />
-          <Route path="/financial-management" element={<FinancialManagement />} />
+          <Route path="/financial-management/income" element={<Income />} />
           <Route path="/facility-management" element={<FacilityManagement />} />
           <Route path="/complaint-tracking" element={<ComplaintTracking />} />
           <Route path="/security-management" element={<SecurityManagement />} />
