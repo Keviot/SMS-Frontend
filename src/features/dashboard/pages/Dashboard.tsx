@@ -1,3 +1,6 @@
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { authApi } from "../../../services/api";
 import StatCard from "../../../components/dashboard/StatCard";
 import BalanceChart from "../../../components/dashboard/BalanceChart";
 import ComplaintTable from "../../../components/dashboard/ComplaintTable";
@@ -5,8 +8,48 @@ import UpcomingActivityCard from "../../../components/dashboard/UpcomingActivity
 import PendingMaintenanceCard from "../../../components/dashboard/PendingMaintenanceCard";
 import ImportantNumbersCard from "../../../components/dashboard/ImportantNumbersCard";
 import { complaints, importantNumbers, pendingMaintenances, statCards, upcomingActivities } from "../../../data/dashboard.data";
+import { Loader2 } from "lucide-react";
 
 export default function Dashboard() {
+  const navigate = useNavigate();
+  const [role, setRole] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const checkRole = async () => {
+      try {
+        const data = await authApi.getProfile();
+        if (data.user) {
+          const userRole = data.user.role?.toLowerCase();
+          setRole(userRole);
+          
+          if (userRole === "guard" || userRole === "security") {
+            navigate("/security-guard");
+          } else if (userRole === "resident") {
+            // If you want residents to have a dashboard, keep them here, 
+            // otherwise redirect to profile/personal details
+            navigate("/profile");
+          }
+        }
+      } catch (error) {
+        console.error("Dashboard role check failed:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    checkRole();
+  }, [navigate]);
+
+  if (loading) {
+    return (
+      <div className="flex h-[400px] items-center justify-center">
+        <Loader2 className="h-10 w-10 animate-spin text-[var(--primary)]" />
+      </div>
+    );
+  }
+
+  // Only render Admin Dashboard if role is admin
+  if (role !== "admin") return null;
 
   return (
 

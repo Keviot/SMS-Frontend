@@ -163,6 +163,17 @@ export const residentApi = {
         return handleResponse(response);
     },
 
+    createPassword: async (token: string, password: any, confirmPassword: any) => {
+        const response = await fetch(`${API_URL}/resident/create-password/${token}`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ password, confirmPassword }),
+        });
+        return handleResponse(response);
+    },
+
     getAll: async () => {
         const response = await fetch(`${API_URL}/resident/get`, {
             method: "GET",

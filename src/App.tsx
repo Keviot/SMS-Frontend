@@ -21,6 +21,7 @@ import SecurityGuard from './features/securityManagement/pages/SecurityGuard'
 import Announcement from './features/announcement/pages/Announcement'
 import Profile from './features/profile/pages/Profile'
 import Income from './features/financialManagement/pages/Income'
+import CreatePassword from './features/auth/pages/CreatePassword'
 import Expense from './features/financialManagement/pages/Expense'
 
 
@@ -51,6 +52,7 @@ function App() {
             <Login />
           </AuthLayout>
         } />
+        <Route path="/create-password/:token" element={<CreatePassword />} />
         <Route path="/forgot-password" element={
           <AuthLayout
             title="Forget Password"

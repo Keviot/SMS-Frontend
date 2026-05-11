@@ -1,9 +1,9 @@
 import { useState } from "react";
-import { Check} from "lucide-react";
-import Modal from "../../ui/Modal";
-import Button from "../../ui/Button";
-import { cn } from "../../lib/cn";
-import { residentApi, authApi } from "../../services/api";
+import { Check } from "lucide-react";
+import Modal from "../../../ui/Modal";
+import Button from "../../../ui/Button";
+import { cn } from "../../../lib/cn";
+import { residentApi, authApi } from "../../../services/api";
 import toast from "react-hot-toast";
 
 interface ResidenceStatusModalProps {
@@ -158,9 +158,9 @@ export default function ResidenceStatusModal({ isOpen, onClose, onSuccess, resid
               <label className="mb-1 block text-sm font-semibold text-[#202224]">
                 Wing<span className="text-[#E74C3C]">*</span>
               </label>
-              <select 
+              <select
                 value={vacateData.wing}
-                onChange={(e) => setVacateData({...vacateData, wing: e.target.value, unit: ""})}
+                onChange={(e) => setVacateData({ ...vacateData, wing: e.target.value, unit: "" })}
                 className="h-12 w-full rounded-xl border border-[#D3D3D3] px-3 text-sm outline-none focus:border-[#FF6B35]"
               >
                 <option value="">Select Wing</option>
@@ -174,9 +174,9 @@ export default function ResidenceStatusModal({ isOpen, onClose, onSuccess, resid
               <label className="mb-1 block text-sm font-semibold text-[#202224]">
                 Unit<span className="text-[#E74C3C]">*</span>
               </label>
-              <select 
+              <select
                 value={vacateData.unit}
-                onChange={(e) => setVacateData({...vacateData, unit: e.target.value})}
+                onChange={(e) => setVacateData({ ...vacateData, unit: e.target.value })}
                 className="h-12 w-full rounded-xl border border-[#D3D3D3] px-3 text-sm outline-none focus:border-[#FF6B35]"
               >
                 <option value="">Select Unit</option>
