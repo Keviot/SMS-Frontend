@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Eye, EyeOff } from "lucide-react";
-import Button from "../../ui/Button";
-import { financialApi } from "../../services/api";
+import Button from "../../../ui/Button";
+import { financialApi } from "../../../services/api";
 
 interface SetMaintenancePasswordModalProps {
   open: boolean;

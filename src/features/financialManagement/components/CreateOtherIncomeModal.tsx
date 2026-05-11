@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import Button from "../../ui/Button";
-import FormDatePicker from "../../ui/FormDatePicker";
+import Button from "../../../ui/Button";
+import FormDatePicker from "../../../ui/FormDatePicker";
 
 interface CreateOtherIncomeModalProps {
   open: boolean;

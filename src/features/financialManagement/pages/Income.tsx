@@ -4,17 +4,17 @@ import DataTable, { type DataTableColumn } from "../../../ui/DataTable";
 import StatusBadge from "../../../ui/StatusBadge";
 import Button from "../../../ui/Button";
 import { cn } from "../../../lib/cn";
-import { authApi, financialApi } from "../../../services/api";
-import SetMaintenancePasswordModal from "../../../components/financial/SetMaintenancePasswordModal";
+import { authApi, financialApi, societyApi } from "../../../services/api";
+import SetMaintenancePasswordModal from "../components/SetMaintenancePasswordModal";
 import AddMaintenanceDetailModal, {
     type MaintenanceDetailData,
-} from "../../../components/financial/AddMaintenanceDetailModal";
-import ViewMaintenanceDetailsModal from "../../../components/financial/ViewMaintenanceDetailsModal";
-import OtherIncomeCard from "../../../components/financial/OtherIncomeCard";
+} from "../components/AddMaintenanceDetailModal";
+import ViewMaintenanceDetailsModal from "../components/ViewMaintenanceDetailsModal";
+import OtherIncomeCard from "../components/OtherIncomeCard";
 import CreateOtherIncomeModal, {
     type OtherIncomeData,
-} from "../../../components/financial/CreateOtherIncomeModal";
-import DeleteConfirmModal from "../../../components/financial/DeleteConfirmModal";
+} from "../components/CreateOtherIncomeModal";
+import DeleteConfirmModal from "../components/DeleteConfirmModal";
 import toast from "react-hot-toast";
 import { EyeIcon } from "../../../assets/icons/admin-dashboard-icons";
 
@@ -70,6 +70,7 @@ export default function Income() {
     const [showEditIncomeModal, setShowEditIncomeModal] = useState(false);
     const [showDeleteModal, setShowDeleteModal] = useState(false);
     const [selectedIncome, setSelectedIncome] = useState<OtherIncome | null>(null);
+    const [selectedIncomeForView, setSelectedIncomeForView] = useState<OtherIncome | null>(null);
     const [maintenancePassword, setMaintenancePassword] = useState("");
 
     // Fetch maintenance data
@@ -80,7 +81,17 @@ export default function Income() {
 
                 if (activeTab === "maintenance") {
                     // Fetch maintenance records from API
+                    console.log("Fetching maintenance records...");
                     const response = await financialApi.getMaintenanceRecords();
+                    console.log("Maintenance API response:", response);
+
+                    if (!response.data || response.data.length === 0) {
+                        console.warn("No maintenance records found in response");
+                        setMaintenanceData([]);
+                        setSummary({ maintenanceAmount: 0, penaltyAmount: 0 });
+                        setLoading(false);
+                        return;
+                    }
 
                     // Transform backend data to frontend format
                     const transformedData = response.data.map((item: any) => {
@@ -223,11 +234,39 @@ export default function Income() {
     const handleAddMaintenanceSubmit = async (data: MaintenanceDetailData) => {
         try {
             // Get user profile to get society ID
-            const profile = await authApi.getProfile();
-            const societyId = profile.data.society;
+            const profileResponse = await authApi.getProfile();
+
+            // Backend returns { user: {...} } not { data: {...} }
+            const user = profileResponse.user;
+
+            if (!user) {
+                toast.error("Unable to fetch user profile. Please try again.");
+                return;
+            }
+
+            // Get society ID - check multiple possible locations
+            let societyId = user.society;
+
+            // If society is not directly available, try to get from societies array
+            if (!societyId && user.societies && user.societies.length > 0) {
+                societyId = user.societies[0]._id;
+            }
+
+            // If still no society, check selectSociety and fetch society ID
+            if (!societyId && user.selectSociety && user.selectSociety.length > 0) {
+                // Need to fetch society by name
+                const societies = await societyApi.getAll();
+                const matchingSociety = societies.data.find(
+                    (s: any) => user.selectSociety.includes(s.societyName)
+                );
+                if (matchingSociety) {
+                    societyId = matchingSociety._id;
+                }
+            }
 
             if (!societyId) {
                 toast.error("Society information not found. Please contact administrator.");
+                console.error("User profile:", user);
                 return;
             }
 
@@ -248,15 +287,31 @@ export default function Income() {
             console.log("Sending maintenance setup payload:", payload);
 
             // Call API to set maintenance setup with password
-            await financialApi.setMaintenanceSetup(payload);
+            const setupResponse = await financialApi.setMaintenanceSetup(payload);
 
-            toast.success("Maintenance setup created successfully!");
+            console.log("✅ Maintenance setup response:", setupResponse);
+
+            // Check if any maintenance records were created
+            if (setupResponse.data) {
+                toast.success("Maintenance setup created successfully!");
+            }
+
             setShowAddMaintenanceModal(false);
             setMaintenancePassword("");
 
             // Refresh maintenance data
+            console.log("🔄 Refreshing maintenance data...");
             setLoading(true);
             const response = await financialApi.getMaintenanceRecords();
+            console.log("📊 Refreshed maintenance data:", response);
+
+            // Check if we got any records
+            if (!response.data || response.data.length === 0) {
+                toast("Maintenance setup created, but no residents found in this society. Add residents first.", {
+                    icon: "ℹ️",
+                    duration: 5000,
+                });
+            }
 
             // Transform backend data to frontend format
             const transformedData = response.data.map((item: any) => {
@@ -359,6 +414,14 @@ export default function Income() {
         if (income) {
             setSelectedIncome(income);
             setShowDeleteModal(true);
+        }
+    };
+
+    const handleViewIncome = (id: string) => {
+        const income = otherIncomeData.find((item) => item.id === id);
+
+        if (income) {
+            setSelectedIncomeForView(income);
         }
     };
 
@@ -642,6 +705,96 @@ export default function Income() {
         },
     ];
 
+    const incomeParticipantRows = maintenanceData.length > 0 ? maintenanceData : getMockData();
+
+
+    if (selectedIncomeForView) {
+        return (
+            <div className="rounded-2xl bg-white p-5">
+                <div className="overflow-hidden rounded-xl bg-white">
+                    <h2 className="mb-5 text-xl font-semibold leading-[30px] text-[#202224]">
+                        {selectedIncomeForView.title} Participator Member List
+                    </h2>
+
+                    <div className="overflow-x-auto">
+                        <div className="min-w-[980px]">
+                            <table className="w-full border-collapse">
+                                <thead>
+                                    <tr className="h-[61px] bg-[#F1F3FF]">
+                                        <th className="rounded-l-xl px-5 text-left text-sm font-semibold text-[#202224]">
+                                            Unit Number
+                                        </th>
+                                        <th className="px-5 text-left text-sm font-semibold text-[#202224]">
+                                            Payment Date
+                                        </th>
+                                        <th className="px-5 text-center text-sm font-semibold text-[#202224]">
+                                            Tenant/Owner Status
+                                        </th>
+                                        <th className="px-5 text-left text-sm font-semibold text-[#202224]">
+                                            Phone Number
+                                        </th>
+                                        <th className="px-5 text-left text-sm font-semibold text-[#202224]">
+                                            Amount
+                                        </th>
+                                        <th className="rounded-r-xl px-5 text-center text-sm font-semibold text-[#202224]">
+                                            Payment
+                                        </th>
+                                    </tr>
+                                </thead>
+
+                                <tbody>
+                                    {incomeParticipantRows.map((row) => (
+                                        <tr
+                                            key={row.id}
+                                            className="h-[69px] border-b border-[#EDF0F5] last:border-b-0"
+                                        >
+                                            <td className="px-5">
+                                                <div className="flex items-center gap-3">
+                                                    <span className="flex h-7 w-7 items-center justify-center rounded-full bg-[#F1F6FF] text-xs font-bold text-[#5678E9]">
+                                                        {row.unitNumber.charAt(0)}
+                                                    </span>
+
+                                                    <span className="text-sm font-medium text-[#434A57]">
+                                                        {row.unitNumber.split(" ")[1]}
+                                                    </span>
+                                                </div>
+                                            </td>
+
+                                            <td className="px-5 text-sm font-medium text-[#434A57]">
+                                                {selectedIncomeForView.date || row.date}
+                                            </td>
+
+                                            <td className="px-5 text-center">
+                                                <StatusBadge variant={row.status} icon={User}>
+                                                    {row.status}
+                                                </StatusBadge>
+                                            </td>
+
+                                            <td className="px-5 text-sm font-medium text-[#434A57]">
+                                                {row.phoneNumber}
+                                            </td>
+
+                                            <td className="px-5 text-sm font-semibold text-[#39973D]">
+                                                ₹ {selectedIncomeForView.amountPerMember}
+                                            </td>
+
+                                            <td className="px-5 text-center">
+                                                <StatusBadge variant={row.paymentMode} icon={Wallet}>
+                                                    {row.paymentMode}
+                                                </StatusBadge>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
+
     return (
         <div className="flex flex-col gap-0">
             {activeTab === "maintenance" && (
@@ -810,6 +963,7 @@ export default function Income() {
                                         data={income}
                                         onEdit={handleEditIncome}
                                         onDelete={handleDeleteIncome}
+                                        onView={handleViewIncome}
                                     />
                                 ))}
                             </div>
