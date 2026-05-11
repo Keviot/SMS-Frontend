@@ -58,7 +58,7 @@ export default function ResidentManagement() {
         residentStatus: r.residentStatus?.toLowerCase() === "owner" ? "owner" : "tenant",
         phoneNumber: r.phoneNumber || "--",
         email: r.email || "",
-        member: r.memberCount || 0,
+        member: r.members?.length || 0,
         vehicle: r.vehicles?.length || 0,
         ownerName: r.ownerName,
         ownerPhone: r.ownerPhone,
