@@ -1,4 +1,14 @@
-import { MessageSquareWarning } from "lucide-react";
+ import { 
+  MessageSquareWarning, 
+  User, 
+  Calendar, 
+  Users, 
+  CreditCard, 
+  ShieldCheck, 
+  UserSearch, 
+  AlertTriangle,
+  Shield
+} from "lucide-react";
 import {
   AnnouncementIcon,
   BuildingIcon,
@@ -10,7 +20,14 @@ import {
   SecurityManagementIcon,
 } from "../assets/icons/admin-dashboard-icons";
 
-export const adminNavigation = [
+export interface NavItem {
+  label: string;
+  icon: any;
+  path: string;
+  children?: { label: string; path: string }[];
+}
+
+export const adminNavigation: NavItem[] = [
   {
     label: "Dashboard",
     icon: DashboardIcon,
@@ -63,6 +80,56 @@ export const adminNavigation = [
     label: "Announcement",
     icon: AnnouncementIcon,
     path: "/announcement",
+  },
+];
+
+export const residentNavigation: NavItem[] = [
+  {
+    label: "Dashboard",
+    icon: DashboardIcon,
+    path: "/dashboard",
+  },
+  {
+    label: "Personal Detail",
+    icon: User,
+    path: "/profile",
+  },
+  {
+    label: "Service And Complaint",
+    icon: MessageSquareWarning,
+    path: "/complaint-tracking",
+  },
+  {
+    label: "Events Participation",
+    icon: Calendar,
+    path: "/announcement",
+  },
+  {
+    label: "Community",
+    icon: Users,
+    path: "/community",
+  },
+  {
+    label: "Payment Portal",
+    icon: CreditCard,
+    path: "/financial-management/income",
+  },
+  {
+    label: "Security Protocols",
+    icon: ShieldCheck,
+    path: "/security-management/protocols",
+  },
+];
+
+export const securityNavigation: NavItem[] = [
+  {
+    label: "Security",
+    icon: Shield,
+    path: "/security",
+    children: [
+      { label: "Visitor Tracking", path: "/security-guard" },
+      { label: "Emergency Management", path: "/security-management/protocols" },
+    ],
   },
 ];
 

@@ -1,7 +1,7 @@
 import { ChevronDown, X } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { adminNavigation, footerNavigation } from "../constants/navigation";
+import { adminNavigation, residentNavigation, securityNavigation, footerNavigation, type NavItem } from "../constants/navigation";
 import { cn } from "../lib/cn";
 import ConfirmPopup from "../ui/ConfirmPopup";
 import { authApi } from "../services/api";
@@ -17,6 +17,21 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
   const location = useLocation();
   const [expanded, setExpanded] = useState<string[]>([]);
   const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
+  const [role, setRole] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchRole = async () => {
+      try {
+        const data = await authApi.getProfile();
+        if (data.user) {
+          setRole(data.user.role);
+        }
+      } catch (error) {
+        console.error("Failed to fetch role in sidebar:", error);
+      }
+    };
+    fetchRole();
+  }, []);
 
   const toggleExpand = (label: string) => {
     setExpanded((prev) =>
@@ -50,6 +65,21 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
     }
   };
 
+  const getNavigation = (): NavItem[] => {
+    switch (role?.toLowerCase()) {
+      case "resident":
+        return residentNavigation;
+      case "security":
+      case "guard":
+        return securityNavigation;
+      case "admin":
+      default:
+        return adminNavigation;
+    }
+  };
+
+  const currentNavigation = getNavigation();
+
   return (
     <aside
       className={cn(
@@ -72,7 +102,7 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
       </div>
 
       <nav className="flex-1 overflow-y-auto px-[15px] py-1">
-        {adminNavigation.map((item) => {
+        {currentNavigation.map((item) => {
           const Icon = item.icon;
           const hasChildren = Boolean(item.children?.length);
           const isExpanded = expanded.includes(item.label);
