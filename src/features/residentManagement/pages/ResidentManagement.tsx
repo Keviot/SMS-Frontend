@@ -17,8 +17,12 @@ interface Resident {
   unitStatus: "occupied" | "vacate";
   residentStatus: "tenant" | "owner";
   phoneNumber: string;
+  email: string;
   member: number;
   vehicle: number;
+  ownerName?: string;
+  ownerPhone?: string;
+  ownerAddress?: string;
   avatar?: string;
 }
 
@@ -53,8 +57,12 @@ export default function ResidentManagement() {
         unitStatus: r.unitStatus?.toLowerCase() === "vacant" ? "vacate" : "occupied",
         residentStatus: r.residentStatus?.toLowerCase() === "owner" ? "owner" : "tenant",
         phoneNumber: r.phoneNumber || "--",
+        email: r.email || "",
         member: r.memberCount || 0,
         vehicle: r.vehicles?.length || 0,
+        ownerName: r.ownerName,
+        ownerPhone: r.ownerPhone,
+        ownerAddress: r.ownerAddress,
         avatar: r.profileImage ? (r.profileImage.startsWith("http") ? r.profileImage : `${BASE_URL}/${r.profileImage}`) : undefined
       }));
       setResidents(mapped);
