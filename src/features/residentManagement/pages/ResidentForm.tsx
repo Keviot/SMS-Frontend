@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Camera, ChevronDown, ChevronUp, Trash2, Image as ImageIcon } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
+import { useEffect } from "react";
 import Button from "../../../ui/Button";
 import FormInput from "../../../ui/FormInput";
 import Select from "../../../ui/Select";
@@ -11,6 +12,7 @@ import toast from "react-hot-toast";
 
 export default function ResidentForm() {
   const navigate = useNavigate();
+  const { id } = useParams();
   const [activeTab, setActiveTab] = useState<"owner" | "tenant">("owner");
   const [memberCount, setMemberCount] = useState(0);
   const [vehicleCount, setVehicleCount] = useState(0);
@@ -61,6 +63,40 @@ export default function ResidentForm() {
     setVehicles(updatedVehicles);
   };
 
+  useEffect(() => {
+    const fetchResident = async () => {
+      if (!id) return;
+      try {
+        const residents = await residentApi.getAll();
+        const resident = residents.find((r: any) => r._id === id);
+        if (resident) {
+          setFormData({
+            name: resident.name || "",
+            phoneNumber: resident.phoneNumber || "",
+            email: resident.email || "",
+            age: resident.age?.toString() || "",
+            gender: resident.gender || "",
+            wing: resident.wing || "",
+            unit: resident.unit || "",
+            relation: resident.relation || "",
+            ownerName: resident.ownerName || "",
+            ownerPhone: resident.ownerPhone || "",
+            ownerAddress: resident.ownerAddress || "",
+            unitStatus: resident.unitStatus || "Occupied",
+          });
+          setActiveTab(resident.residentStatus?.toLowerCase() === "tenant" ? "tenant" : "owner");
+          setMembers(resident.members || []);
+          setMemberCount(resident.members?.length || 0);
+          setVehicles(resident.vehicles || []);
+          setVehicleCount(resident.vehicles?.length || 0);
+        }
+      } catch (error) {
+        toast.error("Failed to fetch resident details");
+      }
+    };
+    fetchResident();
+  }, [id]);
+
   const handleSubmit = async () => {
     try {
       setIsSubmitting(true);
@@ -94,8 +130,13 @@ export default function ResidentForm() {
         rentAgreeMent: files.rentAgreeMent?.name || "",
       };
 
-      await residentApi.create(payload);
-      toast.success("Resident created successfully");
+      if (id) {
+        await residentApi.edit(id, payload);
+        toast.success("Resident updated successfully");
+      } else {
+        await residentApi.create(payload);
+        toast.success("Resident created successfully");
+      }
       navigate("/resident-management");
     } catch (error: any) {
       toast.error(error.message || "Failed to create resident");
@@ -151,7 +192,7 @@ export default function ResidentForm() {
               {files.profileImage ? (
                 <img src={URL.createObjectURL(files.profileImage)} className="h-full w-full object-cover" alt="Profile" />
               ) : (
-                <img src="https://i.pravatar.cc/150?u=tenant" className="h-full w-full object-cover opacity-50" alt="Placeholder" />
+                <img src="" className="h-full w-full object-cover" alt="" />
               )}
               <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                 <Camera size={24} className="text-white" />

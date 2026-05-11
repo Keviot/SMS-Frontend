@@ -188,7 +188,7 @@ export const residentApi = {
         return handleResponse(response);
     },
 
-    editResident: async (id: string, residentData: any) => {
+    edit: async (id: string, residentData: any) => {
         const isFormData = residentData instanceof FormData;
         const response = await fetch(`${API_URL}/resident/edit/${id}`, {
             method: "PUT",
