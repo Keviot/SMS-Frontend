@@ -24,12 +24,15 @@ import Income from './features/financialManagement/pages/Income'
 import CreatePassword from './features/auth/pages/CreatePassword'
 import Expense from './features/financialManagement/pages/Expense'
 
+import { SocketProvider } from './context/SocketContext'
+
 
 function App() {
   return (
-    <Router>
-      <Toaster position="top-right" reverseOrder={false} />
-      <Routes>
+    <SocketProvider>
+      <Router>
+        <Toaster position="top-right" reverseOrder={false} />
+        <Routes>
         <Route path="/" element={<Navigate to="/login" replace />} />
 
         {/* Auth Routes */}
@@ -117,6 +120,7 @@ function App() {
         </Route>
       </Routes>
     </Router>
+    </SocketProvider>
   )
 }
 
