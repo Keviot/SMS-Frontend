@@ -4,11 +4,13 @@ import { Link } from "react-router-dom";
 import { authApi } from "../../../services/api";
 import toast from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
+import { cn } from "../../../lib/cn";
 
 export default function Login() {
   const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -17,11 +19,13 @@ export default function Login() {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
+    if (error) setError(null);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    setError(null);
     try {
       const data = await authApi.login(formData);
       if (data.success || data.token) {
@@ -30,10 +34,13 @@ export default function Login() {
           navigate("/dashboard");
         }, 1500);
       } else {
-        toast.error(data.message || "Login Failed.");
+        const msg = data.message || "Login Failed.";
+        setError(msg);
       }
-    } catch (error) {
-      console.error("Login Error:", error);
+    } catch (err: any) {
+      console.error("Login Error:", err);
+      const errorMessage = err.message || "Something went wrong. Please try again.";
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -72,7 +79,12 @@ export default function Login() {
               value={formData.password}
               onChange={handleChange}
               placeholder="Enter Password"
-              className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-[#EE641D] focus:ring-2 focus:ring-[#EE641D]/20 outline-none transition-all placeholder:text-gray-400 text-gray-700"
+              className={cn(
+                "w-full px-4 py-3 rounded-xl border outline-none transition-all placeholder:text-gray-400 text-gray-700",
+                error 
+                  ? "border-red-500 focus:border-red-500" 
+                  : "border-gray-200 focus:border-[#EE641D] focus:ring-2 focus:ring-[#EE641D]/20"
+              )}
               required
             />
             <button
@@ -83,6 +95,11 @@ export default function Login() {
               {showPassword ? <Eye size={20} /> : <EyeOff size={20} />}
             </button>
           </div>
+          {error && (
+            <p className="text-[13px] font-medium text-red-500 mt-1 ml-1 animate-in fade-in slide-in-from-top-1 duration-200">
+              {error === "Incorrect Password" ? "Incorrect Password." : error}
+            </p>
+          )}
         </div>
 
         {/* Remember Me & Forgot Password */}
@@ -106,10 +123,12 @@ export default function Login() {
         <button
           type="submit"
           disabled={loading || !isFormValid}
-          className={`w-full py-4 rounded-xl transition-all shadow-sm hover:shadow-md mt-4 active:scale-[0.98] font-bold ${isFormValid
-            ? "bg-gradient-to-r from-[#FE512E] to-[#F09633] text-white shadow-lg"
-            : "bg-[#f3f9ff] text-gray-400 cursor-not-allowed"
-            }`}
+          className={cn(
+            "w-full py-4 rounded-xl transition-all shadow-sm hover:shadow-md mt-4 active:scale-[0.98] font-bold",
+            isFormValid
+              ? "bg-gradient-to-r from-[#FE512E] to-[#F09633] text-white shadow-lg"
+              : "bg-[#f3f9ff] text-gray-400 cursor-not-allowed"
+          )}
         >
           {loading ? "Signing in..." : "Sign In"}
         </button>
