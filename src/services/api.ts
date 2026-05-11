@@ -299,6 +299,7 @@ export const financialApi = {
         date: string;
         dueDate: string;
         description: string;
+        society: string;
     }) => {
         const response = await fetch(`${API_URL}/income/add-income`, {
             method: "POST",
@@ -319,6 +320,7 @@ export const financialApi = {
         date: string;
         dueDate: string;
         description: string;
+        society: string;
     }) => {
         const response = await fetch(`${API_URL}/income/edit-income/${id}`, {
             method: "PUT",
@@ -335,6 +337,211 @@ export const financialApi = {
     // Delete other income
     deleteOtherIncome: async (id: string) => {
         const response = await fetch(`${API_URL}/income/delete-income/${id}`, {
+            method: "DELETE",
+            credentials: "include",
+            headers: {
+                "Content-Type": "application/json",
+                ...getAuthHeader()
+            },
+        });
+        return handleResponse(response);
+    },
+
+    // Expense APIs
+
+    // Get all expenses
+    getExpenses: async () => {
+        const response = await fetch(`${API_URL}/expanse/get`, {
+            method: "GET",
+            credentials: "include",
+            headers: {
+                "Content-Type": "application/json",
+                ...getAuthHeader()
+            },
+        });
+        return handleResponse(response);
+    },
+
+    // Add new expense
+    addExpense: async (data: {
+        title: string;
+        amount: number;
+        date: string;
+        description: string;
+        uploadBill: string;
+    }) => {
+        const response = await fetch(`${API_URL}/expanse/add`, {
+            method: "POST",
+            credentials: "include",
+            headers: {
+                "Content-Type": "application/json",
+                ...getAuthHeader()
+            },
+            body: JSON.stringify(data),
+        });
+        return handleResponse(response);
+    },
+
+    // Edit expense
+    editExpense: async (id: string, data: {
+        title: string;
+        amount: number;
+        date: string;
+        description: string;
+        uploadBill: string;
+    }) => {
+        const response = await fetch(`${API_URL}/expanse/edit/${id}`, {
+            method: "PUT",
+            credentials: "include",
+            headers: {
+                "Content-Type": "application/json",
+                ...getAuthHeader()
+            },
+            body: JSON.stringify(data),
+        });
+        return handleResponse(response);
+    },
+
+    // Delete expense
+    deleteExpense: async (id: string) => {
+        const response = await fetch(`${API_URL}/expanse/delete/${id}`, {
+            method: "DELETE",
+            credentials: "include",
+            headers: {
+                "Content-Type": "application/json",
+                ...getAuthHeader()
+            },
+        });
+        return handleResponse(response);
+    },
+
+    // Note APIs
+
+    // Get all notes
+    getNotes: async () => {
+        const response = await fetch(`${API_URL}/note/get`, {
+            method: "GET",
+            credentials: "include",
+            headers: {
+                "Content-Type": "application/json",
+                ...getAuthHeader()
+            },
+        });
+        return handleResponse(response);
+    },
+
+    // Add new note
+    addNote: async (data: {
+        title: string;
+        description: string;
+        date: string;
+    }) => {
+        const response = await fetch(`${API_URL}/note/add`, {
+            method: "POST",
+            credentials: "include",
+            headers: {
+                "Content-Type": "application/json",
+                ...getAuthHeader()
+            },
+            body: JSON.stringify(data),
+        });
+        return handleResponse(response);
+    },
+
+    // Edit note
+    editNote: async (id: string, data: {
+        title: string;
+        description: string;
+        date: string;
+    }) => {
+        const response = await fetch(`${API_URL}/note/edit/${id}`, {
+            method: "PUT",
+            credentials: "include",
+            headers: {
+                "Content-Type": "application/json",
+                ...getAuthHeader()
+            },
+            body: JSON.stringify(data),
+        });
+        return handleResponse(response);
+    },
+
+    // Delete note
+    deleteNote: async (id: string) => {
+        const response = await fetch(`${API_URL}/note/delete/${id}`, {
+            method: "DELETE",
+            credentials: "include",
+            headers: {
+                "Content-Type": "application/json",
+                ...getAuthHeader()
+            },
+        });
+        return handleResponse(response);
+    },
+};
+
+// Complaint Tracking API
+export const complaintApi = {
+    // Get all complaints
+    getAllComplaints: async () => {
+        const response = await fetch(`${API_URL}/complain/getAllComplain`, {
+            method: "GET",
+            credentials: "include",
+            headers: {
+                "Content-Type": "application/json",
+                ...getAuthHeader()
+            },
+        });
+        return handleResponse(response);
+    },
+
+    // Create new complaint
+    createComplaint: async (data: {
+        complainerName: string;
+        complaintName: string;
+        description: string;
+        wing: string;
+        unit: string;
+        priority: string;
+        status: string;
+    }) => {
+        const response = await fetch(`${API_URL}/complain/createComplain`, {
+            method: "POST",
+            credentials: "include",
+            headers: {
+                "Content-Type": "application/json",
+                ...getAuthHeader()
+            },
+            body: JSON.stringify(data),
+        });
+        return handleResponse(response);
+    },
+
+    // Edit complaint
+    editComplaint: async (id: string, data: {
+        complainerName: string;
+        complaintName: string;
+        description: string;
+        wing: string;
+        unit: string;
+        priority: string;
+        status: string;
+    }) => {
+        const response = await fetch(`${API_URL}/complain/editComplain/${id}`, {
+            method: "PUT",
+            credentials: "include",
+            headers: {
+                "Content-Type": "application/json",
+                ...getAuthHeader()
+            },
+            body: JSON.stringify(data),
+        });
+        return handleResponse(response);
+    },
+
+    // Delete complaint
+    deleteComplaint: async (id: string) => {
+        const response = await fetch(`${API_URL}/complain/deleteComplain/${id}`, {
             method: "DELETE",
             credentials: "include",
             headers: {

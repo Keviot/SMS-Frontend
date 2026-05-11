@@ -24,7 +24,7 @@ export const adminNavigation = [
   {
     label: "Financial Management",
     icon: FinancialManagementIcon,
-    path: "/financial-management",
+    path: "/financial-management/income",
     children: [
       { label: "Income", path: "/financial-management/income" },
       { label: "Expanse", path: "/financial-management/expense" },
@@ -41,8 +41,8 @@ export const adminNavigation = [
     icon: MessageSquareWarning,
     path: "/complaint-tracking",
     children: [
-      { label: "Create Complaint", path: "/complaint-tracking/create" },
-      { label: "Request Tracking", path: "/complaint-tracking/request" },
+      { label: "Create Complaint", path: "/complaint-tracking/create-complaint" },
+      { label: "Request Tracking", path: "/complaint-tracking/request-tracking" },
     ],
   },
   {

@@ -1,6 +1,6 @@
 
-import { BalanceIcon, MoneyRecieveIcon, MoneySendIcon, TotalUnitIcon } from "../../assets/icons/admin-dashboard-icons";
-import Card from "../../ui/Card";
+import { BalanceIcon, MoneyRecieveIcon, MoneySendIcon, TotalUnitIcon } from "../../../assets/icons/admin-dashboard-icons";
+import Card from "../../../ui/Card";
 
 type StatCardType = "balance" | "income" | "expense" | "unit";
 

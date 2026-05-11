@@ -1,12 +1,12 @@
 import { X } from "lucide-react";
-import { notifications } from "../../data/dashboard.data";
+import { notifications } from "../data/dashboard.data";
 import {
   NoNotificationIcon,
   NotificationProfilesIcon,
   NotificationOnlineIcon,
   NotificationCashIcon,
   NotificationGaneshIcon,
-} from "../../assets/icons/admin-dashboard-icons";
+} from "../assets/icons/admin-dashboard-icons";
 
 type NotificationItem = {
   id: string | number;

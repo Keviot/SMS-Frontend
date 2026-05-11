@@ -3,12 +3,12 @@ import {
   AddSquareIcon,
   EditIcon,
   TrashIcon,
-} from "../../assets/icons/admin-dashboard-icons";
-import Card from "../../ui/Card";
-import ConfirmPopup from "../../ui/ConfirmPopup";
+} from "../../../assets/icons/admin-dashboard-icons";
+import Card from "../../../ui/Card";
+import ConfirmPopup from "../../../ui/ConfirmPopup";
 import ImportantNumberFormModal, {
   type ImportantNumberFormValues,
-} from "../modals/ImportantNumberFormModal";
+} from "../../../components/modals/ImportantNumberFormModal";
 
 type ImportantNumber = {
   id: string;

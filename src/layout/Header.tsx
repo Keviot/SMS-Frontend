@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { authApi, BASE_URL } from "../services/api";
 import { NotificationBingIcon } from "../assets/icons/admin-dashboard-icons";
-import NotificationDropdown from "../components/dashboard/NotificationDropdown";
+import NotificationDropdown from "../components/NotificationDropdown";
 import Button from "../ui/Button";
 import Input from "../ui/Input";
 

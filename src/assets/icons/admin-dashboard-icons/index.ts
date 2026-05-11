@@ -23,7 +23,9 @@ import NoNotificationSvg from './no-notification.svg?react';
 import NotificationOnlineSvg from './notification-online.svg?react';
 import NotificationCashSvg from './notification-cash.svg?react';
 import NotificationGaneshSvg from './notification-ganesh.svg?react'
-
+import CalenderSvg from './calendar.svg?react';
+import DocumentSvg from './Document.svg?react';
+import GallerySvg from './gallery.svg?react';
 
 
 export const AnnouncementIcon = AnnouncementSvg;
@@ -49,6 +51,9 @@ export const NotificationProfilesIcon = NotificationProfileSvg;
 export const NotificationOnlineIcon = NotificationOnlineSvg;
 export const NotificationCashIcon = NotificationCashSvg;
 export const NotificationGaneshIcon = NotificationGaneshSvg;
+export const CalenderIcon = CalenderSvg;
+export const DocumentIcon = DocumentSvg;
+export const GalleryIcon = GallerySvg;
 
 
 

@@ -1,9 +1,9 @@
-import StatCard from "../../../components/dashboard/StatCard";
-import BalanceChart from "../../../components/dashboard/BalanceChart";
-import ComplaintTable from "../../../components/dashboard/ComplaintTable";
-import UpcomingActivityCard from "../../../components/dashboard/UpcomingActivityCard";
-import PendingMaintenanceCard from "../../../components/dashboard/PendingMaintenanceCard";
-import ImportantNumbersCard from "../../../components/dashboard/ImportantNumbersCard";
+import StatCard from "../components/StatCard";
+import BalanceChart from "../components/BalanceChart";
+import ComplaintTable from "../components/ComplaintTable";
+import UpcomingActivityCard from "../components/UpcomingActivityCard";
+import PendingMaintenanceCard from "../components/PendingMaintenanceCard";
+import ImportantNumbersCard from "../components/ImportantNumbersCard";
 import { complaints, importantNumbers, pendingMaintenances, statCards, upcomingActivities } from "../../../data/dashboard.data";
 
 export default function Dashboard() {
