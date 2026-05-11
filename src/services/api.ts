@@ -408,3 +408,55 @@ export const facilityApi = {
         return handleResponse(response);
     },
 };
+
+export const announcementApi = {
+    create: async (data: any) => {
+        const response = await fetch(`${API_URL}/announcement/create`, {
+            method: "POST",
+            credentials: "include",
+            headers: {
+                "Content-Type": "application/json",
+                ...getAuthHeader()
+            },
+            body: JSON.stringify(data),
+        });
+        return handleResponse(response);
+    },
+
+    getAll: async () => {
+        const response = await fetch(`${API_URL}/announcement/get`, {
+            method: "GET",
+            credentials: "include",
+            headers: {
+                "Content-Type": "application/json",
+                ...getAuthHeader()
+            },
+        });
+        return handleResponse(response);
+    },
+
+    edit: async (id: string, data: any) => {
+        const response = await fetch(`${API_URL}/announcement/edit/${id}`, {
+            method: "PUT",
+            credentials: "include",
+            headers: {
+                "Content-Type": "application/json",
+                ...getAuthHeader()
+            },
+            body: JSON.stringify(data),
+        });
+        return handleResponse(response);
+    },
+
+    delete: async (id: string) => {
+        const response = await fetch(`${API_URL}/announcement/delete/${id}`, {
+            method: "DELETE",
+            credentials: "include",
+            headers: {
+                "Content-Type": "application/json",
+                ...getAuthHeader()
+            },
+        });
+        return handleResponse(response);
+    },
+};
