@@ -47,7 +47,9 @@ export default function Header({ onMenuClick }: HeaderProps) {
     ? `${profile.firstname || ""} ${profile.lastname || ""}`.trim()
     : "First Lastname";
   const profileImageUrl = profile?.profileImage
-    ? `${BASE_URL}/${profile.profileImage}`
+    ? profile.profileImage.startsWith("http")
+      ? profile.profileImage
+      : `${BASE_URL}/${profile.profileImage}`
     : null;
   const notificationRef = useRef<HTMLDivElement | null>(null);
 

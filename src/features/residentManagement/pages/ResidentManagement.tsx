@@ -186,13 +186,13 @@ export default function ResidentManagement() {
         <div className="flex items-center justify-center gap-2">
           {row.fullName !== "-" ? (
             <>
-              <button 
+              <button
                 onClick={() => navigate(`/resident-management/edit/${row.id}`)}
                 className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#F6F8FB] text-[#00B69B] transition-colors hover:bg-blue-hover hover:text-black"
               >
                 <EditIcon className="h-4 w-4" />
               </button>
-              <button 
+              <button
                 onClick={() => {
                   setSelectedResident(row);
                   setIsViewModalOpen(true);
