@@ -3,12 +3,12 @@ import { User, Building2, Plus, Loader2 } from "lucide-react";
 import DataTable, { type DataTableColumn } from "../../../ui/DataTable";
 import StatusBadge from "../../../ui/StatusBadge";
 import Button from "../../../ui/Button";
-import ResidenceStatusModal from "../../../components/modals/ResidenceStatusModal";
+import ResidenceStatusModal from "../components/ResidenceStatusModal";
 import { EditIcon, EyeIcon } from "../../../assets/icons/admin-dashboard-icons";
 import { residentApi, BASE_URL } from "../../../services/api";
 import toast from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
-import ResidentViewModal from "../../../components/modals/ResidentViewModal";
+import ResidentViewModal from "../components/ResidentViewModal";
 
 interface Resident {
   id: string;
