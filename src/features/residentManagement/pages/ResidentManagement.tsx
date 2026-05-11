@@ -7,6 +7,8 @@ import ResidenceStatusModal from "../../../components/modals/ResidenceStatusModa
 import { EditIcon, EyeIcon } from "../../../assets/icons/admin-dashboard-icons";
 import { residentApi, BASE_URL } from "../../../services/api";
 import toast from "react-hot-toast";
+import { useNavigate } from "react-router-dom";
+import ResidentViewModal from "../../../components/modals/ResidentViewModal";
 
 interface Resident {
   id: string;
@@ -20,103 +22,40 @@ interface Resident {
   avatar?: string;
 }
 
-const mockResidents: Resident[] = [
-  {
-    id: "1",
-    fullName: "Evelyn Harper",
-    unitNumber: "A 1001",
-    unitStatus: "occupied",
-    residentStatus: "tenant",
-    phoneNumber: "97587 85828",
-    member: 1,
-    vehicle: 2,
-    avatar: "https://i.pravatar.cc/150?u=1",
-  },
-  {
-    id: "2",
-    fullName: "-",
-    unitNumber: "B 1002",
-    unitStatus: "vacate",
-    residentStatus: "tenant",
-    phoneNumber: "--",
-    member: 0,
-    vehicle: 0,
-  },
-  {
-    id: "3",
-    fullName: "Evelyn Harper",
-    unitNumber: "C 1003",
-    unitStatus: "occupied",
-    residentStatus: "owner",
-    phoneNumber: "97587 85828",
-    member: 1,
-    vehicle: 4,
-    avatar: "https://i.pravatar.cc/150?u=3",
-  },
-  {
-    id: "4",
-    fullName: "Evelyn Harper",
-    unitNumber: "D 1004",
-    unitStatus: "occupied",
-    residentStatus: "tenant",
-    phoneNumber: "97587 85828",
-    member: 4,
-    vehicle: 2,
-    avatar: "https://i.pravatar.cc/150?u=4",
-  },
-  {
-    id: "5",
-    fullName: "-",
-    unitNumber: "E 2001",
-    unitStatus: "vacate",
-    residentStatus: "tenant",
-    phoneNumber: "--",
-    member: 0,
-    vehicle: 0,
-  },
-  {
-    id: "6",
-    fullName: "Robert Fox",
-    unitNumber: "F 2002",
-    unitStatus: "occupied",
-    residentStatus: "tenant",
-    phoneNumber: "97587 85828",
-    member: 3,
-    vehicle: 2,
-    avatar: "https://i.pravatar.cc/150?u=6",
-  },
-  {
-    id: "7",
-    fullName: "Evelyn Harper",
-    unitNumber: "G 2003",
-    unitStatus: "occupied",
-    residentStatus: "owner",
-    phoneNumber: "97587 85828",
-    member: 5,
-    vehicle: 6,
-    avatar: "https://i.pravatar.cc/150?u=7",
-  },
-];
+
 
 export default function ResidentManagement() {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isViewModalOpen, setIsViewModalOpen] = useState(false);
+  const [selectedResident, setSelectedResident] = useState<Resident | null>(null);
   const [residents, setResidents] = useState<Resident[]>([]);
   const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
 
   const fetchResidents = async () => {
     try {
       setLoading(true);
       const data = await residentApi.getAll();
-      const mapped = data.map((r: any) => ({
+      const sortedData = [...data].sort((a: any, b: any) => {
+        const wingA = (a.wing || "").toUpperCase();
+        const wingB = (b.wing || "").toUpperCase();
+        if (wingA !== wingB) return wingA.localeCompare(wingB);
+
+        const unitA = parseInt(a.unit) || 0;
+        const unitB = parseInt(b.unit) || 0;
+        return unitA - unitB;
+      });
+
+      const mapped: Resident[] = sortedData.map((r: any) => ({
         id: r._id,
         fullName: r.name || "-",
         unitNumber: `${r.wing || "-"} ${r.unit || "-"}`,
         unitStatus: r.unitStatus?.toLowerCase() === "vacant" ? "vacate" : "occupied",
-        residentStatus: r.residentStatus?.toLowerCase() || "tenant",
+        residentStatus: r.residentStatus?.toLowerCase() === "owner" ? "owner" : "tenant",
         phoneNumber: r.phoneNumber || "--",
         member: r.memberCount || 0,
         vehicle: r.vehicles?.length || 0,
-        avatar: r.profileImage ? `${BASE_URL}/${r.profileImage}` : `https://i.pravatar.cc/150?u=${r._id}`
+        avatar: r.profileImage ? (r.profileImage.startsWith("http") ? r.profileImage : `${BASE_URL}/${r.profileImage}`) : undefined
       }));
       setResidents(mapped);
     } catch (error: any) {
@@ -130,13 +69,7 @@ export default function ResidentManagement() {
     fetchResidents();
   }, []);
 
-  const handleSaveStatus = () => {
-    // Logic moved to ResidenceStatusModal
-  };
 
-  const handleCreateVacant = async () => {
-    // Logic moved to ResidenceStatusModal
-  };
 
   const columns: DataTableColumn<Resident>[] = [
     {
@@ -245,10 +178,19 @@ export default function ResidentManagement() {
         <div className="flex items-center justify-center gap-2">
           {row.fullName !== "-" ? (
             <>
-              <button className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#F6F8FB] text-[#00B69B] transition-colors hover:bg-blue-hover hover:text-black">
+              <button 
+                onClick={() => navigate(`/resident-management/edit/${row.id}`)}
+                className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#F6F8FB] text-[#00B69B] transition-colors hover:bg-blue-hover hover:text-black"
+              >
                 <EditIcon className="h-4 w-4" />
               </button>
-              <button className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#F6F8FB] text-[#5678E9] transition-colors hover:bg-blue-hover hover:text-black">
+              <button 
+                onClick={() => {
+                  setSelectedResident(row);
+                  setIsViewModalOpen(true);
+                }}
+                className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#F6F8FB] text-[#5678E9] transition-colors hover:bg-blue-hover hover:text-black"
+              >
                 <EyeIcon className="h-4 w-4" />
               </button>
             </>
@@ -296,6 +238,14 @@ export default function ResidentManagement() {
         onClose={() => setIsModalOpen(false)}
         onSuccess={fetchResidents}
         residents={residents}
+      />
+      <ResidentViewModal
+        isOpen={isViewModalOpen}
+        onClose={() => {
+          setIsViewModalOpen(false);
+          setSelectedResident(null);
+        }}
+        resident={selectedResident}
       />
     </div>
   );

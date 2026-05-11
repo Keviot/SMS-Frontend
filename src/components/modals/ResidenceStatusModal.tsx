@@ -160,11 +160,14 @@ export default function ResidenceStatusModal({ isOpen, onClose, onSuccess, resid
               </label>
               <select 
                 value={vacateData.wing}
-                onChange={(e) => setVacateData({...vacateData, wing: e.target.value})}
+                onChange={(e) => setVacateData({...vacateData, wing: e.target.value, unit: ""})}
                 className="h-12 w-full rounded-xl border border-[#D3D3D3] px-3 text-sm outline-none focus:border-[#FF6B35]"
               >
                 <option value="">Select Wing</option>
-                {["A", "B", "C", "D", "E", "F", "G", "H", "I"].map(w => <option key={w} value={w}>{w}</option>)}
+                {Array.from(new Set(residents.map(r => r.unitNumber.split(" ")[0])))
+                  .filter(w => w !== "-")
+                  .sort()
+                  .map(w => <option key={w} value={w}>{w}</option>)}
               </select>
             </div>
             <div className="flex-1">
@@ -177,7 +180,12 @@ export default function ResidenceStatusModal({ isOpen, onClose, onSuccess, resid
                 className="h-12 w-full rounded-xl border border-[#D3D3D3] px-3 text-sm outline-none focus:border-[#FF6B35]"
               >
                 <option value="">Select Unit</option>
-                {[1001, 1002, 1003, 1004, 2001, 2002, 3001, 3002].map(u => <option key={u} value={u}>{u}</option>)}
+                {residents
+                  .filter(r => r.unitNumber.startsWith(vacateData.wing + " "))
+                  .map(r => r.unitNumber.split(" ")[1])
+                  .filter(u => u !== "-")
+                  .sort((a, b) => parseInt(a) - parseInt(b))
+                  .map(u => <option key={u} value={u}>{u}</option>)}
               </select>
             </div>
           </div>

@@ -101,6 +101,7 @@ function App() {
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/resident-management" element={<ResidentManagement />} />
           <Route path="/resident-management/add" element={<ResidentForm />} />
+          <Route path="/resident-management/edit/:id" element={<ResidentForm />} />
           <Route path="/financial-management/income" element={<Income />} />
           <Route path="/facility-management" element={<FacilityManagement />} />
           <Route path="/complaint-tracking" element={<ComplaintTracking />} />

@@ -61,7 +61,7 @@ export default function NotificationDropdown({
 
   if (!hasNotifications) {
     return (
-      <div className="fixed left-1/2 top-[86px] z-[90] h-[438px] w-[calc(100vw-24px)] max-w-[538px] -translate-x-1/2 rounded-[15px] bg-white px-[16px] py-[16px] shadow-[0_0_40px_rgba(0,0,0,0.05)] sm:absolute sm:left-auto sm:right-0 sm:top-[calc(100%+14px)] sm:w-[538px] sm:translate-x-0">
+      <div className="fixed left-1/2 top-[86px] z-90 h-[438px] w-[calc(100vw-24px)] max-w-[538px] -translate-x-1/2 rounded-[15px] bg-white px-[16px] py-[16px] shadow-[0_0_40px_rgba(0,0,0,0.05)] sm:absolute sm:left-auto sm:right-0 sm:top-[calc(100%+14px)] sm:w-[538px] sm:translate-x-0">
         <div className="flex h-[31px] items-center justify-between border-b border-[#F4F4F4] pb-[16px]">
           <h3 className="text-[20px] font-semibold leading-[25px] text-[#202224]">
             Notification

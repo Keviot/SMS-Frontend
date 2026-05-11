@@ -162,7 +162,7 @@ export default function Profile() {
                 className="hidden"
               />
               <img
-                src={previewUrl || (formData.profileImage ? `${BASE_URL}/${formData.profileImage}` : "https://cdn-icons-png.flaticon.com/512/149/149071.png")}
+                src={previewUrl || (formData.profileImage ? (formData.profileImage.startsWith("http") ? formData.profileImage : `${BASE_URL}/${formData.profileImage}`) : "https://cdn-icons-png.flaticon.com/512/149/149071.png")}
                 alt="Profile"
                 className="w-40 h-40 rounded-full object-cover border-4 border-white transition-all duration-300 group-hover:brightness-90"
               />
