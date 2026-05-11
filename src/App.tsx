@@ -21,6 +21,7 @@ import SecurityGuard from './features/securityManagement/pages/SecurityGuard'
 import Announcement from './features/announcement/pages/Announcement'
 import Profile from './features/profile/pages/Profile'
 import Income from './features/financialManagement/pages/Income'
+import Expense from './features/financialManagement/pages/Expense'
 
 
 function App() {
@@ -102,6 +103,8 @@ function App() {
           <Route path="/resident-management" element={<ResidentManagement />} />
           <Route path="/resident-management/add" element={<ResidentForm />} />
           <Route path="/financial-management/income" element={<Income />} />
+          <Route path="/financial-management/expense" element={<Expense />} />
+          <Route path="/financial-management/note" element={<Income />} />
           <Route path="/facility-management" element={<FacilityManagement />} />
           <Route path="/complaint-tracking" element={<ComplaintTracking />} />
           <Route path="/security-management" element={<SecurityManagement />} />

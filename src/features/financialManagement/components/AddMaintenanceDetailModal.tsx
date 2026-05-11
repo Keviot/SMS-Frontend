@@ -1,7 +1,7 @@
 import { useState } from "react";
-import Button from "../../ui/Button";
-import FormDatePicker from "../../ui/FormDatePicker";
-import FormSelect from "../../ui/FormSelect";
+import Button from "../../../ui/Button";
+import FormDatePicker from "../../../ui/FormDatePicker";
+import FormSelect from "../../../ui/FormSelect";
 
 interface AddMaintenanceDetailModalProps {
   open: boolean;

@@ -1,5 +1,5 @@
 import { X, Wallet } from "lucide-react";
-import StatusBadge from "../../ui/StatusBadge";
+import StatusBadge from "../../../ui/StatusBadge";
 
 interface ViewMaintenanceDetailsModalProps {
   open: boolean;

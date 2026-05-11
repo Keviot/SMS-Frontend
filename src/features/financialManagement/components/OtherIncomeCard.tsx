@@ -71,7 +71,7 @@ export default function OtherIncomeCard({
                   setOpenMenu(false);
                   onView?.(data.id);
                 }}
-                className="block w-full px-4 py-2 text-left text-xs font-medium text-[#6F7786] hover:bg-[#F6F8FB]"
+                className="block w-full px-4 py-2 text-left text-xs font-medium text-[#6F7786] hover:bg-[#F6F8FB] hover:text-[#202224]"
               >
                 View
               </button>
