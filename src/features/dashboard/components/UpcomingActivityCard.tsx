@@ -1,4 +1,4 @@
-import Card from "../../ui/Card";
+import Card from "../../../ui/Card";
 
 type UpcomingActivity = { id: string; letter: string; title: string; time: string; date: string };
 type UpcomingActivityCardProps = { data: UpcomingActivity[] };

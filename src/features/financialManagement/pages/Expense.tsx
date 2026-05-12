@@ -1,14 +1,14 @@
-import { Eye, FileImage, FileText, Pencil, Plus, Trash2 } from "lucide-react";
+import { useState, useEffect } from "react";
+import { FileImage, FileText, Pencil, Plus, Trash2, Loader2 } from "lucide-react";
 import Button from "../../../ui/Button";
-import ExpenseFormModal, {
-    type ExpenseFormData,
-} from "../components/ExpenseFormModal";
-import { useState } from "react";
+import ExpenseFormModal, { type ExpenseFormData } from "../components/ExpenseFormModal";
 import DeleteConfirmModal from "../components/DeleteConfirmModal";
 import ExpenseViewModal from "../components/ExpenseViewModal";
+import { EyeIcon } from "../../../assets/icons/admin-dashboard-icons";
+import { financialApi } from "../../../services/api";
+import toast from "react-hot-toast";
 
-
-type BillFormat = "JPG" | "PDF";
+type BillFormat = "JPG" | "PDF" | "PNG" | "GIF";
 
 type ExpenseItem = {
     id: string;
@@ -17,106 +17,55 @@ type ExpenseItem = {
     date: string;
     amount: number;
     billFormat: BillFormat;
+    uploadBill: string;
 };
 
-const expensesData: ExpenseItem[] = [
-    {
-        id: "1",
-        title: "Rent or Mortgage",
-        description: "A visual representation of your spending categories...",
-        date: "10/02/2024",
-        amount: 1000,
-        billFormat: "JPG",
-    },
-    {
-        id: "2",
-        title: "Housing Costs",
-        description: "Rack the fluctuations in your spending over we time...",
-        date: "11/02/2024",
-        amount: 1000,
-        billFormat: "PDF",
-    },
-    {
-        id: "3",
-        title: "Property Taxes",
-        description: "Easily compare your planned budget against we your...",
-        date: "12/02/2024",
-        amount: 1000,
-        billFormat: "JPG",
-    },
-    {
-        id: "4",
-        title: "Transportation",
-        description: "Identify your largest expenditures, you a enabling you...",
-        date: "13/02/2024",
-        amount: 1000,
-        billFormat: "PDF",
-    },
-    {
-        id: "5",
-        title: "Financial Breakdown",
-        description: "Tailor the dashboard to your unique financial we goals...",
-        date: "14/02/2024",
-        amount: 1000,
-        billFormat: "JPG",
-    },
-    {
-        id: "6",
-        title: "Expense Tracker",
-        description: "preferences by categorizing and organizing your expe...",
-        date: "15/02/2024",
-        amount: 1000,
-        billFormat: "PDF",
-    },
-    {
-        id: "7",
-        title: "Personal Expenses",
-        description: "future and adjust your budget will become accordingly...",
-        date: "16/02/2024",
-        amount: 1000,
-        billFormat: "JPG",
-    },
-    {
-        id: "8",
-        title: "Rent or Mortgage",
-        description: "expenses will becomea way that makes sense for you...",
-        date: "17/02/2024",
-        amount: 1000,
-        billFormat: "PDF",
-    },
-    {
-        id: "9",
-        title: "Cost Management Hub",
-        description: "Helping you identify where your money is it is a going...",
-        date: "18/02/2024",
-        amount: 1000,
-        billFormat: "JPG",
-    },
-    {
-        id: "10",
-        title: "Entertainment",
-        description: "Simply navigate through the different sections a to get...",
-        date: "19/02/2024",
-        amount: 1000,
-        billFormat: "PDF",
-    },
-    {
-        id: "11",
-        title: "Rent or Mortgage",
-        description: "A visual representation of your spending categories...",
-        date: "20/02/2024",
-        amount: 1000,
-        billFormat: "JPG",
-    },
-];
-
 export default function Expense() {
-
+    const [expenses, setExpenses] = useState<ExpenseItem[]>([]);
+    const [loading, setLoading] = useState(true);
     const [showExpenseModal, setShowExpenseModal] = useState(false);
     const [selectedExpense, setSelectedExpense] = useState<ExpenseItem | null>(null);
     const [showDeleteModal, setShowDeleteModal] = useState(false);
     const [showViewModal, setShowViewModal] = useState(false);
 
+    // Fetch expenses on component mount
+    useEffect(() => {
+        fetchExpenses();
+    }, []);
+
+    const fetchExpenses = async () => {
+        try {
+            setLoading(true);
+            const response = await financialApi.getExpenses();
+
+            // Transform backend data to frontend format
+            const transformedExpenses = response.data.map((item: any) => {
+                // Extract file extension from uploadBill URL
+                const fileExtension = item.uploadBill?.split('.').pop()?.toUpperCase() || 'JPG';
+                const billFormat = ['JPG', 'PNG', 'GIF', 'PDF'].includes(fileExtension)
+                    ? fileExtension as BillFormat
+                    : 'JPG';
+
+                return {
+                    id: item._id,
+                    title: item.title,
+                    description: item.description,
+                    date: new Date(item.date).toLocaleDateString("en-GB"),
+                    amount: item.amount,
+                    billFormat,
+                    uploadBill: item.uploadBill,
+                };
+            });
+
+            setExpenses(transformedExpenses);
+        } catch (error: any) {
+            console.error("Error fetching expenses:", error);
+            toast.error(error.message || "Failed to fetch expenses");
+            setExpenses([]);
+        } finally {
+            setLoading(false);
+        }
+    };
 
     const handleAddExpense = () => {
         setSelectedExpense(null);
@@ -138,145 +87,208 @@ export default function Expense() {
         setShowDeleteModal(true);
     };
 
-    const handleExpenseSubmit = (data: ExpenseFormData) => {
-        console.log("Expense submitted:", data);
+    const handleExpenseSubmit = async (data: ExpenseFormData) => {
+        try {
+            const payload = {
+                title: data.title,
+                description: data.description,
+                date: new Date(data.date).toISOString(),
+                amount: parseFloat(data.amount),
+                uploadBill: data.billName || "", // TODO: Handle file upload properly
+            };
 
-        setShowExpenseModal(false);
-        setSelectedExpense(null);
+            if (selectedExpense) {
+                // Edit existing expense
+                await financialApi.editExpense(selectedExpense.id, payload);
+                toast.success("Expense updated successfully!");
+            } else {
+                // Add new expense
+                await financialApi.addExpense(payload);
+                toast.success("Expense added successfully!");
+            }
+
+            setShowExpenseModal(false);
+            setSelectedExpense(null);
+
+            // Refresh expenses list
+            await fetchExpenses();
+        } catch (error: any) {
+            console.error("Error saving expense:", error);
+            toast.error(error.message || "Failed to save expense");
+        }
+    };
+
+    const handleConfirmDelete = async () => {
+        try {
+            if (!selectedExpense) return;
+
+            await financialApi.deleteExpense(selectedExpense.id);
+            toast.success("Expense deleted successfully!");
+
+            setShowDeleteModal(false);
+            setSelectedExpense(null);
+
+            // Refresh expenses list
+            await fetchExpenses();
+        } catch (error: any) {
+            console.error("Error deleting expense:", error);
+            toast.error(error.message || "Failed to delete expense");
+        }
     };
 
     return (
-        <div className="rounded-2xl bg-white p-4 sm:p-5">
-            {/* Header */}
-            <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                <h2 className="text-xl font-semibold leading-[30px] text-[#202224]">
-                    Add Expenses Details
-                </h2>
+        <>
+            <div className="rounded-2xl bg-white p-4 sm:p-5">
+                <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <h2 className="text-xl font-semibold leading-8 text-[#202224]">
+                        Add Expenses Details
+                    </h2>
 
-                <Button
-                    type="button"
-                    onClick={handleAddExpense}
-                    className="h-12 w-full rounded-[10px] bg-gradient-to-r from-[#FE512E] to-[#F09619] px-4 text-sm font-semibold text-white shadow-none sm:w-auto sm:min-w-[300px]"
-                >
-                    <span className="flex items-center justify-center gap-2">
-                        <Plus size={18} strokeWidth={2.5} />
-                        Add New Expenses Details
-                    </span>
-                </Button>
-            </div>
+                    <Button
+                        type="button"
+                        onClick={handleAddExpense}
+                        className="min-h-12 w-full rounded-xl bg-gradient-to-r from-[#FE512E] to-[#F09619] px-5 py-3 text-sm font-semibold text-white shadow-none sm:w-auto"
+                    >
+                        <span className="flex items-center justify-center gap-2">
+                            <Plus size={18} strokeWidth={2.5} />
+                            Add New Expenses Details
+                        </span>
+                    </Button>
+                </div>
 
-            {/* Table */}
-            <div className="overflow-x-auto">
-                <div className="min-w-[980px] overflow-hidden rounded-xl bg-white">
-                    <table className="w-full border-collapse">
-                        <thead>
-                            <tr className="h-[61px] bg-[#F1F3FF]">
-                                <th className="rounded-l-xl px-5 text-left text-sm font-semibold text-[#202224]">
-                                    Title
-                                </th>
-                                <th className="px-5 text-left text-sm font-semibold text-[#202224]">
-                                    Description
-                                </th>
-                                <th className="px-5 text-left text-sm font-semibold text-[#202224]">
-                                    Date
-                                </th>
-                                <th className="px-5 text-left text-sm font-semibold text-[#202224]">
-                                    Amount
-                                </th>
-                                <th className="px-5 text-left text-sm font-semibold text-[#202224]">
-                                    Bill Format
-                                </th>
-                                <th className="rounded-r-xl px-5 text-center text-sm font-semibold text-[#202224]">
-                                    Action
-                                </th>
-                            </tr>
-                        </thead>
+                <div className="overflow-hidden rounded-xl bg-white">
+                    <div className="overflow-x-auto">
+                        <div className="max-h-[calc(100vh-18rem)] min-w-[60rem] overflow-y-auto pr-1">
+                            {loading ? (
+                                <div className="flex items-center justify-center py-12">
+                                    <Loader2 className="h-8 w-8 animate-spin text-orange-500" />
+                                    <span className="ml-3 text-gray-600">Loading expenses...</span>
+                                </div>
+                            ) : expenses.length === 0 ? (
+                                <div className="flex flex-col items-center justify-center py-12 text-center">
+                                    <p className="text-gray-500">No expenses found</p>
+                                    <Button
+                                        onClick={handleAddExpense}
+                                        className="mt-4 h-12 rounded-xl px-6"
+                                    >
+                                        <Plus size={18} className="mr-2" />
+                                        Add First Expense
+                                    </Button>
+                                </div>
+                            ) : (
+                                <table className="w-full border-collapse">
+                                    <thead className="sticky top-0 z-10 bg-[#F1F3FF]">
+                                        <tr>
+                                            <th className="rounded-l-xl px-5 py-4 text-left text-sm font-semibold text-[#202224]">
+                                                Title
+                                            </th>
+                                            <th className="px-5 py-4 text-left text-sm font-semibold text-[#202224]">
+                                                Description
+                                            </th>
+                                            <th className="px-5 py-4 text-left text-sm font-semibold text-[#202224]">
+                                                Date
+                                            </th>
+                                            <th className="px-5 py-4 text-left text-sm font-semibold text-[#202224]">
+                                                Amount
+                                            </th>
+                                            <th className="px-5 py-4 text-left text-sm font-semibold text-[#202224]">
+                                                Bill Format
+                                            </th>
+                                            <th className="rounded-r-xl px-5 py-4 text-center text-sm font-semibold text-[#202224]">
+                                                Action
+                                            </th>
+                                        </tr>
+                                    </thead>
 
-                        <tbody>
-                            {expensesData.map((expense) => (
-                                <tr
-                                    key={expense.id}
-                                    className="h-[69px] border-b border-[#EDF0F5] last:border-b-0"
-                                >
-                                    <td className="px-5 text-sm font-medium text-[#434A57]">
-                                        {expense.title}
-                                    </td>
-
-                                    <td className="max-w-[420px] px-5 text-sm font-medium text-[#434A57]">
-                                        <p className="truncate">{expense.description}</p>
-                                    </td>
-
-                                    <td className="px-5 text-sm font-medium text-[#434A57]">
-                                        {expense.date}
-                                    </td>
-
-                                    <td className="px-5 text-sm font-semibold text-[#39973D]">
-                                        ₹ {expense.amount}
-                                    </td>
-
-                                    <td className="px-5">
-                                        <div className="flex items-center gap-2">
-                                            <span
-                                                className={`flex h-8 w-8 items-center justify-center rounded-lg ${expense.billFormat === "PDF"
-                                                    ? "bg-[#FFF1F1] text-[#E74C3C]"
-                                                    : "bg-[#EEF3FF] text-[#5678E9]"
-                                                    }`}
+                                    <tbody>
+                                        {expenses.map((expense) => (
+                                            <tr
+                                                key={expense.id}
+                                                className="border-b border-[#EDF0F5] last:border-b-0"
                                             >
-                                                {expense.billFormat === "PDF" ? (
-                                                    <FileText size={17} />
-                                                ) : (
-                                                    <FileImage size={17} />
-                                                )}
-                                            </span>
+                                                <td className="px-5 py-4 text-sm font-medium text-[#434A57]">
+                                                    {expense.title}
+                                                </td>
 
-                                            <span className="text-sm font-medium text-[#434A57]">
-                                                {expense.billFormat}
-                                            </span>
-                                        </div>
-                                    </td>
+                                                <td className="max-w-md px-5 py-4 text-sm font-medium text-[#434A57]">
+                                                    <p className="truncate">{expense.description}</p>
+                                                </td>
 
-                                    <td className="px-5">
-                                        <div className="flex items-center justify-center gap-3">
-                                            <button
-                                                type="button"
-                                                onClick={() => handleEditExpense(expense)}
-                                                className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#EAF8EF] text-[#39973D] transition hover:bg-[#DDF3E5]"
-                                                aria-label="Edit expense"
-                                            >
-                                                <Pencil size={16} />
-                                            </button>
+                                                <td className="px-5 py-4 text-sm font-medium text-[#434A57]">
+                                                    {expense.date}
+                                                </td>
 
-                                            <button
-                                                type="button"
-                                                onClick={() => handleViewExpense(expense)}
-                                                className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#EEF3FF] text-[#5678E9] transition hover:bg-[#E3EBFF]"
-                                                aria-label="View expense"
-                                            >
-                                                <Eye size={16} />
-                                            </button>
+                                                <td className="px-5 py-4 text-sm font-semibold text-[#39973D]">
+                                                    ₹ {expense.amount.toLocaleString()}
+                                                </td>
 
-                                            <button
-                                                type="button"
-                                                onClick={() => handleDeleteExpense(expense)}
-                                                className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#FFF1F1] text-[#E74C3C] transition hover:bg-[#FFE4E4]"
-                                                aria-label="Delete expense"
-                                            >
-                                                <Trash2 size={16} />
-                                            </button>
-                                        </div>
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
+                                                <td className="px-5 py-4">
+                                                    <div className="flex items-center gap-2">
+                                                        <span
+                                                            className={`flex size-8 items-center justify-center rounded-lg ${expense.billFormat === "PDF"
+                                                                    ? "bg-[#FFF1F1] text-[#E74C3C]"
+                                                                    : "bg-[#EEF3FF] text-[#5678E9]"
+                                                                }`}
+                                                        >
+                                                            {expense.billFormat === "PDF" ? (
+                                                                <FileText size={17} />
+                                                            ) : (
+                                                                <FileImage size={17} />
+                                                            )}
+                                                        </span>
+
+                                                        <span className="text-sm font-medium text-[#434A57]">
+                                                            {expense.billFormat}
+                                                        </span>
+                                                    </div>
+                                                </td>
+
+                                                <td className="px-5 py-4">
+                                                    <div className="flex items-center justify-center gap-3">
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => handleEditExpense(expense)}
+                                                            className="flex size-8 items-center justify-center rounded-lg bg-[#EAF8EF] text-[#39973D] transition hover:bg-[#DDF3E5]"
+                                                            aria-label="Edit expense"
+                                                        >
+                                                            <Pencil size={16} />
+                                                        </button>
+
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => handleViewExpense(expense)}
+                                                            className="flex size-8 items-center justify-center rounded-lg bg-[#EEF3FF] text-[#5678E9] transition hover:bg-[#E3EBFF]"
+                                                            aria-label="View expense"
+                                                        >
+                                                            <EyeIcon />
+                                                        </button>
+
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => handleDeleteExpense(expense)}
+                                                            className="flex size-8 items-center justify-center rounded-lg bg-[#FFF1F1] text-[#E74C3C] transition hover:bg-[#FFE4E4]"
+                                                            aria-label="Delete expense"
+                                                        >
+                                                            <Trash2 size={16} />
+                                                        </button>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            )}
+                        </div>
+                    </div>
                 </div>
             </div>
 
-
-
             <ExpenseFormModal
                 open={showExpenseModal}
-                onClose={() => setShowExpenseModal(false)}
+                onClose={() => {
+                    setShowExpenseModal(false);
+                    setSelectedExpense(null);
+                }}
                 onSubmit={handleExpenseSubmit}
                 isEdit={Boolean(selectedExpense)}
                 initialData={
@@ -286,7 +298,7 @@ export default function Expense() {
                             description: selectedExpense.description,
                             date: selectedExpense.date,
                             amount: String(selectedExpense.amount),
-                            billName: "Syncfusion Essential Rentagreement.GIF",
+                            billName: selectedExpense.uploadBill || "Uploaded Bill",
                             billSize: "3.5 MB",
                         }
                         : null
@@ -304,18 +316,15 @@ export default function Expense() {
                         ? {
                             id: selectedExpense.id,
                             title: selectedExpense.title,
-                            description:
-                                selectedExpense.description ||
-                                "A visual representation of your spending categories visual representation.",
+                            description: selectedExpense.description,
                             date: selectedExpense.date,
                             amount: selectedExpense.amount,
-                            billName: "Adharcard Front Side.JPG",
+                            billName: selectedExpense.uploadBill || "Uploaded Bill",
                             billSize: "3.5 MB",
                         }
                         : null
                 }
             />
-
 
             <DeleteConfirmModal
                 open={showDeleteModal}
@@ -323,18 +332,10 @@ export default function Expense() {
                     setShowDeleteModal(false);
                     setSelectedExpense(null);
                 }}
-                onConfirm={() => {
-                    console.log("Delete expense:", selectedExpense);
-                    setShowDeleteModal(false);
-                    setSelectedExpense(null);
-                }}
+                onConfirm={handleConfirmDelete}
                 title="Delete Expense?"
                 message="Are you sure you want to delete this?"
             />
-
-
-        </div>
-
-
+        </>
     );
 }

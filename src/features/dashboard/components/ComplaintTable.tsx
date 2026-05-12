@@ -1,18 +1,18 @@
 import { useState } from "react";
-import type { ComplaintStatus, Priority } from "../../data/dashboard.data";
+import type { ComplaintStatus, Priority } from "../../../data/dashboard.data";
 import {
   EditIcon,
   EyeIcon,
   TrashIcon,
-} from "../../assets/icons/admin-dashboard-icons";
-import Card from "../../ui/Card";
-import ConfirmPopup from "../../ui/ConfirmPopup";
+} from "../../../assets/icons/admin-dashboard-icons";
+import Card from "../../../ui/Card";
+import ConfirmPopup from "../../../ui/ConfirmPopup";
 import ComplaintFormModal, {
   type ComplaintFormValues,
-} from "../modals/ComplaintFormModal";
+} from "../../../components/modals/ComplaintFormModal";
 import ComplaintViewModal, {
   type ComplaintViewData,
-} from "../modals/ComplaintViewModal";
+} from "../../../components/modals/ComplaintViewModal";
 
 type ComplaintRow = {
   id: string;

@@ -1,5 +1,5 @@
 import { ChevronDown } from "lucide-react";
-import Card from "../../ui/Card";
+import Card from "../../../ui/Card";
 
 const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "July", "Aug", "Sep", "Oct", "Nov", "Dec"];
 const values = [10, 16, 14, 27, 18, 24, 20, 30, 29, 28, 40, 48];

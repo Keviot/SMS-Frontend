@@ -15,7 +15,6 @@ import reset from './assets/images/reset.png'
 import ResidentManagement from './features/residentManagement/pages/ResidentManagement'
 import ResidentForm from './features/residentManagement/pages/ResidentForm'
 import FacilityManagement from './features/facilityManagement/pages/FacilityManagement'
-import ComplaintTracking from './features/complaintTracking/pages/ComplaintTracking'
 import SecurityManagement from './features/securityManagement/pages/SecurityManagement'
 import SecurityGuard from './features/securityManagement/pages/SecurityGuard'
 import Announcement from './features/announcement/pages/Announcement'
@@ -23,6 +22,9 @@ import Profile from './features/profile/pages/Profile'
 import Income from './features/financialManagement/pages/Income'
 import CreatePassword from './features/auth/pages/CreatePassword'
 import Expense from './features/financialManagement/pages/Expense'
+import Note from './features/financialManagement/pages/Note'
+import CreateComplaint from './features/complaintTracking/pages/CreateComplaint'
+import RequestTracking from './features/complaintTracking/pages/RequestTracking'
 
 import { SocketProvider } from './context/SocketContext'
 
@@ -110,9 +112,10 @@ function App() {
           <Route path="/resident-management/edit/:id" element={<ResidentForm />} />
           <Route path="/financial-management/income" element={<Income />} />
           <Route path="/financial-management/expense" element={<Expense />} />
-          <Route path="/financial-management/note" element={<Income />} />
+          <Route path="/financial-management/note" element={<Note />} />
           <Route path="/facility-management" element={<FacilityManagement />} />
-          <Route path="/complaint-tracking" element={<ComplaintTracking />} />
+          <Route path="/complaint-tracking/create-complaint" element={<CreateComplaint />} />
+          <Route path="/complaint-tracking/request-tracking" element={<RequestTracking />} />
           <Route path="/security-management" element={<SecurityManagement />} />
           <Route path="/security-guard" element={<SecurityGuard />} />
           <Route path="/announcement" element={<Announcement />} />

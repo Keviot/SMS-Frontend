@@ -1,5 +1,5 @@
-import Button from "../../ui/Button";
-import Card from "../../ui/Card";
+import Button from "../../../ui/Button";
+import Card from "../../../ui/Card";
 
 type PendingMaintenance = { id: string; name: string; pending: string; amount: string };
 type PendingMaintenanceCardProps = { data: PendingMaintenance[] };
