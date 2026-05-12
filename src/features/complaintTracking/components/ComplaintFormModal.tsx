@@ -9,7 +9,7 @@ export interface ComplaintFormData {
     wing: string;
     unit: string;
     priority: "High" | "Medium" | "Low";
-    status: "Open" | "Pending" | "Solve";
+    status: "Open" | "Pending" | "Closed";
 }
 
 interface ComplaintFormModalProps {
@@ -188,14 +188,14 @@ export default function ComplaintFormModal({
                                     type="button"
                                     onClick={() => handleInputChange("priority", priority)}
                                     className={`flex h-12 items-center justify-center gap-2 rounded-[10px] border text-sm font-medium transition ${formData.priority === priority
-                                            ? "border-[#FE512E] bg-[#FFF7F3] text-[#202224]"
-                                            : "border-[#D9D9D9] bg-white text-[#A7A7A7] hover:border-[#FE512E]"
+                                        ? "border-[#FE512E] bg-[#FFF7F3] text-[#202224]"
+                                        : "border-[#D9D9D9] bg-white text-[#A7A7A7] hover:border-[#FE512E]"
                                         }`}
                                 >
                                     <span
                                         className={`flex size-4 items-center justify-center rounded-full border-2 ${formData.priority === priority
-                                                ? "border-[#FE512E]"
-                                                : "border-[#D9D9D9]"
+                                            ? "border-[#FE512E]"
+                                            : "border-[#D9D9D9]"
                                             }`}
                                     >
                                         {formData.priority === priority && (
@@ -215,20 +215,20 @@ export default function ComplaintFormModal({
                         </label>
 
                         <div className="grid grid-cols-3 gap-3">
-                            {(["Open", "Pending", "Solve"] as const).map((status) => (
+                            {(["Open", "Pending", "Closed"] as const).map((status) => (
                                 <button
                                     key={status}
                                     type="button"
                                     onClick={() => handleInputChange("status", status)}
                                     className={`flex h-12 items-center justify-center gap-2 rounded-[10px] border text-sm font-medium transition ${formData.status === status
-                                            ? "border-[#FE512E] bg-[#FFF7F3] text-[#202224]"
-                                            : "border-[#D9D9D9] bg-white text-[#A7A7A7] hover:border-[#FE512E]"
+                                        ? "border-[#FE512E] bg-[#FFF7F3] text-[#202224]"
+                                        : "border-[#D9D9D9] bg-white text-[#A7A7A7] hover:border-[#FE512E]"
                                         }`}
                                 >
                                     <span
                                         className={`flex size-4 items-center justify-center rounded-full border-2 ${formData.status === status
-                                                ? "border-[#FE512E]"
-                                                : "border-[#D9D9D9]"
+                                            ? "border-[#FE512E]"
+                                            : "border-[#D9D9D9]"
                                             }`}
                                     >
                                         {formData.status === status && (
@@ -257,8 +257,8 @@ export default function ComplaintFormModal({
                             onClick={handleSubmit}
                             disabled={!isFormValid}
                             className={`h-[51px] rounded-[10px] text-base font-semibold shadow-none ${isFormValid
-                                    ? "bg-gradient-to-r from-[#FE512E] to-[#F09619] text-white"
-                                    : "!bg-[#F6F8FB] text-[#202224]"
+                                ? "bg-gradient-to-r from-[#FE512E] to-[#F09619] text-white"
+                                : "!bg-[#F6F8FB] text-[#202224]"
                                 }`}
                         >
                             {isEdit ? "Save" : "Create"}

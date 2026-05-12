@@ -1,10 +1,10 @@
 import { useState, useEffect } from "react";
-import { FileImage, FileText, Pencil, Plus, Trash2, Loader2 } from "lucide-react";
+import { FileImage, FileText, Plus, Loader2 } from "lucide-react";
 import Button from "../../../ui/Button";
 import ExpenseFormModal, { type ExpenseFormData } from "../components/ExpenseFormModal";
 import DeleteConfirmModal from "../components/DeleteConfirmModal";
 import ExpenseViewModal from "../components/ExpenseViewModal";
-import { EyeIcon } from "../../../assets/icons/admin-dashboard-icons";
+import { EditIcon, EyeIcon, TrashIcon } from "../../../assets/icons/admin-dashboard-icons";
 import { financialApi } from "../../../services/api";
 import toast from "react-hot-toast";
 
@@ -226,8 +226,8 @@ export default function Expense() {
                                                     <div className="flex items-center gap-2">
                                                         <span
                                                             className={`flex size-8 items-center justify-center rounded-lg ${expense.billFormat === "PDF"
-                                                                    ? "bg-[#FFF1F1] text-[#E74C3C]"
-                                                                    : "bg-[#EEF3FF] text-[#5678E9]"
+                                                                ? "bg-[#FFF1F1] text-[#E74C3C]"
+                                                                : "bg-[#EEF3FF] text-[#5678E9]"
                                                                 }`}
                                                         >
                                                             {expense.billFormat === "PDF" ? (
@@ -248,28 +248,34 @@ export default function Expense() {
                                                         <button
                                                             type="button"
                                                             onClick={() => handleEditExpense(expense)}
-                                                            className="flex size-8 items-center justify-center rounded-lg bg-[#EAF8EF] text-[#39973D] transition hover:bg-[#DDF3E5]"
+                                                            className="inline-flex aspect-square min-w-8 items-center justify-center rounded-[10px] bg-[#E8F7EC] text-[#39973D] transition hover:scale-105"
                                                             aria-label="Edit expense"
                                                         >
-                                                            <Pencil size={16} />
+                                                            <span className="flex size-4 items-center justify-center [&>svg]:size-4 [&>svg]:text-current">
+                                                                <EditIcon />
+                                                            </span>
                                                         </button>
 
                                                         <button
                                                             type="button"
                                                             onClick={() => handleViewExpense(expense)}
-                                                            className="flex size-8 items-center justify-center rounded-lg bg-[#EEF3FF] text-[#5678E9] transition hover:bg-[#E3EBFF]"
+                                                            className="inline-flex aspect-square min-w-8 items-center justify-center rounded-[10px] bg-[#EEF2FF] text-[#5678E9] transition hover:scale-105"
                                                             aria-label="View expense"
                                                         >
-                                                            <EyeIcon />
+                                                            <span className="flex size-4 items-center justify-center [&>svg]:size-4 [&>svg]:text-current">
+                                                                <EyeIcon />
+                                                            </span>
                                                         </button>
 
                                                         <button
                                                             type="button"
                                                             onClick={() => handleDeleteExpense(expense)}
-                                                            className="flex size-8 items-center justify-center rounded-lg bg-[#FFF1F1] text-[#E74C3C] transition hover:bg-[#FFE4E4]"
+                                                            className="inline-flex aspect-square min-w-8 items-center justify-center rounded-[10px] bg-[#FFF0F0] text-[#E74C3C] transition hover:scale-105"
                                                             aria-label="Delete expense"
                                                         >
-                                                            <Trash2 size={16} />
+                                                            <span className="flex size-4 items-center justify-center [&>svg]:size-4 [&>svg]:text-current">
+                                                                <TrashIcon />
+                                                            </span>
                                                         </button>
                                                     </div>
                                                 </td>

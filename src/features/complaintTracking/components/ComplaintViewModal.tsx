@@ -9,7 +9,7 @@ interface ComplaintViewData {
     wing: string;
     unit: string;
     priority: "High" | "Medium" | "Low";
-    status: "Open" | "Pending" | "Solve";
+    status: "Open" | "Pending" | "Closed";
 }
 
 interface ComplaintViewModalProps {
@@ -32,7 +32,7 @@ function priorityClass(priority: string) {
 
 function statusClass(status: string) {
     switch (status) {
-        case "Solve":
+        case "Closed":
             return "bg-[#E5F4E8] text-[#39973D]";
         case "Open":
             return "bg-[#EEF2FF] text-[#5678E9]";
