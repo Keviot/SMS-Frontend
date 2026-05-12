@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+
 import AppModal from "./AppModal";
 import FormInput from "../../ui/FormInput";
 import PopupActions from "../../ui/PopupActions";
@@ -30,7 +31,8 @@ export default function ImportantNumberFormModal({
   onClose,
   onSave,
 }: ImportantNumberFormModalProps) {
-  const [values, setValues] = useState<ImportantNumberFormValues>(defaultValues);
+  const [values, setValues] =
+    useState<ImportantNumberFormValues>(defaultValues);
 
   useEffect(() => {
     if (!open) return;
@@ -68,11 +70,14 @@ export default function ImportantNumberFormModal({
   return (
     <AppModal
       open={open}
+      onClose={onClose}
       title={mode === "edit" ? "Edit Important Number" : "Add Important Number"}
-      widthClassName="w-[410px]"
+      widthClassName="max-w-[410px]"
+      showHeaderDivider
+      titleClassName="text-xl font-bold leading-6 text-[#202224]"
     >
       <form onSubmit={handleSubmit}>
-        <div className="mt-[20px] flex flex-col gap-[5px]">
+        <div className="flex flex-col gap-1.5">
           <FormInput
             label="Full Name"
             required
@@ -98,7 +103,11 @@ export default function ImportantNumberFormModal({
           />
         </div>
 
-        <PopupActions onCancel={onClose} disabled={isDisabled} submitText="Save" />
+        <PopupActions
+          onCancel={onClose}
+          disabled={isDisabled}
+          submitText="Save"
+        />
       </form>
     </AppModal>
   );

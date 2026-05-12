@@ -1,8 +1,13 @@
+import { cn } from "../lib/cn";
+
 type PopupActionsProps = {
   cancelText?: string;
   submitText?: string;
   disabled?: boolean;
   onCancel: () => void;
+  className?: string;
+  cancelClassName?: string;
+  submitClassName?: string;
 };
 
 export default function PopupActions({
@@ -10,13 +15,19 @@ export default function PopupActions({
   submitText = "Save",
   disabled = false,
   onCancel,
+  className = "",
+  cancelClassName = "",
+  submitClassName = "",
 }: PopupActionsProps) {
   return (
-    <div className="mt-[20px] grid h-[51px] grid-cols-2 gap-[20px]">
+    <div className={cn("mt-5 grid grid-cols-2 gap-5", className)}>
       <button
         type="button"
         onClick={onCancel}
-        className="h-[51px] rounded-[10px] border border-[#D3D3D3] bg-white text-[14px] font-medium leading-[17px] text-[#202224] transition hover:bg-[#F6F8FB]"
+        className={cn(
+          "min-h-[51px] rounded-[10px] border border-[#D3D3D3] bg-white px-4 text-sm font-medium leading-[17px] text-[#202224] transition hover:bg-[#F6F8FB]",
+          cancelClassName
+        )}
       >
         {cancelText}
       </button>
@@ -24,7 +35,10 @@ export default function PopupActions({
       <button
         type="submit"
         disabled={disabled}
-        className="h-[51px] rounded-[10px] bg-[linear-gradient(90deg,#FE512E_0%,#F09619_100%)] text-[14px] font-semibold leading-[17px] text-white transition disabled:bg-none disabled:bg-[#F6F8FB] disabled:text-[#202224] disabled:opacity-100"
+        className={cn(
+          "min-h-[51px] rounded-[10px] bg-[linear-gradient(90deg,#FE512E_0%,#F09619_100%)] px-4 text-sm font-semibold leading-[17px] text-white transition disabled:bg-none disabled:bg-[#F6F8FB] disabled:text-[#202224] disabled:opacity-100",
+          submitClassName
+        )}
       >
         {submitText}
       </button>

@@ -1,3 +1,6 @@
+import { useEffect, useState } from "react";
+import { Loader2 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 import StatCard from "../components/StatCard";
 import BalanceChart from "../components/BalanceChart";
@@ -5,14 +8,20 @@ import ComplaintTable from "../components/ComplaintTable";
 import UpcomingActivityCard from "../components/UpcomingActivityCard";
 import PendingMaintenanceCard from "../components/PendingMaintenanceCard";
 import ImportantNumbersCard from "../components/ImportantNumbersCard";
-import { complaints, importantNumbers, pendingMaintenances, statCards, upcomingActivities } from "../../../data/dashboard.data";
-import { Loader2 } from "lucide-react";
-import { useNavigate } from "react-router-dom";
-import { useEffect, useState } from "react";
+
+import {
+  complaints,
+  importantNumbers,
+  pendingMaintenances,
+  statCards,
+  upcomingActivities,
+} from "../../../data/dashboard.data";
+
 import { authApi } from "../../../services/api";
 
 export default function Dashboard() {
   const navigate = useNavigate();
+
   const [role, setRole] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -20,6 +29,7 @@ export default function Dashboard() {
     const checkRole = async () => {
       try {
         const data = await authApi.getProfile();
+
         if (data.user) {
           const userRole = data.user.role?.toLowerCase();
           setRole(userRole);
@@ -30,40 +40,47 @@ export default function Dashboard() {
         setLoading(false);
       }
     };
+
     checkRole();
   }, []);
 
   if (loading) {
     return (
-      <div className="flex h-[400px] items-center justify-center">
-        <Loader2 className="h-10 w-10 animate-spin text-[var(--primary)]" />
+      <div className="grid min-h-[60vh] place-items-center">
+        <Loader2 className="size-10 animate-spin text-[var(--primary)]" />
       </div>
     );
   }
 
-  // Security View Landing (If they manually navigate to /dashboard)
   if (role === "guard" || role === "security") {
     return (
-      <div className="flex flex-col items-center justify-center h-[400px] text-center bg-white rounded-3xl border border-gray-100 shadow-sm">
-        <h2 className="text-xl font-bold text-gray-900 mb-2">Security Dashboard</h2>
-        <p className="text-gray-500 mb-6">Access visitor tracking and security protocols.</p>
-        <div className="flex gap-4">
-          <button
-            onClick={() => navigate("/security-guard")}
-            className="bg-[#FE512E] text-white px-6 py-2.5 rounded-xl font-bold shadow-lg hover:opacity-90 transition-all"
-          >
-            Visitor Tracking
-          </button>
+      <section className="grid min-h-[60vh] place-items-center rounded-3xl border border-gray-100 bg-white p-6 text-center shadow-sm">
+        <div className="max-w-md">
+          <h2 className="text-xl font-bold text-gray-900">
+            Security Dashboard
+          </h2>
+
+          <p className="mt-2 text-sm font-medium text-gray-500">
+            Access visitor tracking and security protocols.
+          </p>
+
+          <div className="mt-6 flex justify-center">
+            <button
+              type="button"
+              onClick={() => navigate("/security-guard")}
+              className="rounded-xl bg-[#FE512E] px-6 py-2.5 text-sm font-bold text-white shadow-lg shadow-orange-100 transition hover:opacity-90"
+            >
+              Visitor Tracking
+            </button>
+          </div>
         </div>
-      </div>
+      </section>
     );
   }
 
-  // Both Admin and Resident see the same high-fidelity layout as per the user request
   return (
-    <div className="space-y-[20px] animate-in fade-in duration-500">
-      {/* Row 1: Stat Cards - 4 equal columns */}
-      <section className="grid grid-cols-1 gap-[20px] sm:grid-cols-2 lg:grid-cols-4">
+    <div className="animate-in fade-in flex flex-col gap-5 duration-500">
+      <section className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-4">
         {statCards.map((card) => (
           <StatCard
             key={card.title}
@@ -74,15 +91,13 @@ export default function Dashboard() {
         ))}
       </section>
 
-      {/* Row 2: Balance Chart (Large) | Important Numbers | Pending Maintenances */}
-      <section className="grid grid-cols-1 gap-[20px] lg:grid-cols-2 xl:grid-cols-[2fr_1fr_1fr]">
+      <section className="grid grid-cols-1 gap-5 xl:grid-cols-[minmax(0,2fr)_minmax(16rem,1fr)_minmax(16rem,1fr)]">
         <BalanceChart />
         <ImportantNumbersCard data={importantNumbers} role={role} />
         <PendingMaintenanceCard data={pendingMaintenances} />
       </section>
 
-      {/* Row 3: Complaint List (Large) | Upcoming Activity */}
-      <section className="grid grid-cols-1 gap-[20px] xl:grid-cols-[3fr_1fr]">
+      <section className="grid grid-cols-1 gap-5 xl:grid-cols-[minmax(0,3fr)_minmax(16rem,1fr)]">
         <ComplaintTable data={complaints} role={role} />
         <UpcomingActivityCard data={upcomingActivities} />
       </section>

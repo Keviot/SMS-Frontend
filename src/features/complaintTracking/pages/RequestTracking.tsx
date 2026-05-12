@@ -407,7 +407,7 @@ export default function RequestTracking() {
 
                       <td className="px-5 py-4">
                         <span
-                          className={`mx-auto flex min-w-24 items-center justify-center rounded-full px-3 py-1.5 text-xs font-semibold ${priorityClass(
+                          className={`mx-auto flex min-w-24 items-center justify-center rounded-full px-2.5 py-2 text-xs font-semibold ${priorityClass(
                             request.priority
                           )}`}
                         >
@@ -417,7 +417,7 @@ export default function RequestTracking() {
 
                       <td className="px-5 py-4">
                         <span
-                          className={`mx-auto flex min-w-24 items-center justify-center rounded-full px-3 py-1.5 text-xs font-semibold ${statusClass(
+                          className={`mx-auto flex min-w-24 items-center justify-center rounded-full px-2.5 py-2 text-xs font-semibold ${statusClass(
                             request.status
                           )}`}
                         >

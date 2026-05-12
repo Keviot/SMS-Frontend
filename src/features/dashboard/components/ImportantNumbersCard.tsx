@@ -36,7 +36,7 @@ function ActionButton({
       type="button"
       aria-label={label}
       onClick={onClick}
-      className="grid h-[30px] w-[30px] place-items-center rounded-[6px] bg-[#F6F8FB] transition hover:bg-[#EEF4FF] [&_svg]:h-[17px] [&_svg]:w-[17px]"
+      className="grid size-[30px] place-items-center rounded-md bg-[#F6F8FB] transition hover:bg-[#EEF4FF] [&_svg]:size-[17px]"
     >
       {children}
     </button>
@@ -56,6 +56,8 @@ export default function ImportantNumbersCard({
   );
 
   const [deleteTarget, setDeleteTarget] = useState<ImportantNumber | null>(null);
+
+  const isResident = role === "resident";
 
   const openAddModal = () => {
     setModalMode("add");
@@ -88,9 +90,9 @@ export default function ImportantNumbersCard({
         current.map((item) =>
           item.id === selectedNumber.id
             ? {
-              ...item,
-              ...values,
-            }
+                ...item,
+                ...values,
+              }
             : item
         )
       );
@@ -119,65 +121,67 @@ export default function ImportantNumbersCard({
 
   return (
     <>
-      <Card className="h-[398px] p-[16px]">
-        <div className="flex items-center justify-between gap-[10px]">
-          <h2 className="text-[16px] font-semibold leading-[20px] text-[#202224]">
+      <Card className="flex min-h-[398px] flex-col p-4">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <h2 className="text-base font-semibold leading-5 text-[#202224]">
             Important Numbers
           </h2>
 
-          {role !== "resident" && (
+          {!isResident && (
             <button
               type="button"
               onClick={openAddModal}
-              className="flex h-[43px] w-[84px] items-center gap-[8px] rounded-[5px] bg-[linear-gradient(90deg,#FE512E_0%,#F09619_100%)] px-[9px] text-[12px] font-medium text-white"
+              className="flex min-h-[43px] items-center gap-2 rounded-[5px] bg-[linear-gradient(90deg,#FE512E_0%,#F09619_100%)] px-2.5 text-xs font-medium text-white shadow-[0_8px_18px_rgba(254,81,46,0.22)] transition hover:opacity-95"
             >
-              <AddSquareIcon className="h-[20px] w-[20px]" />
+              <AddSquareIcon className="size-5 shrink-0" />
               Add
             </button>
           )}
         </div>
 
-        <div className="mt-[15px] h-[320px] space-y-[11px] overflow-y-auto pr-[4px]">
-          {numbers.map((item) => (
-            <div
-              key={item.id}
-              className="flex min-h-[75px] justify-between gap-[10px] rounded-[10px] border border-[#F1F1F1] bg-white p-[10px]"
-            >
-              <div className="min-w-0 flex-1">
-                <p className="truncate text-[12px] font-medium leading-[18px] text-[#202224]">
-                  <span className="font-semibold">Name :</span>{" "}
-                  <span className="text-[#4F4F4F]">{item.name}</span>
-                </p>
+        <div className="mt-4 min-h-0 flex-1 overflow-hidden">
+          <div className="max-h-[320px] space-y-3 overflow-y-auto pr-1">
+            {numbers.map((item) => (
+              <div
+                key={item.id}
+                className="flex min-h-[75px] justify-between gap-3 rounded-[10px] border border-[#F1F1F1] bg-white p-2.5 transition hover:border-[#EDF0F5] hover:shadow-[0_6px_18px_rgba(15,23,42,0.04)]"
+              >
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-xs font-medium leading-[18px] text-[#202224]">
+                    <span className="font-semibold">Name :</span>{" "}
+                    <span className="text-[#4F4F4F]">{item.name}</span>
+                  </p>
 
-                <p className="mt-[5px] truncate text-[11px] font-medium leading-[16px] text-[#A7A7A7]">
-                  Ph Number :{" "}
-                  <span className="text-[#4F4F4F]">{item.phone}</span>
-                </p>
+                  <p className="mt-1 truncate text-[11px] font-medium leading-4 text-[#A7A7A7]">
+                    Ph Number :{" "}
+                    <span className="text-[#4F4F4F]">{item.phone}</span>
+                  </p>
 
-                <p className="mt-[5px] truncate text-[11px] font-medium leading-[16px] text-[#A7A7A7]">
-                  Work : <span className="text-[#4F4F4F]">{item.work}</span>
-                </p>
-              </div>
-
-              {role !== "resident" && (
-                <div className="flex shrink-0 items-start gap-[6px]">
-                  <ActionButton
-                    label="Delete important number"
-                    onClick={() => openDeleteModal(item)}
-                  >
-                    <TrashIcon />
-                  </ActionButton>
-
-                  <ActionButton
-                    label="Edit important number"
-                    onClick={() => openEditModal(item)}
-                  >
-                    <EditIcon />
-                  </ActionButton>
+                  <p className="mt-1 truncate text-[11px] font-medium leading-4 text-[#A7A7A7]">
+                    Work : <span className="text-[#4F4F4F]">{item.work}</span>
+                  </p>
                 </div>
-              )}
-            </div>
-          ))}
+
+                {!isResident && (
+                  <div className="flex shrink-0 items-start gap-1.5">
+                    <ActionButton
+                      label="Delete important number"
+                      onClick={() => openDeleteModal(item)}
+                    >
+                      <TrashIcon />
+                    </ActionButton>
+
+                    <ActionButton
+                      label="Edit important number"
+                      onClick={() => openEditModal(item)}
+                    >
+                      <EditIcon />
+                    </ActionButton>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
         </div>
       </Card>
 
@@ -187,10 +191,10 @@ export default function ImportantNumbersCard({
         initialValues={
           selectedNumber
             ? {
-              name: selectedNumber.name,
-              phone: selectedNumber.phone,
-              work: selectedNumber.work,
-            }
+                name: selectedNumber.name,
+                phone: selectedNumber.phone,
+                work: selectedNumber.work,
+              }
             : undefined
         }
         onClose={closeFormModal}

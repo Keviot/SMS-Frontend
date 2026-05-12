@@ -1,5 +1,10 @@
+import {
+  BalanceIcon,
+  MoneyRecieveIcon,
+  MoneySendIcon,
+  TotalUnitIcon,
+} from "../../../assets/icons/admin-dashboard-icons";
 
-import { BalanceIcon, MoneyRecieveIcon, MoneySendIcon, TotalUnitIcon } from "../../../assets/icons/admin-dashboard-icons";
 import Card from "../../../ui/Card";
 
 type StatCardType = "balance" | "income" | "expense" | "unit";
@@ -46,19 +51,40 @@ export default function StatCard({ title, value, type }: StatCardProps) {
   const Icon = config.icon;
 
   return (
-    <Card className="relative flex h-[105px] items-center justify-between overflow-hidden rounded-[15px] border border-[#F4F4F4] bg-white p-[30px] shadow-none">
-      <span className={`absolute left-0 top-[25px] h-[50px] w-[6px] rounded-r-full ${config.edge}`} />
+    <Card className="relative flex min-h-[6.5rem] items-center justify-between overflow-hidden rounded-[15px] border border-[#F4F4F4] bg-white p-5 shadow-none sm:p-6">
       <span
-        className={`pointer-events-none absolute right-0 top-0 z-[1] h-full w-[125px] rounded-tr-[15px] border-r border-t ${config.corner}`}
+        className={[
+          "absolute left-0 top-1/2 h-1/2 w-1.5 -translate-y-1/2 rounded-r-full",
+          config.edge,
+        ].join(" ")}
       />
-      <div className="min-w-0 pr-[12px]">
-        <p className="text-[16px] font-medium leading-[20px] text-[#202224]">{title}</p>
-        <h3 className="mt-[8px] text-[26px] font-semibold leading-[31px] tracking-[-0.4px] text-[#202224]">
-          {type !== "unit" && "₹ "}{value}
+
+      <span
+        className={[
+          "pointer-events-none absolute right-0 top-0 z-[1] h-full w-1/3 rounded-tr-[15px] border-r border-t",
+          config.corner,
+        ].join(" ")}
+      />
+
+      <div className="min-w-0 pr-3">
+        <p className="truncate text-base font-medium leading-5 text-[#202224]">
+          {title}
+        </p>
+
+        <h3 className="mt-2 truncate text-2xl font-semibold leading-tight tracking-[-0.4px] text-[#202224]">
+          {type !== "unit" && "₹ "}
+          {value}
         </h3>
       </div>
-      <div className={`grid h-[45px] w-[45px] shrink-0 place-items-center rounded-[10px] ${config.iconBg} ${config.iconColor}`}>
-        <Icon className="h-[24px] w-[24px] [&_path]:fill-current" strokeWidth={2.2} />
+
+      <div
+        className={[
+          "z-[2] grid size-11 shrink-0 place-items-center rounded-[10px]",
+          config.iconBg,
+          config.iconColor,
+        ].join(" ")}
+      >
+        <Icon className="size-6 [&_path]:fill-current" strokeWidth={2.2} />
       </div>
     </Card>
   );

@@ -27,48 +27,55 @@ export default function AppModal({
   panelClassName = "",
   showHeaderDivider = false,
   headerRight,
-  titleClassName = "text-2xl font-bold leading-[22px] text-[#202224]",
+  titleClassName = "text-xl font-bold leading-6 text-[#202224]",
   centerTitle = false,
 }: AppModalProps) {
   if (!open) return null;
 
-  const modalRoot = document.body;
-
   const modalContent = (
     <div
       className={cn(
-        "fixed inset-0 z-999 flex items-center justify-center bg-black/50 px-4 transition-opacity",
+        "fixed inset-0 z-[999] flex items-center justify-center overflow-y-auto bg-black/50 px-4 py-6 transition-opacity",
         overlayClassName
       )}
-      onClick={(e) => {
-        if (e.target === e.currentTarget && onClose) onClose();
+      onClick={(event) => {
+        if (event.target === event.currentTarget && onClose) {
+          onClose();
+        }
       }}
     >
       <div
         className={cn(
-          "relative rounded-2xl bg-white p-[24px] shadow-[0_8px_24px_rgba(0,0,0,0.12)] transition-all animate-in fade-in zoom-in duration-200",
+          "animate-in fade-in zoom-in relative w-full rounded-2xl bg-white p-5 shadow-[0_8px_24px_rgba(0,0,0,0.12)] transition-all duration-200",
           widthClassName,
           panelClassName
         )}
       >
         <div
           className={cn(
-            "relative flex w-full items-center mb-[20px]",
+            "relative mb-5 flex w-full items-center",
             centerTitle ? "justify-center" : "justify-between",
-            showHeaderDivider && "border-b border-[#F4F4F4] pb-[15px]"
+            showHeaderDivider && "border-b border-[#F4F4F4] pb-4"
           )}
         >
           <h2 className={cn(titleClassName, centerTitle && "text-center")}>
             {title}
           </h2>
 
-          <div className={cn("flex items-center gap-2", !centerTitle ? "" : "absolute right-0")}>
+          <div
+            className={cn(
+              "flex items-center gap-2",
+              centerTitle && "absolute right-0"
+            )}
+          >
             {headerRight}
+
             {onClose && (
               <button
                 type="button"
                 onClick={onClose}
-                className="flex h-8 w-8 items-center justify-center rounded-full bg-[#F6F8FB] text-[#202224] transition hover:bg-[#FFEDE6] hover:text-[#FF5630]"
+                aria-label="Close modal"
+                className="grid size-8 place-items-center rounded-full bg-[#F6F8FB] text-[#202224] transition hover:bg-[#FFEDE6] hover:text-[#FF5630]"
               >
                 <X size={18} />
               </button>
@@ -76,12 +83,10 @@ export default function AppModal({
           </div>
         </div>
 
-        <div className="modal-content">
-          {children}
-        </div>
+        <div>{children}</div>
       </div>
     </div>
   );
 
-  return createPortal(modalContent, modalRoot);
+  return createPortal(modalContent, document.body);
 }

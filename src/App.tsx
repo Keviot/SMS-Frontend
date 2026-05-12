@@ -28,6 +28,7 @@ import RequestTracking from './features/complaintTracking/pages/RequestTracking'
 import { SocketProvider } from './context/SocketContext'
 import VisitorLogs from './features/securityManagement/pages/VisitorLogs'
 import SecurityProtocols from './features/securityManagement/pages/SecurityProtocols'
+import SecurityGuard from './features/securityManagement/pages/SecurityGuard'
 
 
 function App() {
@@ -122,6 +123,7 @@ function App() {
           <Route path="/security-management" element={<SecurityManagement />} />
           <Route path="/security-management/visitor-logs" element={<VisitorLogs />} />
           <Route path="/security-management/security-protocols" element={<SecurityProtocols />} />
+          <Route path="/security-guard" element={<SecurityGuard />} />
           <Route path="/announcement" element={<Announcement />} />
           <Route path="/profile" element={<Profile />} />
         </Route>
