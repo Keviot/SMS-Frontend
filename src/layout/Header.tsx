@@ -216,7 +216,9 @@ export default function Header({ onMenuClick }: HeaderProps) {
                 <h4 className="text-[13px] font-bold leading-tight text-[var(--text-primary)] lg:text-[14px]">
                   {userName}
                 </h4>
-                <p className="mt-0.5 text-[11px] font-medium text-[var(--text-light)] lg:text-[12px]">Admin</p>
+                <p className="mt-0.5 text-[11px] font-medium text-[var(--text-light)] lg:text-[12px] capitalize">
+                  {profile?.role || "Admin"}
+                </p>
               </div>
 
               <ChevronDown size={16} className="hidden text-[var(--text-light)] sm:block lg:w-[18px] lg:h-[18px]" strokeWidth={2} />

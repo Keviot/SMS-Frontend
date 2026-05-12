@@ -29,6 +29,7 @@ type ComplaintRow = {
 
 type ComplaintTableProps = {
   data: ComplaintRow[];
+  role?: string | null;
 };
 
 const priorityClasses: Record<Priority, string> = {
@@ -86,7 +87,7 @@ function ActionButton({
   );
 }
 
-export default function ComplaintTable({ data }: ComplaintTableProps) {
+export default function ComplaintTable({ data, role }: ComplaintTableProps) {
   const [rows, setRows] = useState<ComplaintRow[]>(data);
 
   const [selectedComplaint, setSelectedComplaint] =
@@ -252,12 +253,14 @@ export default function ComplaintTable({ data }: ComplaintTableProps) {
 
                   <td className="px-[18px]">
                     <div className="flex items-center gap-[8px]">
-                      <ActionButton
-                        label="Edit complaint"
-                        onClick={() => openEditModal(row)}
-                      >
-                        <EditIcon />
-                      </ActionButton>
+                      {role !== "resident" && (
+                        <ActionButton
+                          label="Edit complaint"
+                          onClick={() => openEditModal(row)}
+                        >
+                          <EditIcon />
+                        </ActionButton>
+                      )}
 
                       <ActionButton
                         label="View complaint"
@@ -266,12 +269,14 @@ export default function ComplaintTable({ data }: ComplaintTableProps) {
                         <EyeIcon />
                       </ActionButton>
 
-                      <ActionButton
-                        label="Delete complaint"
-                        onClick={() => openDeleteModal(row)}
-                      >
-                        <TrashIcon />
-                      </ActionButton>
+                      {role !== "resident" && (
+                        <ActionButton
+                          label="Delete complaint"
+                          onClick={() => openDeleteModal(row)}
+                        >
+                          <TrashIcon />
+                        </ActionButton>
+                      )}
                     </div>
                   </td>
                 </tr>

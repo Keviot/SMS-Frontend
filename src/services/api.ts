@@ -163,6 +163,17 @@ export const residentApi = {
         return handleResponse(response);
     },
 
+    createPassword: async (token: string, password: any, confirmPassword: any) => {
+        const response = await fetch(`${API_URL}/resident/create-password/${token}`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ password, confirmPassword }),
+        });
+        return handleResponse(response);
+    },
+
     getAll: async () => {
         const response = await fetch(`${API_URL}/resident/get`, {
             method: "GET",
@@ -542,6 +553,110 @@ export const complaintApi = {
     // Delete complaint
     deleteComplaint: async (id: string) => {
         const response = await fetch(`${API_URL}/complain/deleteComplain/${id}`, {
+            method: "DELETE",
+            credentials: "include",
+            headers: {
+                "Content-Type": "application/json",
+                ...getAuthHeader()
+            },
+        });
+        return handleResponse(response);
+    },
+};
+
+export const facilityApi = {
+    add: async (data: any) => {
+        const response = await fetch(`${API_URL}/facility/add`, {
+            method: "POST",
+            credentials: "include",
+            headers: {
+                "Content-Type": "application/json",
+                ...getAuthHeader()
+            },
+            body: JSON.stringify(data),
+        });
+        return handleResponse(response);
+    },
+
+    getAll: async () => {
+        const response = await fetch(`${API_URL}/facility/get`, {
+            method: "GET",
+            credentials: "include",
+            headers: {
+                "Content-Type": "application/json",
+                ...getAuthHeader()
+            },
+        });
+        return handleResponse(response);
+    },
+
+    edit: async (id: string, data: any) => {
+        const response = await fetch(`${API_URL}/facility/edit/${id}`, {
+            method: "PUT",
+            credentials: "include",
+            headers: {
+                "Content-Type": "application/json",
+                ...getAuthHeader()
+            },
+            body: JSON.stringify(data),
+        });
+        return handleResponse(response);
+    },
+
+    delete: async (id: string) => {
+        const response = await fetch(`${API_URL}/facility/delete/${id}`, {
+            method: "DELETE",
+            credentials: "include",
+            headers: {
+                "Content-Type": "application/json",
+                ...getAuthHeader()
+            },
+        });
+        return handleResponse(response);
+    },
+};
+
+export const announcementApi = {
+    create: async (data: any) => {
+        const response = await fetch(`${API_URL}/announcement/create`, {
+            method: "POST",
+            credentials: "include",
+            headers: {
+                "Content-Type": "application/json",
+                ...getAuthHeader()
+            },
+            body: JSON.stringify(data),
+        });
+        return handleResponse(response);
+    },
+
+    getAll: async () => {
+        const response = await fetch(`${API_URL}/announcement/get`, {
+            method: "GET",
+            credentials: "include",
+            headers: {
+                "Content-Type": "application/json",
+                ...getAuthHeader()
+            },
+        });
+        return handleResponse(response);
+    },
+
+    edit: async (id: string, data: any) => {
+        const response = await fetch(`${API_URL}/announcement/edit/${id}`, {
+            method: "PUT",
+            credentials: "include",
+            headers: {
+                "Content-Type": "application/json",
+                ...getAuthHeader()
+            },
+            body: JSON.stringify(data),
+        });
+        return handleResponse(response);
+    },
+
+    delete: async (id: string) => {
+        const response = await fetch(`${API_URL}/announcement/delete/${id}`, {
             method: "DELETE",
             credentials: "include",
             headers: {

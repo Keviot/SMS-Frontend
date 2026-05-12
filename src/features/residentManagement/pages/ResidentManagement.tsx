@@ -3,12 +3,12 @@ import { User, Building2, Plus, Loader2 } from "lucide-react";
 import DataTable, { type DataTableColumn } from "../../../ui/DataTable";
 import StatusBadge from "../../../ui/StatusBadge";
 import Button from "../../../ui/Button";
-import ResidenceStatusModal from "../../../components/modals/ResidenceStatusModal";
+import ResidenceStatusModal from "../components/ResidenceStatusModal";
 import { EditIcon, EyeIcon } from "../../../assets/icons/admin-dashboard-icons";
 import { residentApi, BASE_URL } from "../../../services/api";
 import toast from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
-import ResidentViewModal from "../../../components/modals/ResidentViewModal";
+import ResidentViewModal from "../components/ResidentViewModal";
 
 interface Resident {
   id: string;
@@ -58,7 +58,7 @@ export default function ResidentManagement() {
         residentStatus: r.residentStatus?.toLowerCase() === "owner" ? "owner" : "tenant",
         phoneNumber: r.phoneNumber || "--",
         email: r.email || "",
-        member: r.memberCount || 0,
+        member: r.members?.length || 0,
         vehicle: r.vehicles?.length || 0,
         ownerName: r.ownerName,
         ownerPhone: r.ownerPhone,

@@ -19,6 +19,7 @@ type ImportantNumber = {
 
 type ImportantNumbersCardProps = {
   data: ImportantNumber[];
+  role?: string | null;
 };
 
 function ActionButton({
@@ -44,6 +45,7 @@ function ActionButton({
 
 export default function ImportantNumbersCard({
   data,
+  role,
 }: ImportantNumbersCardProps) {
   const [numbers, setNumbers] = useState<ImportantNumber[]>(data);
 
@@ -123,14 +125,16 @@ export default function ImportantNumbersCard({
             Important Numbers
           </h2>
 
-          <button
-            type="button"
-            onClick={openAddModal}
-            className="flex h-[43px] w-[84px] items-center gap-[8px] rounded-[5px] bg-[linear-gradient(90deg,#FE512E_0%,#F09619_100%)] px-[9px] text-[12px] font-medium text-white"
-          >
-            <AddSquareIcon className="h-[20px] w-[20px]" />
-            Add
-          </button>
+          {role !== "resident" && (
+            <button
+              type="button"
+              onClick={openAddModal}
+              className="flex h-[43px] w-[84px] items-center gap-[8px] rounded-[5px] bg-[linear-gradient(90deg,#FE512E_0%,#F09619_100%)] px-[9px] text-[12px] font-medium text-white"
+            >
+              <AddSquareIcon className="h-[20px] w-[20px]" />
+              Add
+            </button>
+          )}
         </div>
 
         <div className="mt-[15px] h-[320px] space-y-[11px] overflow-y-auto pr-[4px]">
@@ -155,21 +159,23 @@ export default function ImportantNumbersCard({
                 </p>
               </div>
 
-              <div className="flex shrink-0 items-start gap-[6px]">
-                <ActionButton
-                  label="Delete important number"
-                  onClick={() => openDeleteModal(item)}
-                >
-                  <TrashIcon />
-                </ActionButton>
+              {role !== "resident" && (
+                <div className="flex shrink-0 items-start gap-[6px]">
+                  <ActionButton
+                    label="Delete important number"
+                    onClick={() => openDeleteModal(item)}
+                  >
+                    <TrashIcon />
+                  </ActionButton>
 
-                <ActionButton
-                  label="Edit important number"
-                  onClick={() => openEditModal(item)}
-                >
-                  <EditIcon />
-                </ActionButton>
-              </div>
+                  <ActionButton
+                    label="Edit important number"
+                    onClick={() => openEditModal(item)}
+                  >
+                    <EditIcon />
+                  </ActionButton>
+                </div>
+              )}
             </div>
           ))}
         </div>
