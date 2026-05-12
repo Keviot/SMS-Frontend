@@ -110,6 +110,11 @@ export const residentNavigation: NavItem[] = [
     path: "/community",
   },
   {
+    label: "Facility",
+    icon: BuildingIcon,
+    path: "/facility-management",
+  },
+  {
     label: "Payment Portal",
     icon: CreditCard,
     path: "/financial-management/income",

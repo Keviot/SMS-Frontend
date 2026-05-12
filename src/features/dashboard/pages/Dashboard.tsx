@@ -48,7 +48,7 @@ export default function Dashboard() {
         <h2 className="text-xl font-bold text-gray-900 mb-2">Security Dashboard</h2>
         <p className="text-gray-500 mb-6">Access visitor tracking and security protocols.</p>
         <div className="flex gap-4">
-          <button 
+          <button
             onClick={() => navigate("/security-guard")}
             className="bg-[#FE512E] text-white px-6 py-2.5 rounded-xl font-bold shadow-lg hover:opacity-90 transition-all"
           >
