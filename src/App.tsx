@@ -18,6 +18,7 @@ import FacilityManagement from './features/facilityManagement/pages/FacilityMana
 import SecurityManagement from './features/securityManagement/pages/SecurityProtocols'
 import Announcement from './features/announcement/pages/Announcement'
 import Profile from './features/profile/pages/Profile'
+import PersonalDetail from './features/profile/pages/PersonalDetail'
 import Income from './features/financialManagement/pages/Income'
 import CreatePassword from './features/auth/pages/CreatePassword'
 import Expense from './features/financialManagement/pages/Expense'
@@ -125,7 +126,7 @@ function App() {
           <Route path="/security-management/security-protocols" element={<SecurityProtocols />} />
           <Route path="/security-guard" element={<SecurityGuard />} />
           <Route path="/announcement" element={<Announcement />} />
-          <Route path="/profile" element={<Profile />} />
+          <Route path="/profile" element={<PersonalDetail />} />
         </Route>
       </Routes>
     </Router>
