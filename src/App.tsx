@@ -110,13 +110,17 @@ function App() {
           <Route path="/resident-management" element={<ResidentManagement />} />
           <Route path="/resident-management/add" element={<ResidentForm />} />
           <Route path="/resident-management/edit/:id" element={<ResidentForm />} />
+          <Route path="/financial-management" element={<Income />} />
           <Route path="/financial-management/income" element={<Income />} />
           <Route path="/financial-management/expense" element={<Expense />} />
           <Route path="/financial-management/note" element={<Note />} />
           <Route path="/facility-management" element={<FacilityManagement />} />
+          <Route path="/complaint-tracking" element={<CreateComplaint />} />
           <Route path="/complaint-tracking/create-complaint" element={<CreateComplaint />} />
           <Route path="/complaint-tracking/request-tracking" element={<RequestTracking />} />
           <Route path="/security-management" element={<SecurityManagement />} />
+          <Route path="/security-management/visitor-logs" element={<SecurityManagement />} />
+          <Route path="/security-management/security-protocols" element={<SecurityManagement />} />
           <Route path="/security-guard" element={<SecurityGuard />} />
           <Route path="/announcement" element={<Announcement />} />
           <Route path="/profile" element={<Profile />} />
