@@ -1,14 +1,15 @@
-import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { authApi } from "../../../services/api";
-import StatCard from "../../../components/dashboard/StatCard";
-import BalanceChart from "../../../components/dashboard/BalanceChart";
-import ComplaintTable from "../../../components/dashboard/ComplaintTable";
-import UpcomingActivityCard from "../../../components/dashboard/UpcomingActivityCard";
-import PendingMaintenanceCard from "../../../components/dashboard/PendingMaintenanceCard";
-import ImportantNumbersCard from "../../../components/dashboard/ImportantNumbersCard";
+
+import StatCard from "../components/StatCard";
+import BalanceChart from "../components/BalanceChart";
+import ComplaintTable from "../components/ComplaintTable";
+import UpcomingActivityCard from "../components/UpcomingActivityCard";
+import PendingMaintenanceCard from "../components/PendingMaintenanceCard";
+import ImportantNumbersCard from "../components/ImportantNumbersCard";
 import { complaints, importantNumbers, pendingMaintenances, statCards, upcomingActivities } from "../../../data/dashboard.data";
 import { Loader2 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { authApi } from "../../../services/api";
 
 export default function Dashboard() {
   const navigate = useNavigate();
