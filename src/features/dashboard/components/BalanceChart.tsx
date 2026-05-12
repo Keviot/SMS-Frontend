@@ -69,7 +69,7 @@ export default function BalanceChart({ data = [], total = "0" }: BalanceChartPro
             Total Balance
           </h2>
 
-          <p className="mt-4 text-3xl font-semibold leading-tight tracking-[-0.4px] text-[#202224]">
+          <p className="mt-0 text-3xl font-semibold leading-tight tracking-[-0.4px] text-[#202224]">
             {Number(total).toLocaleString()}
           </p>
         </div>
@@ -121,7 +121,7 @@ export default function BalanceChart({ data = [], total = "0" }: BalanceChartPro
         </div>
       </div>
 
-      <div className="mt-8 min-h-0 flex-1">
+      <div className="mt-0 min-h-0 flex-1">
         <div className="grid h-full grid-cols-[3rem_minmax(0,1fr)]">
           <div className="relative h-[286px] text-sm font-normal text-[#4F4F4F]">
             {[

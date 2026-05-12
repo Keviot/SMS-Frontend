@@ -16,7 +16,7 @@ export default function PendingMaintenanceCard({
   data,
 }: PendingMaintenanceCardProps) {
   return (
-    <Card className="flex h-98 flex-col p-5">
+    <Card className="flex h-[27rem] flex-col p-5">
       <div className="flex items-center justify-between gap-3">
         <h2 className="text-base font-semibold leading-5 text-[#202224]">
           Pending Maintenances
