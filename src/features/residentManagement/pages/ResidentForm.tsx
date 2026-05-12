@@ -113,28 +113,37 @@ export default function ResidentForm() {
         return;
       }
 
-      // Build JSON object instead of FormData to match Postman/Backend requirements
-      const payload = {
-        ...formData,
-        society: societyId,
-        residentStatus: activeTab.charAt(0).toUpperCase() + activeTab.slice(1),
-        unitStatus: "Occupied",
-        memberCount: memberCount,
-        members: members.slice(0, memberCount),
-        vehicles: vehicles.slice(0, vehicleCount),
-        // For files, we send the filenames or empty strings for now since this is JSON
-        profileImage: files.profileImage?.name || "",
-        uploadAadharfront: files.uploadAadharfront?.name || "",
-        uploadAadharback: files.uploadAadharback?.name || "",
-        addressProof: files.addressProof?.name || "",
-        rentAgreeMent: files.rentAgreeMent?.name || "",
-      };
+      // Build FormData to handle file uploads
+      const formDataToSend = new FormData();
+      
+      // Append basic fields
+      Object.entries(formData).forEach(([key, value]) => {
+        formDataToSend.append(key, value);
+      });
+
+      formDataToSend.append("society", societyId);
+      formDataToSend.append("residentStatus", activeTab.charAt(0).toUpperCase() + activeTab.slice(1));
+      formDataToSend.append("memberCount", memberCount.toString());
+      
+      // Append arrays as JSON strings - filter out empty items
+      const cleanedMembers = members.slice(0, memberCount).filter(m => m && Object.keys(m).length > 0 && m.name);
+      const cleanedVehicles = vehicles.slice(0, vehicleCount).filter(v => v && Object.keys(v).length > 0 && v.vehicleName);
+      
+      formDataToSend.append("members", JSON.stringify(cleanedMembers));
+      formDataToSend.append("vehicles", JSON.stringify(cleanedVehicles));
+
+      // Append actual files
+      if (files.profileImage) formDataToSend.append("profileImage", files.profileImage);
+      if (files.uploadAadharfront) formDataToSend.append("uploadAadharfront", files.uploadAadharfront);
+      if (files.uploadAadharback) formDataToSend.append("uploadAadharback", files.uploadAadharback);
+      if (files.addressProof) formDataToSend.append("addressProof", files.addressProof);
+      if (files.rentAgreeMent) formDataToSend.append("rentAgreeMent", files.rentAgreeMent);
 
       if (id) {
-        await residentApi.edit(id, payload);
+        await residentApi.edit(id, formDataToSend);
         toast.success("Resident updated successfully");
       } else {
-        await residentApi.create(payload);
+        await residentApi.create(formDataToSend);
         toast.success("Resident created successfully");
       }
       navigate("/resident-management");

@@ -58,11 +58,19 @@ export default function ResidentManagement() {
         residentStatus: r.residentStatus?.toLowerCase() === "owner" ? "owner" : "tenant",
         phoneNumber: r.phoneNumber || "--",
         email: r.email || "",
+        gender: r.gender,
+        age: r.age,
         member: r.members?.length || 0,
         vehicle: r.vehicles?.length || 0,
+        members: r.members || [],
+        vehicles: r.vehicles || [],
         ownerName: r.ownerName,
         ownerPhone: r.ownerPhone,
         ownerAddress: r.ownerAddress,
+        uploadAadharfront: r.uploadAadharfront,
+        uploadAadharback: r.uploadAadharback,
+        addressProof: r.addressProof,
+        rentAgreeMent: r.rentAgreeMent,
         avatar: r.profileImage ? (r.profileImage.startsWith("http") ? r.profileImage : `${BASE_URL}/${r.profileImage}`) : undefined
       }));
       setResidents(mapped);
@@ -85,11 +93,19 @@ export default function ResidentManagement() {
       header: "Full Name",
       render: (row) => (
         <div className="flex items-center gap-3">
-          <div className="h-10 w-10 overflow-hidden rounded-full bg-gray-100">
-            {row.fullName !== "-" ? (
-              <img src={row.avatar} alt={row.fullName} className="h-full w-full object-cover" />
+          <div className="h-10 w-10 overflow-hidden rounded-full bg-[#F6F8FB] flex items-center justify-center">
+            {row.fullName !== "-" && row.avatar ? (
+              <img 
+                src={row.avatar} 
+                alt={row.fullName} 
+                className="h-full w-full object-cover"
+                onError={(e: any) => {
+                  e.target.onerror = null;
+                  e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(row.fullName)}&background=F6F8FB&color=5678E9&bold=true`;
+                }}
+              />
             ) : (
-              <div className="flex h-full w-full items-center justify-center bg-gray-100 text-gray-400">
+              <div className="flex h-full w-full items-center justify-center text-[#A3AED0]">
                 <User size={20} />
               </div>
             )}

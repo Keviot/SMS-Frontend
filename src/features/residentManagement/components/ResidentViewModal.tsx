@@ -42,11 +42,19 @@ export default function ResidentViewModal({ isOpen, onClose, resident }: Residen
         <div className="flex-1 overflow-y-auto custom-scrollbar">
           {/* Profile Section */}
           <div className="flex flex-col items-center py-8">
-            <div className="h-28 w-28 overflow-hidden rounded-full border-4 border-white shadow-lg bg-gray-100">
+            <div className="h-28 w-28 overflow-hidden rounded-full border-4 border-white shadow-lg bg-[#F6F8FB] flex items-center justify-center">
               {resident.avatar ? (
-                <img src={resident.avatar} alt={resident.fullName} className="h-full w-full object-cover" />
+                <img 
+                  src={resident.avatar} 
+                  alt={resident.fullName} 
+                  className="h-full w-full object-cover"
+                  onError={(e: any) => {
+                    e.target.onerror = null;
+                    e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(resident.fullName)}&background=F6F8FB&color=5678E9&bold=true`;
+                  }}
+                />
               ) : (
-                <div className="flex h-full w-full items-center justify-center bg-gray-50 text-gray-400">
+                <div className="flex h-full w-full items-center justify-center text-[#A3AED0]">
                   <User size={50} />
                 </div>
               )}
@@ -83,23 +91,33 @@ export default function ResidentViewModal({ isOpen, onClose, resident }: Residen
             <h4 className="text-sm font-semibold text-[#202224] leading-none mb-4">Document</h4>
             <div className="flex flex-col gap-3">
               {[
-                { name: "Adharcard Front Side.JPG", size: "3.5 MB", type: "image" },
-                { name: "Address Proof Front Side.PDF", size: "3.5 MB", type: "pdf" }
-              ].map((doc, i) => (
-                <div key={i} className="flex items-center gap-3 p-3 border border-gray-100 rounded-xl hover:bg-gray-50 transition-colors">
+                { name: "Aadhar Card Front", url: resident.uploadAadharfront },
+                { name: "Aadhar Card Back", url: resident.uploadAadharback },
+                { name: "Address Proof", url: resident.addressProof },
+                { name: "Rent Agreement", url: resident.rentAgreeMent }
+              ].filter(doc => doc.url).map((doc, i) => (
+                <a 
+                  key={i} 
+                  href={doc.url} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-3 p-3 border border-gray-100 rounded-xl hover:bg-gray-50 transition-colors no-underline"
+                >
                   <div className={cn(
-                    "p-2 rounded-lg",
-                    doc.type === "pdf" ? "bg-red-50 text-red-500" : "bg-blue-50 text-blue-500"
+                    "p-2 rounded-lg bg-blue-50 text-blue-500"
                   )}>
                     <FileText size={20} />
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-[14px] font-semibold text-[#202224] truncate">{doc.name}</p>
-                    <p className="text-[10px] text-gray-400">{doc.size}</p>
+                    <p className="text-[10px] text-gray-400">View File</p>
                   </div>
-                  <Eye size={16} className="text-gray-400 cursor-pointer hover:text-gray-600" />
-                </div>
+                  <Eye size={16} className="text-gray-400 hover:text-gray-600" />
+                </a>
               ))}
+              {(!resident.uploadAadharfront && !resident.uploadAadharback && !resident.addressProof && !resident.rentAgreeMent) && (
+                <p className="text-xs text-gray-400 italic text-center py-2">No documents uploaded</p>
+              )}
             </div>
           </div>
 
@@ -123,27 +141,34 @@ export default function ResidentViewModal({ isOpen, onClose, resident }: Residen
           )}
 
           {/* Member Section */}
-          <div className="px-6 pb-10">
-            <div className="bg-[#5678E9] text-white p-3 rounded-t-xl flex justify-between items-center">
-              <span className="font-bold text-sm">Member Counting</span>
-              <span className="font-bold text-sm bg-white/20 px-2 py-0.5 rounded-lg">{resident.member || "0"}</span>
+          <div className="px-6 pb-10 space-y-6">
+            <div className="bg-[#5678E9] text-white p-3 rounded-xl flex justify-between items-center shadow-md">
+              <span className="font-bold text-sm">Member Details</span>
+              <span className="font-bold text-sm bg-white/20 px-3 py-0.5 rounded-full">{resident.members?.length || 0}</span>
             </div>
-            <div className="border border-t-0 border-gray-100 rounded-b-xl overflow-hidden">
-              <div className="p-4 flex flex-col gap-4 bg-white">
-                <div className="grid grid-cols-2 gap-y-4">
-                  <span className="text-sm font-semibold text-[#202224] leading-none">First Name</span>
-                  <span className="text-sm font-semibold text-[#202224] leading-none text-right">{resident.fullName}</span>
-                  <span className="text-sm font-semibold text-[#202224] leading-none">Phone No</span>
-                  <span className="text-sm font-semibold text-[#202224] leading-none text-right">{resident.phoneNumber}</span>
-                  <span className="text-sm font-semibold text-[#202224] leading-none">Age</span>
-                  <span className="text-sm font-semibold text-[#202224] leading-none text-right">{resident.age || "20"}</span>
-                  <span className="text-sm font-semibold text-[#202224] leading-none">Gender</span>
-                  <span className="text-sm font-semibold text-[#202224] leading-none text-right capitalize">{resident.gender || "Male"}</span>
-                  <span className="text-sm font-semibold text-[#202224] leading-none">Relation</span>
-                  <span className="text-sm font-semibold text-[#202224] leading-none text-right">Self</span>
-                </div>
+            
+            {(resident.members && resident.members.length > 0) ? (
+              <div className="flex flex-col gap-4">
+                {resident.members.map((member: any, idx: number) => (
+                  <div key={idx} className="border border-gray-100 rounded-xl p-4 bg-gray-50/30">
+                    <div className="grid grid-cols-2 gap-y-4">
+                      <span className="text-sm font-semibold text-[#202224] leading-none">Full Name</span>
+                      <span className="text-sm font-semibold text-[#202224] leading-none text-right">{member.name}</span>
+                      <span className="text-sm font-semibold text-[#202224] leading-none">Phone No</span>
+                      <span className="text-sm font-semibold text-[#202224] leading-none text-right">{member.phoneNumber || "-"}</span>
+                      <span className="text-sm font-semibold text-[#202224] leading-none">Age</span>
+                      <span className="text-sm font-semibold text-[#202224] leading-none text-right">{member.age || "-"}</span>
+                      <span className="text-sm font-semibold text-[#202224] leading-none">Gender</span>
+                      <span className="text-sm font-semibold text-[#202224] leading-none text-right capitalize">{member.gender || "-"}</span>
+                      <span className="text-sm font-semibold text-[#202224] leading-none">Relation</span>
+                      <span className="text-sm font-semibold text-[#202224] leading-none text-right">{member.relation || "-"}</span>
+                    </div>
+                  </div>
+                ))}
               </div>
-            </div>
+            ) : (
+              <p className="text-xs text-gray-400 italic text-center">No other members listed</p>
+            )}
           </div>
         </div>
       </div>

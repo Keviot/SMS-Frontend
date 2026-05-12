@@ -54,16 +54,8 @@ const normalizeMaintenanceRecord = (item: any): MaintenanceRecord => {
     const avatar = item.resident?.profileImage || undefined;
     const formattedDate = new Date(item.date).toLocaleDateString("en-GB");
 
-    let residentStatus = "tenant";
-    if (item.resident?.ResidentStatus) {
-        residentStatus = item.resident.role?.toLowerCase() || "tenant";
-    } else if (item.resident?.role) {
-        residentStatus = item.resident.role.toLowerCase();
-    } else if (item.resident?.residentStatus) {
-        residentStatus = item.resident.residentStatus.toLowerCase();
-    } else if (item.residentStatus) {
-        residentStatus = item.residentStatus.toLowerCase();
-    }
+    // Priority: item.residentStatus > item.resident.residentStatus > item.resident.ResidentStatus
+    let residentStatus = (item.residentStatus || item.resident?.residentStatus || item.resident?.ResidentStatus || "Tenant").toLowerCase();
 
     if (residentStatus !== "tenant" && residentStatus !== "owner") {
         residentStatus = "tenant";
@@ -168,6 +160,18 @@ export default function Income() {
                     }
 
                     const transformedData = response.data.map(normalizeMaintenanceRecord);
+
+                    // Sort by Unit Number (Wing first, then Unit)
+                    transformedData.sort((a, b) => {
+                        const wingA = a.unitNumber.split(" ")[0];
+                        const wingB = b.unitNumber.split(" ")[0];
+                        if (wingA !== wingB) return wingA.localeCompare(wingB);
+
+                        const unitA = parseInt(a.unitNumber.split(" ")[1]);
+                        const unitB = parseInt(b.unitNumber.split(" ")[1]);
+                        return unitA - unitB;
+                    });
+
                     setMaintenanceData(transformedData);
                     setSummary(calculateSummary(transformedData));
                 } else {
@@ -289,6 +293,18 @@ export default function Income() {
             }
 
             const transformedData = response.data.map(normalizeMaintenanceRecord);
+
+            // Sort by Unit Number (Wing first, then Unit)
+            transformedData.sort((a, b) => {
+                const wingA = a.unitNumber.split(" ")[0];
+                const wingB = b.unitNumber.split(" ")[0];
+                if (wingA !== wingB) return wingA.localeCompare(wingB);
+
+                const unitA = parseInt(a.unitNumber.split(" ")[1]);
+                const unitB = parseInt(b.unitNumber.split(" ")[1]);
+                return unitA - unitB;
+            });
+
             setMaintenanceData(transformedData);
             setSummary(calculateSummary(transformedData));
             setLoading(false);

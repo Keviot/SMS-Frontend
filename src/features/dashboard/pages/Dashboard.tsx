@@ -1,47 +1,101 @@
-import { useEffect, useState } from "react";
-import { Loader2 } from "lucide-react";
-import { useNavigate } from "react-router-dom";
-
 import StatCard from "../components/StatCard";
 import BalanceChart from "../components/BalanceChart";
 import ComplaintTable from "../components/ComplaintTable";
 import UpcomingActivityCard from "../components/UpcomingActivityCard";
 import PendingMaintenanceCard from "../components/PendingMaintenanceCard";
 import ImportantNumbersCard from "../components/ImportantNumbersCard";
-
-import {
-  complaints,
-  importantNumbers,
-  pendingMaintenances,
-  statCards,
-  upcomingActivities,
-} from "../../../data/dashboard.data";
-
-import { authApi } from "../../../services/api";
+import { statCards } from "../../../data/dashboard.data";
+import { Loader2 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { authApi, complaintApi, importantNumberApi, financialApi, announcementApi } from "../../../services/api";
 
 export default function Dashboard() {
   const navigate = useNavigate();
 
   const [role, setRole] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [data, setData] = useState({
+    complaints: [],
+    importantNumbers: [],
+    pendingMaintenances: [],
+    upcomingActivities: []
+  });
 
   useEffect(() => {
-    const checkRole = async () => {
+    const fetchDashboardData = async () => {
       try {
-        const data = await authApi.getProfile();
+        setLoading(true);
+        const profileData = await authApi.getProfile();
 
-        if (data.user) {
-          const userRole = data.user.role?.toLowerCase();
+        if (profileData.user) {
+          const userRole = profileData.user.role?.toLowerCase();
           setRole(userRole);
+
+          const societyId = profileData.user.society?._id || profileData.user.society;
+
+          // Fetch all dashboard data in parallel
+          const [complaintsData, numbersData, maintenanceData, announcementsData] = await Promise.all([
+            complaintApi.getAllComplaints(societyId),
+            importantNumberApi.getAll(),
+            financialApi.getMaintenanceRecords(),
+            announcementApi.getAll(societyId)
+          ]);
+
+          // Map Complaints
+          const mappedComplaints = (complaintsData || []).map((c: any) => ({
+            id: c._id,
+            compainerName: c.compainerName,
+            complainName: c.complainName,
+            date: new Date(c.createdAt).toLocaleDateString("en-GB"),
+            priority: c.priority,
+            status: c.status
+          }));
+
+          // Map Important Numbers
+          const mappedNumbers = (numbersData || []).map((n: any) => ({
+            id: n._id,
+            name: n.name,
+            phone: n.phoneNumber || n.phone,
+            work: n.work
+          }));
+
+          // Map Pending Maintenances
+          const allMaintenance = maintenanceData.data || maintenanceData || [];
+          const mappedMaintenance = allMaintenance
+            .filter((m: any) => m.status === "Pending")
+            .map((m: any) => ({
+              id: m._id,
+              name: m.name || (m.resident?.name || "Resident"),
+              pending: "Pending",
+              amount: m.amount?.toString() || "0"
+            }));
+
+          // Map Upcoming Activities (Announcements)
+          const announcements = announcementsData.announcement || announcementsData || [];
+          const mappedActivities = announcements.map((a: any) => ({
+            id: a._id,
+            letter: (a.title || "A").charAt(0).toUpperCase(),
+            title: a.title,
+            time: a.time || "Event Time",
+            date: new Date(a.date).toLocaleDateString("en-GB")
+          }));
+
+          setData({
+            complaints: mappedComplaints,
+            importantNumbers: mappedNumbers,
+            pendingMaintenances: mappedMaintenance,
+            upcomingActivities: mappedActivities
+          });
         }
       } catch (error) {
-        console.error("Dashboard role check failed:", error);
+        console.error("Dashboard data fetch failed:", error);
       } finally {
         setLoading(false);
       }
     };
 
-    checkRole();
+    fetchDashboardData();
   }, []);
 
   if (loading) {
@@ -52,6 +106,7 @@ export default function Dashboard() {
     );
   }
 
+  // Security View Landing
   if (role === "guard" || role === "security") {
     return (
       <section className="grid min-h-[60vh] place-items-center rounded-3xl border border-gray-100 bg-white p-6 text-center shadow-sm">
@@ -80,6 +135,7 @@ export default function Dashboard() {
 
   return (
     <div className="animate-in fade-in flex flex-col gap-5 duration-500">
+      {/* Row 1: Stat Cards */}
       <section className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-4">
         {statCards.map((card) => (
           <StatCard
@@ -91,15 +147,17 @@ export default function Dashboard() {
         ))}
       </section>
 
+      {/* Row 2: Balance Chart | Important Numbers | Pending Maintenances */}
       <section className="grid grid-cols-1 gap-5 xl:grid-cols-[minmax(0,2fr)_minmax(16rem,1fr)_minmax(16rem,1fr)]">
         <BalanceChart />
-        <ImportantNumbersCard data={importantNumbers} role={role} />
-        <PendingMaintenanceCard data={pendingMaintenances} />
+        <ImportantNumbersCard data={data.importantNumbers} role={role} />
+        <PendingMaintenanceCard data={data.pendingMaintenances} />
       </section>
 
+      {/* Row 3: Complaint List | Upcoming Activity */}
       <section className="grid grid-cols-1 gap-5 xl:grid-cols-[minmax(0,3fr)_minmax(16rem,1fr)]">
-        <ComplaintTable data={complaints} role={role} />
-        <UpcomingActivityCard data={upcomingActivities} />
+        <ComplaintTable data={data.complaints} role={role} />
+        <UpcomingActivityCard data={data.upcomingActivities} />
       </section>
     </div>
   );

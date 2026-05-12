@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   AddSquareIcon,
   EditIcon,
@@ -48,6 +48,10 @@ export default function ImportantNumbersCard({
   role,
 }: ImportantNumbersCardProps) {
   const [numbers, setNumbers] = useState<ImportantNumber[]>(data);
+
+  useEffect(() => {
+    setNumbers(data);
+  }, [data]);
 
   const [modalMode, setModalMode] = useState<"add" | "edit">("add");
   const [isFormOpen, setIsFormOpen] = useState(false);
