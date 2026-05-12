@@ -754,6 +754,108 @@ export const announcementApi = {
     },
 };
 
+// Security Management API
+export const securityApi = {
+    // Security Protocols
+    getAllSecurityProtocols: async (societyId?: string) => {
+        const url = societyId
+            ? `${API_URL}/security-protocol/get?societyId=${societyId}`
+            : `${API_URL}/security-protocol/get`;
+
+        const response = await fetch(url, {
+            method: "GET",
+            credentials: "include",
+            headers: {
+                "Content-Type": "application/json",
+                ...getAuthHeader()
+            },
+        });
+        return handleResponse(response);
+    },
+
+    createSecurityProtocol: async (data: {
+        title: string;
+        description: string;
+        society: string;
+    }) => {
+        const response = await fetch(`${API_URL}/security-protocol/create`, {
+            method: "POST",
+            credentials: "include",
+            headers: {
+                "Content-Type": "application/json",
+                ...getAuthHeader()
+            },
+            body: JSON.stringify(data),
+        });
+        return handleResponse(response);
+    },
+
+    editSecurityProtocol: async (id: string, data: {
+        title: string;
+        description: string;
+        date?: string;
+        time?: string;
+    }) => {
+        const response = await fetch(`${API_URL}/security-protocol/edit/${id}`, {
+            method: "PUT",
+            credentials: "include",
+            headers: {
+                "Content-Type": "application/json",
+                ...getAuthHeader()
+            },
+            body: JSON.stringify(data),
+        });
+        return handleResponse(response);
+    },
+
+    deleteSecurityProtocol: async (id: string) => {
+        const response = await fetch(`${API_URL}/security-protocol/delete/${id}`, {
+            method: "DELETE",
+            credentials: "include",
+            headers: {
+                "Content-Type": "application/json",
+                ...getAuthHeader()
+            },
+        });
+        return handleResponse(response);
+    },
+
+    // Visitor Logs
+    getAllVisitors: async () => {
+        // Backend uses req.user.society from auth token, no query params needed
+        const response = await fetch(`${API_URL}/visitor/get`, {
+            method: "GET",
+            credentials: "include",
+            headers: {
+                "Content-Type": "application/json",
+                ...getAuthHeader()
+            },
+        });
+        return handleResponse(response);
+    },
+
+    addVisitor: async (data: {
+        name: string;
+        phoneNumber: string;
+        wing: string;
+        unit: string;
+        date: string;
+        time: string;
+        society: string;
+    }) => {
+        const response = await fetch(`${API_URL}/visitor/add`, {
+            method: "POST",
+            credentials: "include",
+            headers: {
+                "Content-Type": "application/json",
+                ...getAuthHeader()
+            },
+            body: JSON.stringify(data),
+        });
+        return handleResponse(response);
+    },
+};
+
 export const securityGuardApi = {
     create: async (data: any) => {
         const isFormData = data instanceof FormData;

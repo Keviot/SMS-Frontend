@@ -134,7 +134,7 @@ export default function Note() {
                 </div>
 
                 {/* Notes Grid */}
-                <div className="max-h-[calc(100vh-16rem)] overflow-y-auto pr-1">
+                <div className="max-h-[calc(100vh-18.75rem)] overflow-y-auto pr-1">
                     {loading ? (
                         <div className="flex items-center justify-center py-12">
                             <Loader2 className="h-8 w-8 animate-spin text-orange-500" />

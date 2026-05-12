@@ -68,7 +68,7 @@ export const adminNavigation: NavItem[] = [
     path: "/security-management",
     children: [
       { label: "Visitor Logs", path: "/security-management/visitor-logs" },
-      { label: "Security Protocols", path: "/security-management/protocols" },
+      { label: "Security Protocols", path: "/security-management/security-protocols" },
     ],
   },
   {

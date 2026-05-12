@@ -15,8 +15,7 @@ import reset from './assets/images/reset.png'
 import ResidentManagement from './features/residentManagement/pages/ResidentManagement'
 import ResidentForm from './features/residentManagement/pages/ResidentForm'
 import FacilityManagement from './features/facilityManagement/pages/FacilityManagement'
-import SecurityManagement from './features/securityManagement/pages/SecurityManagement'
-import SecurityGuard from './features/securityManagement/pages/SecurityGuard'
+import SecurityManagement from './features/securityManagement/pages/SecurityProtocols'
 import Announcement from './features/announcement/pages/Announcement'
 import Profile from './features/profile/pages/Profile'
 import Income from './features/financialManagement/pages/Income'
@@ -27,6 +26,8 @@ import CreateComplaint from './features/complaintTracking/pages/CreateComplaint'
 import RequestTracking from './features/complaintTracking/pages/RequestTracking'
 
 import { SocketProvider } from './context/SocketContext'
+import VisitorLogs from './features/securityManagement/pages/VisitorLogs'
+import SecurityProtocols from './features/securityManagement/pages/SecurityProtocols'
 
 
 function App() {
@@ -119,9 +120,8 @@ function App() {
           <Route path="/complaint-tracking/create-complaint" element={<CreateComplaint />} />
           <Route path="/complaint-tracking/request-tracking" element={<RequestTracking />} />
           <Route path="/security-management" element={<SecurityManagement />} />
-          <Route path="/security-management/visitor-logs" element={<SecurityManagement />} />
-          <Route path="/security-management/security-protocols" element={<SecurityManagement />} />
-          <Route path="/security-guard" element={<SecurityGuard />} />
+          <Route path="/security-management/visitor-logs" element={<VisitorLogs />} />
+          <Route path="/security-management/security-protocols" element={<SecurityProtocols />} />
           <Route path="/announcement" element={<Announcement />} />
           <Route path="/profile" element={<Profile />} />
         </Route>

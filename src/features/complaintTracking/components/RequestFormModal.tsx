@@ -10,7 +10,7 @@ export interface RequestFormData {
   wing: string;
   unit: string;
   priority: "High" | "Medium" | "Low";
-  status: "Open" | "Pending" | "Solve";
+  status: "Open" | "Pending" | "Solved";
 }
 
 interface RequestFormModalProps {
@@ -245,7 +245,7 @@ export default function RequestFormModal({
               </label>
 
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-                {(["Open", "Pending", "Solve"] as const).map((status) => {
+                {(["Open", "Pending", "Solved"] as const).map((status) => {
                   const selected = formData.status === status;
 
                   return (

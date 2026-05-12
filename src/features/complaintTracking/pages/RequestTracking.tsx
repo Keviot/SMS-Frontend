@@ -16,7 +16,7 @@ import toast from "react-hot-toast";
 import { Loader2 } from "lucide-react";
 
 type Priority = "Medium" | "Low" | "High";
-type RequestStatus = "Pending" | "Open" | "Solve";
+type RequestStatus = "Pending" | "Open" | "Solved";
 
 type RequestItem = {
   id: string;
@@ -45,7 +45,7 @@ function priorityClass(priority: Priority) {
 
 function statusClass(status: RequestStatus) {
   switch (status) {
-    case "Solve":
+    case "Solved":
       return "bg-[#E5F4E8] text-[#39973D]";
     case "Open":
       return "bg-[#EEF2FF] text-[#5678E9]";
@@ -318,7 +318,7 @@ export default function RequestTracking() {
       {/* Table */}
       <div className="overflow-hidden rounded-xl bg-white">
         <div className="overflow-x-auto">
-          <div className="max-h-[calc(100vh-18rem)] min-w-[60rem] overflow-y-auto pr-1">
+          <div className="max-h-[calc(100vh-18.75rem)] min-w-[60rem] overflow-y-auto pr-1">
             {loading ? (
               <div className="flex items-center justify-center py-12">
                 <Loader2 className="h-8 w-8 animate-spin text-orange-500" />
