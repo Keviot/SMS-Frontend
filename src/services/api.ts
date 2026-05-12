@@ -578,8 +578,9 @@ export const facilityApi = {
         return handleResponse(response);
     },
 
-    getAll: async () => {
-        const response = await fetch(`${API_URL}/facility/get`, {
+    getAll: async (societyId?: string) => {
+        const url = societyId ? `${API_URL}/facility/get?societyId=${societyId}` : `${API_URL}/facility/get`;
+        const response = await fetch(url, {
             method: "GET",
             credentials: "include",
             headers: {
@@ -630,8 +631,9 @@ export const announcementApi = {
         return handleResponse(response);
     },
 
-    getAll: async () => {
-        const response = await fetch(`${API_URL}/announcement/get`, {
+    getAll: async (societyId?: string) => {
+        const url = societyId ? `${API_URL}/announcement/get?societyId=${societyId}` : `${API_URL}/announcement/get`;
+        const response = await fetch(url, {
             method: "GET",
             credentials: "include",
             headers: {

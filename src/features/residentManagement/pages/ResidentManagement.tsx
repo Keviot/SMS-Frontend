@@ -141,7 +141,7 @@ export default function ResidentManagement() {
       header: "Phone Number",
       className: "text-center",
       render: (row) => (
-        row.phoneNumber !== "--" ? (
+        row.fullName !== "-" && row.phoneNumber !== "--" ? (
           <span className="text-gray-600 font-medium">{row.phoneNumber}</span>
         ) : (
           <span className="inline-flex h-8 min-w-25 items-center justify-center rounded-full bg-gray-light-grey  text-sm font-semibold text-gray-400">
@@ -155,7 +155,7 @@ export default function ResidentManagement() {
       header: "Member",
       className: "text-center",
       render: (row) => (
-        row.member !== 0 ? (
+        row.fullName !== "-" && row.member !== 0 ? (
           <span className="text-gray-600 font-medium">{row.member}</span>
         ) : (
           <span className="inline-flex h-8 min-w-25 items-center justify-center rounded-full bg-gray-light-grey  text-sm font-semibold text-gray-400">
@@ -169,7 +169,7 @@ export default function ResidentManagement() {
       header: "Vehicle",
       className: "text-center",
       render: (row) => (
-        row.vehicle !== 0 ? (
+        row.fullName !== "-" && row.vehicle !== 0 ? (
           <span className="text-gray-600 font-medium">{row.vehicle}</span>
         ) : (
           <span className="inline-flex h-8 min-w-25 items-center justify-center rounded-full bg-gray-light-grey  text-sm font-semibold text-gray-400">

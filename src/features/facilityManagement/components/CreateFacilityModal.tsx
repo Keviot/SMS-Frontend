@@ -3,7 +3,7 @@ import Button from "../../../ui/Button";
 import Input from "../../../ui/Input";
 import toast from "react-hot-toast";
 import { useEffect, useState } from "react";
-import { facilityApi } from "../../../services/api";
+import { facilityApi, authApi } from "../../../services/api";
 
 interface CreateFacilityModalProps {
   open: boolean;
@@ -56,11 +56,24 @@ export default function CreateFacilityModal({ open, onClose, facility, onSuccess
     e.preventDefault();
     setLoading(true);
     try {
+      // Fetch profile to get society ID
+      const profile = await authApi.getProfile();
+      const user = profile.user;
+      
+      // Get society ID - handle direct field or societies array for admins
+      const societyId = user?.society || (user?.societies && user.societies[0]?._id);
+
+      if (!societyId) {
+        toast.error("Society ID not found. Please ensure your account is linked to a society.");
+        setLoading(false);
+        return;
+      }
+
       if (isEdit) {
-        await facilityApi.edit(facility._id, formData);
+        await facilityApi.edit(facility._id, { ...formData, society: societyId });
         toast.success("Facility updated successfully");
       } else {
-        await facilityApi.add(formData);
+        await facilityApi.add({ ...formData, society: societyId });
         toast.success("Facility created successfully");
       }
       onSuccess?.();

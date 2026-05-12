@@ -3,7 +3,7 @@ import Button from "../../../ui/Button";
 import Input from "../../../ui/Input";
 import toast from "react-hot-toast";
 import { useEffect, useState } from "react";
-import { announcementApi } from "../../../services/api";
+import { announcementApi, authApi } from "../../../services/api";
 
 interface CreateAnnouncementModalProps {
   open: boolean;
@@ -65,11 +65,24 @@ export default function CreateAnnouncementModal({ open, onClose, announcement, o
       announcementType: [actualType]
     };
     try {
+      // Fetch profile to get society ID
+      const profile = await authApi.getProfile();
+      const user = profile.user;
+      
+      // Get society ID - handle direct field or societies array for admins
+      const societyId = user?.society || (user?.societies && user.societies[0]?._id);
+
+      if (!societyId) {
+        toast.error("Society ID not found. Please ensure your account is linked to a society.");
+        setLoading(false);
+        return;
+      }
+
       if (isEdit) {
-        await announcementApi.edit(announcement._id, dataToSubmit);
+        await announcementApi.edit(announcement._id, { ...dataToSubmit, society: societyId });
         toast.success("Announcement updated successfully");
       } else {
-        await announcementApi.create(dataToSubmit);
+        await announcementApi.create({ ...dataToSubmit, society: societyId });
         toast.success("Announcement created successfully");
       }
       onSuccess?.();

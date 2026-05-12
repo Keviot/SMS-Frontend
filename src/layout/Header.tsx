@@ -4,6 +4,7 @@ import { Link, useLocation } from "react-router-dom";
 import { authApi, BASE_URL } from "../services/api";
 import { NotificationBingIcon } from "../assets/icons/admin-dashboard-icons";
 import NotificationDropdown from "../components/NotificationDropdown";
+import { useSocket } from "../context/SocketContext";
 import Button from "../ui/Button";
 import Input from "../ui/Input";
 
@@ -73,6 +74,9 @@ export default function Header({ onMenuClick }: HeaderProps) {
       document.removeEventListener("touchstart", handleClickOutside);
     };
   }, [notificationOpen]);
+
+  const { notifications } = useSocket();
+  const hasUnread = notifications.some((n) => n.status === "unread");
 
   return (
     <>
@@ -174,7 +178,9 @@ export default function Header({ onMenuClick }: HeaderProps) {
               aria-label="Open notifications"
             >
               <NotificationBingIcon className="h-6 w-6" />
-              <span className="absolute right-3 top-2 h-2 w-2 rounded-full bg-[#E74C3C] ring-2 ring-white" />
+              {hasUnread && (
+                <span className="absolute right-3 top-2 h-2 w-2 rounded-full bg-[#E74C3C] ring-2 ring-white" />
+              )}
             </button>
 
             {notificationOpen && (

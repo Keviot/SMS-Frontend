@@ -29,7 +29,17 @@ export default function Announcement() {
   const fetchAnnouncements = async () => {
     try {
       setLoading(true);
-      const res = await announcementApi.getAll();
+      // Fetch profile to get society ID
+      const profileData = await authApi.getProfile();
+      const user = profileData.user;
+      const societyId = user?.society || (user?.societies && user.societies[0]?._id);
+
+      if (!societyId) {
+        setAnnouncements([]);
+        return;
+      }
+
+      const res = await announcementApi.getAll(societyId);
       setAnnouncements(res.announcement || []);
     } catch (error: any) {
       toast.error(error.message || "Failed to fetch announcements");
@@ -148,10 +158,24 @@ export default function Announcement() {
 function AnnouncementCard({ item, role, onEdit, onDelete, onView }: { item: AnnouncementItem, role: string | null, onEdit: () => void, onDelete: () => void, onView: () => void }) {
   const [showMenu, setShowMenu] = useState(false);
 
+  const getTypeColor = (type: string | string[]) => {
+    const t = Array.isArray(type) ? type[0] : type;
+    switch (t) {
+      case "Notice":
+        return "bg-[#5678E9]"; // Blue
+      case "Event":
+        return "bg-[#FFB302]"; // Yellow/Orange
+      case "Community Initiatives":
+        return "bg-[#34A853]"; // Green
+      default:
+        return "bg-[#5678E9]";
+    }
+  };
+
   return (
     <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden flex flex-col h-full group transition-all hover:shadow-md">
       {/* Card Header */}
-      <div className="bg-[#5678E9] text-white p-4 flex justify-between items-center">
+      <div className={cn("text-white p-4 flex justify-between items-center", getTypeColor(item.announcementType))}>
         <h3 className="font-bold text-sm truncate pr-2">
           {Array.isArray(item.announcementType) ? item.announcementType[0] : item.announcementType}
         </h3>

@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import Button from "../../../ui/Button";
 import { cn } from "../../../lib/cn";
 import CreateFacilityModal from "../components/CreateFacilityModal";
-import { facilityApi } from "../../../services/api";
+import { facilityApi, authApi } from "../../../services/api";
 import toast from "react-hot-toast";
 import ConfirmPopup from "../../../ui/ConfirmPopup";
 
@@ -22,10 +22,22 @@ export default function FacilityManagement() {
   const [selectedFacility, setSelectedFacility] = useState<Facility | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
 
+  const [role, setRole] = useState<string | null>(null);
+
   const fetchFacilities = async () => {
     try {
       setLoading(true);
-      const res = await facilityApi.getAll();
+      // Fetch profile to get society ID
+      const profileData = await authApi.getProfile();
+      const user = profileData.user;
+      const societyId = user?.society || (user?.societies && user.societies[0]?._id);
+
+      if (!societyId) {
+        setFacilities([]);
+        return;
+      }
+
+      const res = await facilityApi.getAll(societyId);
       // Backend returns { message: "...", data: [...] }
       setFacilities(res.data || []);
     } catch (error: any) {
@@ -37,6 +49,17 @@ export default function FacilityManagement() {
 
   useEffect(() => {
     fetchFacilities();
+    const fetchRole = async () => {
+      try {
+        const data = await authApi.getProfile();
+        if (data.user) {
+          setRole(data.user.role?.toLowerCase());
+        }
+      } catch (error) {
+        console.error("Failed to fetch role in FacilityManagement:", error);
+      }
+    };
+    fetchRole();
   }, []);
 
   const handleEdit = (facility: Facility) => {
@@ -68,12 +91,14 @@ export default function FacilityManagement() {
         <div className="p-6 border-b border-gray-50 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <h1 className="text-xl font-bold text-gray-900">Facility Management</h1>
           
-          <Button 
-            onClick={() => setIsModalOpen(true)}
-            className="bg-[#FE512E] text-white px-6 py-2.5 rounded-xl font-bold shadow-lg flex items-center gap-2 hover:opacity-90 transition-all active:scale-[0.98] whitespace-nowrap"
-          >
-            Create Facility
-          </Button>
+          {role && role !== "resident" && (
+            <Button 
+              onClick={() => setIsModalOpen(true)}
+              className="bg-[#FE512E] text-white px-6 py-2.5 rounded-xl font-bold shadow-lg flex items-center gap-2 hover:opacity-90 transition-all active:scale-[0.98] whitespace-nowrap"
+            >
+              Create Facility
+            </Button>
+          )}
         </div>
 
         <div className="p-6">
@@ -88,7 +113,12 @@ export default function FacilityManagement() {
                 <Plus size={40} className="text-gray-300" />
               </div>
               <h3 className="text-lg font-bold text-gray-900">No Facilities Found</h3>
-              <p className="text-gray-500 max-w-xs">You haven't added any facilities yet. Click "Create Facility" to get started.</p>
+              <p className="text-gray-500 max-w-xs">
+                {role === "resident" 
+                  ? "No facilities have been added by the administrator yet." 
+                  : "You haven't added any facilities yet. Click \"Create Facility\" to get started."
+                }
+              </p>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -96,6 +126,7 @@ export default function FacilityManagement() {
                 <FacilityCard 
                   key={facility._id} 
                   facility={facility} 
+                  role={role}
                   onEdit={() => handleEdit(facility)}
                   onDelete={() => setDeleteId(facility._id)}
                 />
@@ -124,7 +155,7 @@ export default function FacilityManagement() {
   );
 }
 
-function FacilityCard({ facility, onEdit, onDelete }: { facility: Facility, onEdit: () => void, onDelete: () => void }) {
+function FacilityCard({ facility, role, onEdit, onDelete }: { facility: Facility, role: string | null, onEdit: () => void, onDelete: () => void }) {
   const [showMenu, setShowMenu] = useState(false);
 
   return (
@@ -132,40 +163,42 @@ function FacilityCard({ facility, onEdit, onDelete }: { facility: Facility, onEd
       {/* Card Header */}
       <div className="bg-[#5678E9] text-white p-4 flex justify-between items-center">
         <h3 className="font-bold text-sm truncate pr-2">{facility.name}</h3>
-        <div className="relative">
-          <button 
-            onClick={() => setShowMenu(!showMenu)}
-            className="p-1 hover:bg-white/10 rounded-md transition-colors"
-          >
-            <MoreVertical size={16} />
-          </button>
-          
-          {showMenu && (
-            <>
-              <div className="fixed inset-0 z-10" onClick={() => setShowMenu(false)} />
-              <div className="absolute right-0 mt-2 w-32 bg-white rounded-xl shadow-xl border border-gray-50 py-1 z-20 animate-in fade-in zoom-in-95 duration-100">
-                <button 
-                  onClick={() => {
-                    onEdit();
-                    setShowMenu(false);
-                  }}
-                  className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors font-medium border-b border-gray-50"
-                >
-                  Edit
-                </button>
-                <button 
-                  onClick={() => {
-                    onDelete();
-                    setShowMenu(false);
-                  }}
-                  className="w-full text-left px-4 py-2 text-sm text-red-500 hover:bg-red-50 transition-colors font-medium"
-                >
-                  Delete
-                </button>
-              </div>
-            </>
-          )}
-        </div>
+        {role !== "resident" && (
+          <div className="relative">
+            <button 
+              onClick={() => setShowMenu(!showMenu)}
+              className="p-1 hover:bg-white/10 rounded-md transition-colors"
+            >
+              <MoreVertical size={16} />
+            </button>
+            
+            {showMenu && (
+              <>
+                <div className="fixed inset-0 z-10" onClick={() => setShowMenu(false)} />
+                <div className="absolute right-0 mt-2 w-32 bg-white rounded-xl shadow-xl border border-gray-50 py-1 z-20 animate-in fade-in zoom-in-95 duration-100">
+                  <button 
+                    onClick={() => {
+                      onEdit();
+                      setShowMenu(false);
+                    }}
+                    className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors font-medium border-b border-gray-50"
+                  >
+                    Edit
+                  </button>
+                  <button 
+                    onClick={() => {
+                      onDelete();
+                      setShowMenu(false);
+                    }}
+                    className="w-full text-left px-4 py-2 text-sm text-red-500 hover:bg-red-50 transition-colors font-medium"
+                  >
+                    Delete
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Card Body */}
