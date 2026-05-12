@@ -753,3 +753,58 @@ export const announcementApi = {
         return handleResponse(response);
     },
 };
+
+export const securityGuardApi = {
+    create: async (data: any) => {
+        const isFormData = data instanceof FormData;
+        const response = await fetch(`${API_URL}/security-guard/create`, {
+            method: "POST",
+            credentials: "include",
+            headers: {
+                ...(isFormData ? {} : { "Content-Type": "application/json" }),
+                ...getAuthHeader()
+            },
+            body: isFormData ? data : JSON.stringify(data),
+        });
+        return handleResponse(response);
+    },
+
+    getAll: async (societyId?: string) => {
+        const url = societyId ? `${API_URL}/security-guard/get?societyId=${societyId}` : `${API_URL}/security-guard/get`;
+        const response = await fetch(url, {
+            method: "GET",
+            credentials: "include",
+            headers: {
+                "Content-Type": "application/json",
+                ...getAuthHeader()
+            },
+        });
+        return handleResponse(response);
+    },
+
+    edit: async (id: string, data: any) => {
+        const isFormData = data instanceof FormData;
+        const response = await fetch(`${API_URL}/security-guard/edit/${id}`, {
+            method: "PUT",
+            credentials: "include",
+            headers: {
+                ...(isFormData ? {} : { "Content-Type": "application/json" }),
+                ...getAuthHeader()
+            },
+            body: isFormData ? data : JSON.stringify(data),
+        });
+        return handleResponse(response);
+    },
+
+    delete: async (id: string) => {
+        const response = await fetch(`${API_URL}/security-guard/delete/${id}`, {
+            method: "DELETE",
+            credentials: "include",
+            headers: {
+                "Content-Type": "application/json",
+                ...getAuthHeader()
+            },
+        });
+        return handleResponse(response);
+    },
+};

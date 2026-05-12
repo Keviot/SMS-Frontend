@@ -1,96 +1,219 @@
-import { Plus } from "lucide-react";
-import { useState } from "react";
+import { Plus, Edit, Eye, Trash2, Sun, Moon, User as UserIcon, Loader2 } from "lucide-react";
+import { useEffect, useState } from "react";
 import DataTable from "../../../ui/DataTable";
 import Button from "../../../ui/Button";
-import AddVisitorModal from "../components/AddVisitorModal";
-
-const dummyVisitors = [
-  { id: 1, name: "Evelyn Harper", phone: "97852 12369", date: "10/01/2024", unit: "A", number: "1001", time: "3:45 PM", avatar: "https://i.pravatar.cc/150?u=1" },
-  { id: 2, name: "Wade Warren", phone: "97852 25893", date: "10/01/2024", unit: "B", number: "1002", time: "2:45 AM", avatar: "https://i.pravatar.cc/150?u=2" },
-  { id: 3, name: "Guy Hawkins", phone: "97589 55563", date: "10/01/2024", unit: "C", number: "1003", time: "3:00 PM", avatar: "https://i.pravatar.cc/150?u=3" },
-  { id: 4, name: "Robert Fox", phone: "97444 98323", date: "10/01/2024", unit: "D", number: "1004", time: "5:30 AM", avatar: "https://i.pravatar.cc/150?u=4" },
-  { id: 5, name: "Jacob Jones", phone: "97123 12583", date: "10/01/2024", unit: "E", number: "2001", time: "12:45 PM", avatar: "https://i.pravatar.cc/150?u=5" },
-  { id: 6, name: "Ronald Richards", phone: "97259 12363", date: "10/01/2024", unit: "F", number: "2002", time: "3:45 PM", avatar: "https://i.pravatar.cc/150?u=6" },
-  { id: 7, name: "Annette Black", phone: "97569 77763", date: "10/01/2024", unit: "G", number: "2003", time: "6:00 AM", avatar: "https://i.pravatar.cc/150?u=7" },
-  { id: 8, name: "Jerome Bell", phone: "97123 25863", date: "10/01/2024", unit: "H", number: "2004", time: "3:45 PM", avatar: "https://i.pravatar.cc/150?u=8" },
-  { id: 9, name: "Theresa Webb", phone: "97258 36973", date: "10/01/2024", unit: "I", number: "3001", time: "7:00 PM", avatar: "https://i.pravatar.cc/150?u=9" },
-  { id: 10, name: "Kathryn Murphy", phone: "97577 66663", date: "10/01/2024", unit: "A", number: "3002", time: "6:00 AM", avatar: "https://i.pravatar.cc/150?u=10" },
-];
+import AddSecurityModal from "../components/AddSecurityModal";
+import ViewSecurityModal from "../components/ViewSecurityModal";
+import { securityGuardApi, authApi } from "../../../services/api";
+import toast from "react-hot-toast";
+import ConfirmPopup from "../../../ui/ConfirmPopup";
 
 export default function SecurityGuard() {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [guards, setGuards] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [selectedGuard, setSelectedGuard] = useState<any>(null);
+  const [modalMode, setModalMode] = useState<"add" | "edit" | "view">("add");
+
+  const [userRole, setUserRole] = useState<string>("");
+
+  const fetchGuards = async () => {
+    try {
+      setLoading(true);
+      const profileData = await authApi.getProfile();
+      const user = profileData.user;
+      setUserRole(user?.role || "");
+      const societyId = user?.society || (user?.societies && user.societies[0]?._id);
+
+      if (!societyId) {
+        setGuards([]);
+        return;
+      }
+
+      const res = await securityGuardApi.getAll(societyId);
+      setGuards(res.securityGuard || []);
+    } catch (error: any) {
+      toast.error(error.message || "Failed to fetch security guards");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchGuards();
+  }, []);
+
+  const handleEdit = (guard: any) => {
+    setSelectedGuard(guard);
+    setModalMode("edit");
+    setIsModalOpen(true);
+  };
+
+  const handleView = (guard: any) => {
+    setSelectedGuard(guard);
+    setModalMode("view");
+    setIsModalOpen(true);
+  };
+
+  const handleAdd = () => {
+    setSelectedGuard(null);
+    setModalMode("add");
+    setIsModalOpen(true);
+  };
+
+  const handleDelete = async () => {
+    if (!deleteId) return;
+    try {
+      await securityGuardApi.delete(deleteId);
+      toast.success("Security guard deleted successfully");
+      fetchGuards();
+    } catch (error: any) {
+      toast.error(error.message || "Failed to delete security guard");
+    } finally {
+      setDeleteId(null);
+    }
+  };
 
   const columns = [
     {
       key: "name",
-      header: "Visitor Name",
+      header: "Security Guard Name",
       render: (row: any) => (
         <div className="flex items-center gap-3">
-          <img src={row.avatar} alt="" className="h-10 w-10 rounded-full border border-gray-100" />
-          <span className="font-semibold text-gray-900">{row.name}</span>
+          <div className="h-10 w-10 rounded-full border border-gray-100 bg-gray-50 flex items-center justify-center overflow-hidden">
+            {row.profileImage ? (
+              <img src={row.profileImage} alt="" className="h-full w-full object-cover" />
+            ) : (
+              <UserIcon size={20} className="text-gray-400" />
+            )}
+          </div>
+          <span className="font-semibold text-gray-900">{row.name || `${row.firstname} ${row.lastname}`}</span>
         </div>
       ),
     },
-    { key: "phone", header: "Phone Number", render: (row: any) => <span className="text-gray-500">{row.phone}</span> },
-    { key: "date", header: "Date", render: (row: any) => <span className="text-gray-500">{row.date}</span> },
-    { 
-      key: "unit",
-      header: "Unit Number", 
+    { key: "phoneNumber", header: "Phone Number", render: (row: any) => <span className="text-gray-500 font-medium">{row.phoneNumber}</span> },
+    {
+      key: "shift",
+      header: "Select Shift",
+      render: (row: any) => (
+        <span className={`inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-bold ${row.shift?.toLowerCase() === 'day' ? 'bg-[#FFF9E7] text-[#FFB302]' : 'bg-[#313131] text-white'
+          }`}>
+          {row.shift?.toLowerCase() === 'day' ? <Sun size={16} /> : <Moon size={16} />}
+          {row.shift}
+        </span>
+      )
+    },
+    {
+      key: "shiftDate",
+      header: "Shift Date",
+      render: (row: any) => {
+        if (!row.shiftDate) return <span className="text-gray-500">N/A</span>;
+        const date = new Date(row.shiftDate);
+        return <span className="text-gray-500 font-medium">{date.toLocaleDateString('en-GB')}</span>;
+      }
+    },
+    { key: "shiftTime", header: "Shift Time", render: (row: any) => <span className="text-gray-500 font-medium">{row.shiftTime}</span> },
+    {
+      key: "gender",
+      header: "Gender",
+      render: (row: any) => (
+        <span className={`inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs font-bold ${row.gender?.toLowerCase() === 'male' ? 'bg-[#F1F4FF] text-[#5678E9]' : 'bg-[#FFF1F8] text-[#FF71BA]'
+          }`}>
+          <UserIcon size={14} />
+          <span className="capitalize">{row.gender}</span>
+        </span>
+      )
+    },
+    {
+      key: "action",
+      header: "Action",
       render: (row: any) => (
         <div className="flex items-center gap-2">
-          <span className="flex h-6 w-6 items-center justify-center rounded-full bg-blue-50 text-[12px] font-bold text-blue-600">
-            {row.unit}
-          </span>
-          <span className="font-bold text-gray-900">{row.number}</span>
+          <button
+            onClick={() => handleEdit(row)}
+            className="flex h-10 w-10 items-center justify-center rounded-lg border border-gray-100 bg-white text-[#39973D] transition-all hover:bg-green-50 shadow-sm"
+          >
+            <Edit size={18} />
+          </button>
+          <button
+            onClick={() => handleView(row)}
+            className="flex h-10 w-10 items-center justify-center rounded-lg border border-gray-100 bg-white text-[#5678E9] transition-all hover:bg-blue-50 shadow-sm"
+          >
+            <Eye size={18} />
+          </button>
+          <button
+            onClick={() => setDeleteId(row._id)}
+            className="flex h-10 w-10 items-center justify-center rounded-lg border border-gray-100 bg-white text-[#E74C3C] transition-all hover:bg-red-50 shadow-sm"
+          >
+            <Trash2 size={18} />
+          </button>
         </div>
-      ) 
+      )
     },
-    { 
-      key: "time",
-      header: "Time", 
-      render: (row: any) => (
-        <span className="inline-flex items-center rounded-full bg-gray-50 px-3 py-1 text-xs font-bold text-gray-700">
-          {row.time}
-        </span>
-      ) 
-    },
-  ];
+  ].filter(col => userRole === "admin" || col.key !== "action");
 
   return (
     <div className="p-4 lg:p-6 space-y-6 bg-[#F6F8FB] min-h-screen">
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
         <div className="p-6 border-b border-gray-50 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-          <h1 className="text-xl font-bold text-gray-900">Visitor Tracking</h1>
-          
-          <div className="flex items-center gap-3 w-full sm:w-auto">
-            <select className="bg-white border border-gray-200 rounded-xl px-4 py-2.5 text-sm font-semibold outline-none focus:border-[#FE512E] transition-all">
-              <option>Week</option>
-              <option>Month</option>
-              <option>Year</option>
-            </select>
-            
-            <Button 
-              onClick={() => setIsModalOpen(true)}
-              className="bg-[#FE512E] text-white px-6 py-2.5 rounded-xl font-bold shadow-lg flex items-center gap-2 hover:opacity-90 transition-all active:scale-[0.98] whitespace-nowrap"
+          <h1 className="text-xl font-bold text-gray-900">Security Guard Details</h1>
+
+          {userRole === "admin" && (
+            <Button
+              variant="primary"
+              onClick={handleAdd}
+              className="h-12 px-6 rounded-xl font-bold shadow-lg flex items-center gap-2 hover:opacity-90 transition-all active:scale-[0.98] whitespace-nowrap"
+              leftIcon={<Plus size={20} />}
             >
-              <Plus size={20} />
-              Add Visiter details
+              Add Security
             </Button>
-          </div>
+          )}
         </div>
 
-        <div className="overflow-x-auto">
-          <DataTable 
-            columns={columns} 
-            data={dummyVisitors}
-            getRowKey={(row) => row.id.toString()}
-          />
+        <div className="overflow-x-auto min-h-[400px]">
+          {loading ? (
+            <div className="flex flex-col items-center justify-center h-64 gap-4">
+              <Loader2 className="h-10 w-10 animate-spin text-[#FE512E]" />
+              <p className="text-gray-400 font-medium">Loading guards...</p>
+            </div>
+          ) : (
+            <DataTable
+              columns={columns}
+              data={guards}
+              getRowKey={(row) => row._id.toString()}
+            />
+          )}
         </div>
       </div>
 
-      <AddVisitorModal 
-        open={isModalOpen} 
-        onClose={() => setIsModalOpen(false)} 
+      <AddSecurityModal
+        open={isModalOpen && modalMode !== "view"}
+        mode={modalMode === "view" ? "add" : modalMode}
+        initialData={selectedGuard}
+        onClose={() => {
+          setIsModalOpen(false);
+          setSelectedGuard(null);
+        }}
+        onSuccess={fetchGuards}
+      />
+
+      <ViewSecurityModal
+        open={isModalOpen && modalMode === "view"}
+        data={selectedGuard}
+        onClose={() => {
+          setIsModalOpen(false);
+          setSelectedGuard(null);
+        }}
+      />
+
+      <ConfirmPopup
+        open={Boolean(deleteId)}
+        onCancel={() => setDeleteId(null)}
+        onConfirm={handleDelete}
+        title="Delete Security Guard"
+        message="Are you sure you want to delete this security guard? This action cannot be undone."
+        confirmText="Delete"
       />
     </div>
   );

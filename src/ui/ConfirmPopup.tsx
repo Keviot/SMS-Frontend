@@ -24,20 +24,19 @@ export default function ConfirmPopup({
       open={open}
       title={title}
       widthClassName="w-full max-w-[410px]"
-      showHeaderDivider
       centerTitle
     >
-      <div className="mt-4 mb-8 text-center">
-        <p className="text-[14px] font-medium leading-relaxed text-[#A7A7A7]">
+      <div className="pt-2 pb-6 text-center">
+        <p className="text-[14px] font-medium leading-relaxed text-gray-400">
           {message}
         </p>
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="flex gap-4 justify-center">
         <button
           type="button"
           onClick={onCancel}
-          className="h-12 rounded-xl border border-[#D3D3D3] bg-white text-[16px] font-bold text-[#202224] transition hover:bg-gray-50"
+          className="flex-1 h-12 rounded-xl border border-gray-200 bg-white text-[16px] font-bold text-gray-700 transition hover:bg-gray-50"
         >
           {cancelText}
         </button>
@@ -45,7 +44,7 @@ export default function ConfirmPopup({
         <button
           type="button"
           onClick={onConfirm}
-          className="h-12 rounded-xl bg-[#E74C3C] text-[16px] font-bold text-white transition hover:bg-[#C0392B] shadow-lg shadow-red-500/20"
+          className="flex-1 h-12 rounded-xl bg-[#E74C3C] text-[16px] font-bold text-white transition hover:bg-[#C0392B] shadow-lg shadow-red-500/10"
         >
           {confirmText}
         </button>
