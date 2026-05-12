@@ -1,33 +1,65 @@
 import { ChevronDown } from "lucide-react";
 import Card from "../../../ui/Card";
+import { useState } from "react";
 
-const months = [
-  "Jan",
-  "Feb",
-  "Mar",
-  "Apr",
-  "May",
-  "Jun",
-  "July",
-  "Aug",
-  "Sep",
-  "Oct",
-  "Nov",
-  "Dec",
-];
+const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "July", "Aug", "Sep", "Oct", "Nov", "Dec"];
+const weekDays = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+const monthDays = ["1", "5", "10", "15", "20", "25", "30"];
 
-const values = [10, 16, 14, 27, 18, 24, 20, 30, 29, 28, 40, 48];
-const max = 50;
+type BalanceChartProps = {
+  data?: number[];
+  total?: number | string;
+};
 
-export default function BalanceChart() {
-  const points = values
-    .map((value, index) => {
-      const x = 6 + (index / (values.length - 1)) * 88;
-      const y = 92 - (value / max) * 78;
+export default function BalanceChart({ data = [], total = "0" }: BalanceChartProps) {
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [selectedOption, setSelectedOption] = useState("Year");
 
-      return `${x},${y}`;
-    })
-    .join(" ");
+  // Determine labels and data points based on selection
+  const getChartConfig = () => {
+    switch (selectedOption) {
+      case "Week":
+        return {
+          labels: weekDays,
+          values: data.slice(0, 7).length === 7 ? data.slice(0, 7) : [12000, 15000, 13000, 18000, 14000, 16000, 19000]
+        };
+      case "Month":
+        return {
+          labels: monthDays,
+          values: data.slice(0, 7).length === 7 ? data.slice(0, 7) : [15000, 22000, 19000, 28000, 24000, 26000, 32000]
+        };
+      default: // Year
+        return {
+          labels: months,
+          values: data.length === 12 ? data : [10000, 16000, 14000, 27000, 18000, 24000, 20000, 30000, 29000, 28000, 35000, 42000]
+        };
+    }
+  };
+
+  const { labels, values: chartValues } = getChartConfig();
+  const maxVal = Math.max(...chartValues, 50000);
+
+  const getPath = () => {
+    if (chartValues.length < 2) return "";
+
+    const pointsArray = chartValues.map((value, index) => ({
+      x: 4 + (index / (chartValues.length - 1)) * 92,
+      y: 92 - (value / maxVal) * 78,
+    }));
+
+    let d = `M ${pointsArray[0].x},${pointsArray[0].y}`;
+
+    for (let i = 0; i < pointsArray.length - 1; i++) {
+      const p1 = pointsArray[i];
+      const p2 = pointsArray[i + 1];
+
+      // Control points for smooth bezier curve
+      const cx = (p1.x + p2.x) / 2;
+      d += ` C ${cx},${p1.y} ${cx},${p2.y} ${p2.x},${p2.y}`;
+    }
+
+    return d;
+  };
 
   return (
     <Card className="flex min-h-[24rem] flex-col p-5">
@@ -38,152 +70,172 @@ export default function BalanceChart() {
           </h2>
 
           <p className="mt-4 text-3xl font-semibold leading-tight tracking-[-0.4px] text-[#202224]">
-            55,000
+            {Number(total).toLocaleString()}
           </p>
         </div>
 
         <div className="relative w-full sm:w-auto">
           <button
             type="button"
+            onClick={() => setIsDropdownOpen(!isDropdownOpen)}
             className="flex min-h-11 w-full items-center justify-between gap-4 rounded-[10px] border border-[#D3D3D3] bg-white px-4 text-sm font-semibold text-[#202224] sm:min-w-28"
           >
-            Month
-            <ChevronDown size={18} />
+            {selectedOption}
+            <ChevronDown size={18} className={`transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`} />
           </button>
 
-          <div className="absolute right-0 top-full z-10 mt-2 w-full rounded-[10px] bg-white p-3 shadow-[0_18px_45px_rgba(15,23,42,0.12)] sm:w-40">
-            {["Last week", "Last month", "Last Year"].map((item) => {
-              const isActive = item === "Last month";
+          {isDropdownOpen && (
+            <div className="absolute right-0 top-full z-20 mt-2 w-full rounded-[10px] bg-white p-3 shadow-[0_18px_45px_rgba(15,23,42,0.12)] sm:w-44">
+              {["Week", "Month", "Year"].map((item) => {
+                const isActive = item === selectedOption;
 
-              return (
-                <label
-                  key={item}
-                  className="flex cursor-pointer items-center gap-2.5 py-1.5"
-                >
-                  <span
-                    className={[
-                      "grid size-4 place-items-center rounded-full border",
-                      isActive ? "border-[#FE512E]" : "border-[#C9CDD5]",
-                    ].join(" ")}
+                return (
+                  <label
+                    key={item}
+                    onClick={() => {
+                      setSelectedOption(item);
+                      setIsDropdownOpen(false);
+                    }}
+                    className="flex cursor-pointer items-center gap-2.5 py-1.5"
                   >
-                    {isActive && (
-                      <span className="size-2 rounded-full bg-[#FE512E]" />
-                    )}
-                  </span>
+                    <div
+                      className={`grid size-4 place-items-center rounded-full border ${isActive ? "border-[#FE512E]" : "border-[#C9CDD5]"
+                        }`}
+                    >
+                      {isActive && (
+                        <div className="size-2 rounded-full bg-[#FE512E]" />
+                      )}
+                    </div>
 
-                  <span
-                    className={[
-                      "text-xs font-medium",
-                      isActive ? "text-[#202224]" : "text-[#A7A7A7]",
-                    ].join(" ")}
-                  >
-                    {item}
-                  </span>
-                </label>
-              );
-            })}
-          </div>
+                    <span
+                      className={`text-xs font-medium ${isActive ? "text-[#202224]" : "text-[#A7A7A7]"
+                        }`}
+                    >
+                      {item}
+                    </span>
+                  </label>
+                );
+              })}
+            </div>
+          )}
         </div>
       </div>
 
-      <div className="mt-5 min-h-0 flex-1">
-        <div className="grid h-full grid-cols-[2.75rem_minmax(0,1fr)]">
-          <div className="flex h-full flex-col justify-between pb-8 pt-1 text-sm font-normal text-[#4F4F4F]">
-            {["50k", "40k", "30k", "20k", "10k", "0k"].map((label) => (
-              <span key={label}>{label}</span>
+      <div className="mt-8 min-h-0 flex-1">
+        <div className="grid h-full grid-cols-[3rem_minmax(0,1fr)]">
+          <div className="relative h-[286px] text-sm font-normal text-[#4F4F4F]">
+            {[
+              { label: "50k", top: "14%" },
+              { label: "40k", top: "29.6%" },
+              { label: "30k", top: "45.2%" },
+              { label: "20k", top: "60.8%" },
+              { label: "10k", top: "76.4%" },
+              { label: "0k", top: "92%" },
+            ].map((item) => (
+              <span
+                key={item.label}
+                className="absolute left-0 -translate-y-1/2 leading-none"
+                style={{ top: item.top }}
+              >
+                {item.label}
+              </span>
             ))}
           </div>
 
-          <div className="min-w-0">
-            <svg
-              viewBox="0 0 100 100"
-              preserveAspectRatio="none"
-              className="h-64 w-full overflow-visible sm:h-72"
-            >
-              {[14, 29.6, 45.2, 60.8, 76.4, 92].map((y) => (
-                <line
-                  key={y}
-                  x1="0"
-                  x2="100"
-                  y1={y}
-                  y2={y}
-                  stroke="#EDF0F5"
-                  strokeWidth="0.45"
+          <div className="relative min-w-0">
+            <div className="relative">
+              <svg
+                viewBox="0 0 100 100"
+                preserveAspectRatio="none"
+                className="h-[286px] w-full overflow-visible"
+              >
+                {[14, 29.6, 45.2, 60.8, 76.4, 92].map((y) => (
+                  <line
+                    key={y}
+                    x1="0"
+                    x2="100"
+                    y1={y}
+                    y2={y}
+                    stroke="#F1F1F1"
+                    strokeWidth="1"
+                    vectorEffect="non-scaling-stroke"
+                  />
+                ))}
+
+                <defs>
+                  <filter id="chartShadow" x="-20%" y="-20%" width="140%" height="140%">
+                    <feDropShadow
+                      dx="0"
+                      dy="4"
+                      stdDeviation="3"
+                      floodColor="#8EA2FF"
+                      floodOpacity="0.4"
+                    />
+                  </filter>
+                </defs>
+
+                <path
+                  d={getPath()}
+                  fill="none"
+                  stroke="#8EA2FF"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  vectorEffect="non-scaling-stroke"
+                  filter="url(#chartShadow)"
                 />
-              ))}
 
-              <defs>
-                <filter
-                  id="chartShadow"
-                  x="-20%"
-                  y="-20%"
-                  width="140%"
-                  height="140%"
-                >
-                  <feDropShadow
-                    dx="0"
-                    dy="5"
-                    stdDeviation="4"
-                    floodColor="#8EA2FF"
-                    floodOpacity="0.45"
-                  />
-                </filter>
-              </defs>
+                {/* Dynamic Tooltip placeholder - can be improved for interactivity */}
+                {selectedOption === "Last Year" && (
+                  <g>
+                    <filter id="tooltipShadow">
+                      {/* <feDropShadow dx="0" dy="2" stdDeviation="2" floodOpacity="0.1" /> */}
+                    </filter>
+                    <rect
+                      x="43"
+                      y="44"
+                      width="14"
+                      height="8"
+                      rx="3"
+                      fill="white"
+                      stroke="#F1F1F1"
+                      strokeWidth="0.5"
+                      filter="url(#tooltipShadow)"
+                    />
+                  </g>
+                )}
+              </svg>
 
-              <polyline
-                points={points}
-                fill="none"
-                stroke="#8EA2FF"
-                strokeWidth="1.6"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                filter="url(#chartShadow)"
-              />
+              {/* Perfectly round points rendered as HTML */}
+              <div className="pointer-events-none absolute inset-0">
+                {chartValues.map((value, index) => {
+                  const x = 4 + (index / (chartValues.length - 1)) * 92;
+                  const y = 92 - (value / maxVal) * 78;
 
-              {values.map((value, index) => {
-                const x = 6 + (index / (values.length - 1)) * 88;
-                const y = 92 - (value / max) * 78;
+                  return (
+                    <div
+                      key={index}
+                      className="absolute size-[10px] -translate-x-1/2 -translate-y-1/2 rounded-full border-[1.5px] border-white bg-[#8EA2FF] shadow-[0_2px_4px_rgba(142,162,255,0.4)]"
+                      style={{ left: `${x}%`, top: `${y}%` }}
+                    />
+                  );
+                })}
+              </div>
+            </div>
 
+            <div className="relative mt-4 h-6 text-xs font-normal text-[#4F4F4F] sm:text-sm">
+              {labels.map((label, index) => {
+                const x = 4 + (index / (labels.length - 1)) * 92;
                 return (
-                  <circle
+                  <span
                     key={index}
-                    cx={x}
-                    cy={y}
-                    r="1.8"
-                    fill="#8EA2FF"
-                    stroke="white"
-                    strokeWidth="0.8"
-                  />
+                    className="absolute -translate-x-1/2 whitespace-nowrap"
+                    style={{ left: `${x}%` }}
+                  >
+                    {label}
+                  </span>
                 );
               })}
-
-              <g>
-                <rect
-                  x="40"
-                  y="36"
-                  width="13"
-                  height="9"
-                  rx="2"
-                  fill="white"
-                  stroke="#EAEFFF"
-                />
-                <text
-                  x="46.5"
-                  y="42.3"
-                  textAnchor="middle"
-                  fontSize="4.1"
-                  fill="#8EA2FF"
-                  fontWeight="600"
-                >
-                  55,000
-                </text>
-              </g>
-            </svg>
-
-            <div className="mt-2 grid grid-cols-6 gap-y-2 text-center text-xs font-normal text-[#4F4F4F] sm:grid-cols-12 sm:text-sm">
-              {months.map((month) => (
-                <span key={month}>{month}</span>
-              ))}
             </div>
           </div>
         </div>

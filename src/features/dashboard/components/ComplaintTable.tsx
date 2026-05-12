@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import type { ComplaintStatus, Priority } from "../../../data/dashboard.data";
 import {
   EditIcon,
@@ -93,6 +93,11 @@ function ActionButton({
 
 export default function ComplaintTable({ data, role }: ComplaintTableProps) {
   const [rows, setRows] = useState<ComplaintRow[]>(data);
+
+  // Sync rows with data prop when it changes
+  useEffect(() => {
+    setRows(data);
+  }, [data]);
 
   const [selectedComplaint, setSelectedComplaint] =
     useState<ComplaintViewData | null>(null);
@@ -227,7 +232,7 @@ export default function ComplaintTable({ data, role }: ComplaintTableProps) {
                               className="size-full object-cover"
                             />
                           ) : (
-                            row.complainerName.charAt(0)
+                            (row.complainerName || "C").charAt(0)
                           )}
                         </div>
 

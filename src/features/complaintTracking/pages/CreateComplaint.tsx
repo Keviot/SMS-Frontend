@@ -173,7 +173,7 @@ export default function CreateComplaint() {
                 return {
                     id: item._id,
                     complainerName: item.compainerName,  // Backend uses 'compainerName'
-                    avatar: item.avatar || `https://i.pravatar.cc/80?img=${Math.floor(Math.random() * 70)}`,
+                    // avatar: item.avatar || `https://i.pravatar.cc/80?img=${Math.floor(Math.random() * 70)}`,
                     complaintName: item.complainName,     // Backend uses 'complainName'
                     description: item.description,
                     unitLetter: item.wing,
