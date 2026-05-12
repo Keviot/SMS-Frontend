@@ -22,7 +22,7 @@ type ComplaintRow = {
   date: string;
   priority: Priority;
   status: ComplaintStatus;
-  avatar?: string;
+  initials: string;
   description?: string;
   wing?: string;
   unit?: string;
@@ -151,15 +151,15 @@ export default function ComplaintTable({ data, role }: ComplaintTableProps) {
       current.map((item) =>
         item.id === editingComplaint.id
           ? {
-              ...item,
-              complainerName: values.complainerName,
-              complaintName: values.complaintName,
-              description: values.description,
-              wing: values.wing,
-              unit: values.unit,
-              priority: values.priority,
-              status: values.status,
-            }
+            ...item,
+            complainerName: values.complainerName,
+            complaintName: values.complaintName,
+            description: values.description,
+            wing: values.wing,
+            unit: values.unit,
+            priority: values.priority,
+            status: values.status,
+          }
           : item
       )
     );
@@ -225,12 +225,8 @@ export default function ComplaintTable({ data, role }: ComplaintTableProps) {
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-2.5">
                         <div className="grid size-[30px] shrink-0 place-items-center overflow-hidden rounded-full bg-[#FFF1E9] text-[11px] font-semibold text-[#FE512E]">
-                          {row.avatar ? (
-                            <img
-                              src={row.avatar}
-                              alt={row.complainerName}
-                              className="size-full object-cover"
-                            />
+                          {row.initials ? (
+                            row.initials
                           ) : (
                             (row.complainerName || "C").charAt(0)
                           )}
@@ -310,14 +306,14 @@ export default function ComplaintTable({ data, role }: ComplaintTableProps) {
         initialValues={
           editingComplaint
             ? {
-                complainerName: editingComplaint.complainerName,
-                complaintName: editingComplaint.complaintName,
-                description: editingComplaint.description ?? editDescription,
-                wing: editingComplaint.wing ?? "A",
-                unit: editingComplaint.unit ?? "1001",
-                priority: editingComplaint.priority,
-                status: editingComplaint.status,
-              }
+              complainerName: editingComplaint.complainerName,
+              complaintName: editingComplaint.complaintName,
+              description: editingComplaint.description ?? editDescription,
+              wing: editingComplaint.wing ?? "A",
+              unit: editingComplaint.unit ?? "1001",
+              priority: editingComplaint.priority,
+              status: editingComplaint.status,
+            }
             : undefined
         }
         onClose={closeEditModal}

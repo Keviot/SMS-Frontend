@@ -20,7 +20,7 @@ type ComplaintStatus = "Pending" | "Open" | "Closed";
 type Complaint = {
     id: string;
     complainerName: string;
-    avatar: string;
+    initials: string;
     complaintName: string;
     description: string;
     unitLetter: string;
@@ -168,12 +168,24 @@ export default function CreateComplaint() {
             }
 
             // Transform backend data to frontend format
+            const getInitials = (name?: string) => {
+                if (!name) return "?";
+
+                const words = name.trim().split(/\s+/);
+
+                if (words.length === 1) {
+                    return words[0].charAt(0).toUpperCase();
+                }
+
+                return `${words[0].charAt(0)}${words[1].charAt(0)}`.toUpperCase();
+            };
             const transformedComplaints = complaintsData.map((item: any) => {
                 console.log("Transforming complaint:", item);
                 return {
                     id: item._id,
                     complainerName: item.compainerName,  // Backend uses 'compainerName'
-                    // avatar: item.avatar || `https://i.pravatar.cc/80?img=${Math.floor(Math.random() * 70)}`,
+                    initials: getInitials(item.compainerName),
+
                     complaintName: item.complainName,     // Backend uses 'complainName'
                     description: item.description,
                     unitLetter: item.wing,
@@ -418,11 +430,9 @@ export default function CreateComplaint() {
                                             >
                                                 <td className="px-5 py-4">
                                                     <div className="flex items-center gap-3">
-                                                        <img
-                                                            src={complaint.avatar}
-                                                            alt={complaint.complainerName}
-                                                            className="size-10 shrink-0 rounded-full object-cover"
-                                                        />
+                                                        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#F6F8FB] text-sm font-bold uppercase text-[#5678E9]">
+                                                            {complaint.initials || complaint.complainerName?.charAt(0)?.toUpperCase() || "?"}
+                                                        </div>
                                                         <span className="text-sm font-medium text-[#434A57]">
                                                             {complaint.complainerName}
                                                         </span>
@@ -543,7 +553,7 @@ export default function CreateComplaint() {
                     selectedComplaint
                         ? {
                             complainerName: selectedComplaint.complainerName,
-                            avatar: selectedComplaint.avatar,
+                            initials: selectedComplaint.initials,
                             date: "Aug 5, 2024",
                             complaintName: selectedComplaint.complaintName,
                             description: selectedComplaint.description,
