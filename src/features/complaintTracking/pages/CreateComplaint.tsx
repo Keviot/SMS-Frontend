@@ -9,7 +9,7 @@ import {
     DeleteConfirmModal,
     type ComplaintFormData,
 } from "../components";
-import { complaintApi } from "../../../services/api";
+import { complaintApi, authApi, societyApi } from "../../../services/api";
 import toast from "react-hot-toast";
 import { Loader2 } from "lucide-react";
 
@@ -121,21 +121,69 @@ export default function CreateComplaint() {
     const fetchComplaints = async () => {
         try {
             setLoading(true);
-            const response = await complaintApi.getAllComplaints();
+            console.log("Fetching complaints...");
+
+            // Get user profile to get society ID
+            const profileResponse = await authApi.getProfile();
+            const user = profileResponse.user;
+
+            if (!user) {
+                toast.error("Unable to fetch user profile. Please try again.");
+                setLoading(false);
+                return;
+            }
+
+            // Get society ID - check multiple possible locations
+            let societyId = user.society;
+
+            if (!societyId && user.societies && user.societies.length > 0) {
+                societyId = user.societies[0]._id;
+            }
+
+            if (!societyId && user.selectSociety && user.selectSociety.length > 0) {
+                const societies = await societyApi.getAll();
+                const matchingSociety = societies.data.find(
+                    (s: any) => user.selectSociety.includes(s.societyName)
+                );
+                if (matchingSociety) {
+                    societyId = matchingSociety._id;
+                }
+            }
+
+            console.log("Fetching complaints for society:", societyId);
+
+            // Pass society ID to the API
+            const response = await complaintApi.getAllComplaints(societyId);
+            console.log("getAllComplaints response:", response);
+
+            // Backend returns { complainList: [...] }
+            const complaintsData = response.complainList || [];
+            console.log("Complaints data:", complaintsData);
+
+            if (!complaintsData || complaintsData.length === 0) {
+                console.log("No complaints found");
+                setComplaints([]);
+                setLoading(false);
+                return;
+            }
 
             // Transform backend data to frontend format
-            const transformedComplaints = response.data.map((item: any) => ({
-                id: item._id,
-                complainerName: item.complainerName,
-                avatar: item.avatar || `https://i.pravatar.cc/80?img=${Math.floor(Math.random() * 70)}`,
-                complaintName: item.complaintName,
-                description: item.description,
-                unitLetter: item.wing,
-                unitNumber: item.unit,
-                priority: item.priority as Priority,
-                status: item.status as ComplaintStatus,
-            }));
+            const transformedComplaints = complaintsData.map((item: any) => {
+                console.log("Transforming complaint:", item);
+                return {
+                    id: item._id,
+                    complainerName: item.compainerName,  // Backend uses 'compainerName'
+                    avatar: item.avatar || `https://i.pravatar.cc/80?img=${Math.floor(Math.random() * 70)}`,
+                    complaintName: item.complainName,     // Backend uses 'complainName'
+                    description: item.description,
+                    unitLetter: item.wing,
+                    unitNumber: item.unit,
+                    priority: item.priority as Priority,
+                    status: item.status as ComplaintStatus,
+                };
+            });
 
+            console.log("Transformed complaints:", transformedComplaints);
             setComplaints(transformedComplaints);
         } catch (error: any) {
             console.error("Error fetching complaints:", error);
@@ -167,7 +215,51 @@ export default function CreateComplaint() {
 
     const handleComplaintSubmit = async (data: ComplaintFormData) => {
         try {
-            await complaintApi.createComplaint(data);
+            // Get user profile to get society ID
+            const profileResponse = await authApi.getProfile();
+            const user = profileResponse.user;
+
+            if (!user) {
+                toast.error("Unable to fetch user profile. Please try again.");
+                return;
+            }
+
+            // Get society ID - check multiple possible locations
+            let societyId = user.society;
+
+            if (!societyId && user.societies && user.societies.length > 0) {
+                societyId = user.societies[0]._id;
+            }
+
+            if (!societyId && user.selectSociety && user.selectSociety.length > 0) {
+                const societies = await societyApi.getAll();
+                const matchingSociety = societies.data.find(
+                    (s: any) => user.selectSociety.includes(s.societyName)
+                );
+                if (matchingSociety) {
+                    societyId = matchingSociety._id;
+                }
+            }
+
+            if (!societyId) {
+                toast.error("Society information not found. Please contact administrator.");
+                console.error("User profile:", user);
+                return;
+            }
+
+            // Add society to the complaint data
+            const payload = {
+                compainerName: data.complainerName,  // Backend expects 'compainerName'
+                complainName: data.complaintName,     // Backend expects 'complainName'
+                description: data.description,
+                wing: data.wing,
+                unit: data.unit,
+                priority: data.priority,
+                status: data.status,
+                society: societyId,
+            };
+
+            await complaintApi.createComplaint(payload);
             toast.success("Complaint created successfully!");
             setShowCreateModal(false);
             // Refresh complaints list
@@ -182,7 +274,50 @@ export default function CreateComplaint() {
         try {
             if (!selectedComplaint) return;
 
-            await complaintApi.editComplaint(selectedComplaint.id, data);
+            // Get user profile to get society ID
+            const profileResponse = await authApi.getProfile();
+            const user = profileResponse.user;
+
+            if (!user) {
+                toast.error("Unable to fetch user profile. Please try again.");
+                return;
+            }
+
+            // Get society ID
+            let societyId = user.society;
+
+            if (!societyId && user.societies && user.societies.length > 0) {
+                societyId = user.societies[0]._id;
+            }
+
+            if (!societyId && user.selectSociety && user.selectSociety.length > 0) {
+                const societies = await societyApi.getAll();
+                const matchingSociety = societies.data.find(
+                    (s: any) => user.selectSociety.includes(s.societyName)
+                );
+                if (matchingSociety) {
+                    societyId = matchingSociety._id;
+                }
+            }
+
+            if (!societyId) {
+                toast.error("Society information not found. Please contact administrator.");
+                return;
+            }
+
+            // Add society to the complaint data
+            const payload = {
+                compainerName: data.complainerName,  // Backend expects 'compainerName'
+                complainName: data.complaintName,     // Backend expects 'complainName'
+                description: data.description,
+                wing: data.wing,
+                unit: data.unit,
+                priority: data.priority,
+                status: data.status,
+                society: societyId,
+            };
+
+            await complaintApi.editComplaint(selectedComplaint.id, payload);
             toast.success("Complaint updated successfully!");
             setShowEditModal(false);
             setSelectedComplaint(null);

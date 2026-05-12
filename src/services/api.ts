@@ -494,8 +494,12 @@ export const financialApi = {
 // Complaint Tracking API
 export const complaintApi = {
     // Get all complaints
-    getAllComplaints: async () => {
-        const response = await fetch(`${API_URL}/complain/getAllComplain`, {
+    getAllComplaints: async (societyId?: string) => {
+        const url = societyId
+            ? `${API_URL}/complain/getAllComplain?societyId=${societyId}`
+            : `${API_URL}/complain/getAllComplain`;
+
+        const response = await fetch(url, {
             method: "GET",
             credentials: "include",
             headers: {
@@ -508,13 +512,14 @@ export const complaintApi = {
 
     // Create new complaint
     createComplaint: async (data: {
-        complainerName: string;
-        complaintName: string;
+        compainerName: string;
+        complainName: string;
         description: string;
         wing: string;
         unit: string;
         priority: string;
         status: string;
+        society: string;
     }) => {
         const response = await fetch(`${API_URL}/complain/createComplain`, {
             method: "POST",
@@ -530,13 +535,14 @@ export const complaintApi = {
 
     // Edit complaint
     editComplaint: async (id: string, data: {
-        complainerName: string;
-        complaintName: string;
+        compainerName: string;
+        complainName: string;
         description: string;
         wing: string;
         unit: string;
         priority: string;
         status: string;
+        society: string;
     }) => {
         const response = await fetch(`${API_URL}/complain/editComplain/${id}`, {
             method: "PUT",
@@ -553,6 +559,84 @@ export const complaintApi = {
     // Delete complaint
     deleteComplaint: async (id: string) => {
         const response = await fetch(`${API_URL}/complain/deleteComplain/${id}`, {
+            method: "DELETE",
+            credentials: "include",
+            headers: {
+                "Content-Type": "application/json",
+                ...getAuthHeader()
+            },
+        });
+        return handleResponse(response);
+    },
+};
+
+// Request Tracking API
+export const requestTrackingApi = {
+    // Get all requests
+    getAllRequests: async (societyId?: string) => {
+        const url = societyId
+            ? `${API_URL}/request/get?societyId=${societyId}`
+            : `${API_URL}/request/get`;
+
+        const response = await fetch(url, {
+            method: "GET",
+            credentials: "include",
+            headers: {
+                "Content-Type": "application/json",
+                ...getAuthHeader()
+            },
+        });
+        return handleResponse(response);
+    },
+
+    // Create new request
+    createRequest: async (data: {
+        requesterName: string;
+        requestName: string;
+        description?: string;
+        wing: string;
+        unit: string;
+        priority: string;
+        status: string;
+        society: string;
+    }) => {
+        const response = await fetch(`${API_URL}/request/create`, {
+            method: "POST",
+            credentials: "include",
+            headers: {
+                "Content-Type": "application/json",
+                ...getAuthHeader()
+            },
+            body: JSON.stringify(data),
+        });
+        return handleResponse(response);
+    },
+
+    // Edit request
+    editRequest: async (id: string, data: {
+        requesterName: string;
+        requestName: string;
+        description?: string;
+        wing: string;
+        unit: string;
+        priority: string;
+        status: string;
+    }) => {
+        const response = await fetch(`${API_URL}/request/edit/${id}`, {
+            method: "PUT",
+            credentials: "include",
+            headers: {
+                "Content-Type": "application/json",
+                ...getAuthHeader()
+            },
+            body: JSON.stringify(data),
+        });
+        return handleResponse(response);
+    },
+
+    // Delete request
+    deleteRequest: async (id: string) => {
+        const response = await fetch(`${API_URL}/request/delete/${id}`, {
             method: "DELETE",
             credentials: "include",
             headers: {
