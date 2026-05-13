@@ -30,6 +30,7 @@ import VisitorLogs from './features/securityManagement/pages/VisitorLogs'
 import SecurityProtocols from './features/securityManagement/pages/SecurityProtocols'
 import ResidentSecurityProtocols from './features/securityManagement/pages/ResidentSecurityProtocols'
 import SecurityGuard from './features/securityManagement/pages/SecurityGuard'
+import EventsParticipation from './features/eventsParticipation/pages/EventsParticipation'
 
 
 function App() {
@@ -127,6 +128,7 @@ function App() {
             <Route path="/security-management/protocols" element={<ResidentSecurityProtocols />} />
             <Route path="/security-guard" element={<SecurityGuard />} />
             <Route path="/announcement" element={<Announcement />} />
+            <Route path="/events-participation" element={<EventsParticipation />} />
             <Route path="/profile" element={<PersonalDetail />} />
           </Route>
         </Routes>

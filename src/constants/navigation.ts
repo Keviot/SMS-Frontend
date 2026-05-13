@@ -1,11 +1,11 @@
- import { 
-  MessageSquareWarning, 
-  User, 
-  Calendar, 
-  Users, 
-  CreditCard, 
-  ShieldCheck, 
-  UserSearch, 
+import {
+  MessageSquareWarning,
+  User,
+  Calendar,
+  Users,
+  CreditCard,
+  ShieldCheck,
+  UserSearch,
   AlertTriangle,
   Shield
 } from "lucide-react";
@@ -102,7 +102,7 @@ export const residentNavigation: NavItem[] = [
   {
     label: "Events Participation",
     icon: Calendar,
-    path: "/announcement",
+    path: "/events-participation",
   },
   {
     label: "Community",

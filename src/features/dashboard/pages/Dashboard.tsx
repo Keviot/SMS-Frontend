@@ -276,11 +276,45 @@ export default function Dashboard() {
         {role !== "resident" && <PendingMaintenanceCard data={data.pendingMaintenances} />}
         {role === "resident" && (
           <Card className="flex h-[27rem] flex-col p-5">
-            <h2 className="text-base font-semibold leading-5 text-[#202224]">
-              Upcoming Events
-            </h2>
-            <div className="mt-3 flex flex-1 items-center justify-center">
-              <p className="text-sm text-gray-500">Check announcements for upcoming events</p>
+            <div className="flex items-center justify-between gap-3">
+              <h2 className="text-base font-semibold leading-5 text-[#202224]">
+                Upcoming Events
+              </h2>
+              <button
+                onClick={() => navigate("/events-participation")}
+                className="text-xs font-medium text-[#5678E9] hover:underline"
+              >
+                View all
+              </button>
+            </div>
+            <div className="mt-3 flex flex-1 flex-col gap-3 overflow-y-auto">
+              {data.upcomingActivities.length === 0 ? (
+                <div className="flex flex-1 items-center justify-center text-center">
+                  <p className="text-sm text-gray-500">No upcoming events</p>
+                </div>
+              ) : (
+                data.upcomingActivities.slice(0, 5).map((activity) => (
+                  <div
+                    key={activity.id}
+                    className="flex items-center gap-2.5 rounded-[10px] border border-[#F1F1F1] p-2.5"
+                  >
+                    <div className="grid size-9 shrink-0 place-items-center rounded-full bg-[#5678E9] text-sm font-semibold text-white">
+                      {activity.letter}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-xs font-semibold leading-5 text-[#202224]">
+                        {activity.title}
+                      </p>
+                      <p className="truncate text-[11px] font-medium leading-4 text-[#A7A7A7]">
+                        {activity.time}
+                      </p>
+                    </div>
+                    <p className="shrink-0 text-right text-[11px] font-medium leading-4 text-[#A7A7A7]">
+                      {activity.date}
+                    </p>
+                  </div>
+                ))
+              )}
             </div>
           </Card>
         )}
