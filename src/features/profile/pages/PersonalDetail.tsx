@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { User,Mail , Phone, MapPin, Calendar, Users, Car, CreditCard, AlertCircle, Clock, FileText } from "lucide-react";
 import { authApi, announcementApi, financialApi, paymentApi } from "../../../services/api";
 import toast from "react-hot-toast";
+import Avatar from "../../../components/Avatar";
 
 
 export default function PersonalDetail() {
@@ -134,22 +135,13 @@ export default function PersonalDetail() {
         <div className="p-8 flex flex-col xl:flex-row gap-8">
           {/* Avatar and Main Info */}
           <div className="flex flex-col md:flex-row items-center gap-8 flex-1">
-            <div className="h-32 w-32 rounded-full border-4 border-[#F6F8FB] overflow-hidden bg-gray-50 flex items-center justify-center">
-              {activeTab === (profile.residentStatus === "Owner" ? "Owner" : "Tenant") && profile.profileImage ? (
-                <img 
-                  src={profile.profileImage} 
-                  alt="" 
-                  className="h-full w-full object-cover"
-                  onError={(e: any) => {
-                    e.target.onerror = null;
-                    e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(profile.name || "User")}&background=F6F8FB&color=5678E9&bold=true`;
-                  }}
-                />
-              ) : (
-                <div className="h-full w-full flex items-center justify-center text-gray-300">
-                  <User size={64} />
-                </div>
-              )}
+            <div className="h-32 w-32 shrink-0">
+              <Avatar
+                src={profile.profileImage}
+                name={profile.name || `${profile.firstname} ${profile.lastname}`}
+                size="lg"
+                className="h-32 w-32 text-3xl border-4 border-[#F6F8FB] shadow-lg"
+              />
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-12 gap-y-6 flex-1">

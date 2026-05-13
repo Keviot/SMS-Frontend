@@ -11,6 +11,7 @@ import toast from "react-hot-toast";
 import { cn } from "../../../lib/cn";
 import Button from "../../../ui/Button";
 import ChatSidebar, { type Contact } from "../components/ChatSidebar";
+import Avatar from "../../../components/Avatar";
 
 // Mock data for contacts
 const contacts: Contact[] = [
@@ -138,9 +139,10 @@ export default function CommunitiesDiscussion() {
                                 <ChevronLeft size={20} />
                             </button>
                         )}
-                        <div className="h-10 w-10 rounded-full bg-[#F3F4F6] flex items-center justify-center text-[#A7A7A7]">
-                            <img src={contacts[2].avatar} alt="" className="h-full w-full rounded-full" />
-                        </div>
+                        <Avatar
+                            src={contacts[2].avatar}
+                            name="Community"
+                        />
                         <div>
                             <h3 className="text-sm font-bold text-[#202224]">Community</h3>
                             <p className="text-[10px] text-[#A7A7A7]">9:00 Pm</p>

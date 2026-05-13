@@ -7,6 +7,7 @@ import ViewSecurityModal from "../components/ViewSecurityModal";
 import { securityGuardApi, authApi } from "../../../services/api";
 import toast from "react-hot-toast";
 import ConfirmPopup from "../../../ui/ConfirmPopup";
+import Avatar from "../../../components/Avatar";
 
 export default function SecurityGuard() {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -81,12 +82,11 @@ export default function SecurityGuard() {
       header: "Security Guard Name",
       render: (row: any) => (
         <div className="flex items-center gap-3">
-          <div className="h-10 w-10 rounded-full border border-gray-100 bg-gray-50 flex items-center justify-center overflow-hidden">
-            {row.profileImage ? (
-              <img src={row.profileImage} alt="" className="h-full w-full object-cover" />
-            ) : (
-              <UserIcon size={20} className="text-gray-400" />
-            )}
+          <div className="h-10 w-10 flex-shrink-0">
+            <Avatar
+              src={row.profileImage}
+              name={row.name || `${row.firstname} ${row.lastname}`}
+            />
           </div>
           <span className="font-semibold text-gray-900">{row.name || `${row.firstname} ${row.lastname}`}</span>
         </div>

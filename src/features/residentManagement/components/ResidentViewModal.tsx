@@ -1,5 +1,6 @@
-import { User, ChevronLeft, FileText, Eye } from "lucide-react";
 import { cn } from "../../../lib/cn";
+import Avatar from "../../../components/Avatar";
+import { ChevronLeft, Eye, FileText } from "lucide-react";
 
 interface ResidentViewModalProps {
   isOpen: boolean;
@@ -42,23 +43,12 @@ export default function ResidentViewModal({ isOpen, onClose, resident }: Residen
         <div className="flex-1 overflow-y-auto custom-scrollbar">
           {/* Profile Section */}
           <div className="flex flex-col items-center py-8">
-            <div className="h-28 w-28 overflow-hidden rounded-full border-4 border-white shadow-lg bg-[#F6F8FB] flex items-center justify-center">
-              {resident.avatar ? (
-                <img 
-                  src={resident.avatar} 
-                  alt={resident.fullName} 
-                  className="h-full w-full object-cover"
-                  onError={(e: any) => {
-                    e.target.onerror = null;
-                    e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(resident.fullName)}&background=F6F8FB&color=5678E9&bold=true`;
-                  }}
-                />
-              ) : (
-                <div className="flex h-full w-full items-center justify-center text-[#A3AED0]">
-                  <User size={50} />
-                </div>
-              )}
-            </div>
+            <Avatar
+              src={resident.avatar}
+              name={resident.fullName}
+              size="lg"
+              className="h-28 w-28 text-3xl border-4 border-white shadow-lg"
+            />
             <h3 className="mt-4 text-2xl font-bold text-gray-900">{resident.fullName}</h3>
             <p className="text-gray-500 font-medium">{resident.email || "No Email Provided"}</p>
           </div>
@@ -96,10 +86,10 @@ export default function ResidentViewModal({ isOpen, onClose, resident }: Residen
                 { name: "Address Proof", url: resident.addressProof },
                 { name: "Rent Agreement", url: resident.rentAgreeMent }
               ].filter(doc => doc.url).map((doc, i) => (
-                <a 
-                  key={i} 
-                  href={doc.url} 
-                  target="_blank" 
+                <a
+                  key={i}
+                  href={doc.url}
+                  target="_blank"
                   rel="noopener noreferrer"
                   className="flex items-center gap-3 p-3 border border-gray-100 rounded-xl hover:bg-gray-50 transition-colors no-underline"
                 >
@@ -146,7 +136,7 @@ export default function ResidentViewModal({ isOpen, onClose, resident }: Residen
               <span className="font-bold text-sm">Member Details</span>
               <span className="font-bold text-sm bg-white/20 px-3 py-0.5 rounded-full">{resident.members?.length || 0}</span>
             </div>
-            
+
             {(resident.members && resident.members.length > 0) ? (
               <div className="flex flex-col gap-4">
                 {resident.members.map((member: any, idx: number) => (
