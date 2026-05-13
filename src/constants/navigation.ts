@@ -122,7 +122,11 @@ export const residentNavigation: NavItem[] = [
   {
     label: "Payment Portal",
     icon: CreditCard,
-    path: "/financial-management/income",
+    path: "/payment-portal",
+    children: [
+      { label: "Maintenance Invoices", path: "/payment-portal" },
+      { label: "Other Invoices", path: "/payment-portal/other-invoices" },
+    ],
   },
   {
     label: "Security Protocols",
