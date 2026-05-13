@@ -1119,3 +1119,41 @@ export const pollApi = {
         return handleResponse(response);
     },
 };
+
+export const chatApi = {
+    getMembers: async (societyId: string) => {
+        const response = await fetch(`${API_URL}/chat/members?societyId=${societyId}`, {
+            method: "GET",
+            credentials: "include",
+            headers: {
+                "Content-Type": "application/json",
+                ...getAuthHeader()
+            },
+        });
+        return handleResponse(response);
+    },
+
+    getHistory: async (societyId: string) => {
+        const response = await fetch(`${API_URL}/chat/history?societyId=${societyId}`, {
+            method: "GET",
+            credentials: "include",
+            headers: {
+                "Content-Type": "application/json",
+                ...getAuthHeader()
+            },
+        });
+        return handleResponse(response);
+    },
+
+    getPersonalHistory: async (otherUserId: string) => {
+        const response = await fetch(`${API_URL}/chat/personal-history?otherUserId=${otherUserId}`, {
+            method: "GET",
+            credentials: "include",
+            headers: {
+                "Content-Type": "application/json",
+                ...getAuthHeader()
+            },
+        });
+        return handleResponse(response);
+    },
+};
