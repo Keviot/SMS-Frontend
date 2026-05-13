@@ -30,6 +30,7 @@ import VisitorLogs from './features/securityManagement/pages/VisitorLogs'
 import SecurityProtocols from './features/securityManagement/pages/SecurityProtocols'
 import ResidentSecurityProtocols from './features/securityManagement/pages/ResidentSecurityProtocols'
 import SecurityGuard from './features/securityManagement/pages/SecurityGuard'
+import EmergencyManagement from './features/securityManagement/pages/EmergencyManagement'
 import EventsParticipation from './features/eventsParticipation/pages/EventsParticipation'
 
 
@@ -126,6 +127,7 @@ function App() {
             <Route path="/security-management/visitor-logs" element={<VisitorLogs />} />
             <Route path="/security-management/security-protocols" element={<SecurityProtocols />} />
             <Route path="/security-management/protocols" element={<ResidentSecurityProtocols />} />
+            <Route path="/security-management/emergency" element={<EmergencyManagement />} />
             <Route path="/security-guard" element={<SecurityGuard />} />
             <Route path="/announcement" element={<Announcement />} />
             <Route path="/events-participation" element={<EventsParticipation />} />
@@ -136,5 +138,6 @@ function App() {
     </SocketProvider>
   )
 }
+
 
 export default App

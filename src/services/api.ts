@@ -963,6 +963,92 @@ export const securityGuardApi = {
     },
 };
 
+export const emergencyApi = {
+    create: async (data: {
+        alertType: string;
+        description: string;
+        society: string;
+    }) => {
+        const response = await fetch(`${API_URL}/emergency`, {
+            method: "POST",
+            credentials: "include",
+            headers: {
+                "Content-Type": "application/json",
+                ...getAuthHeader()
+            },
+            body: JSON.stringify(data),
+        });
+        return handleResponse(response);
+    },
+
+    getAll: async () => {
+        const response = await fetch(`${API_URL}/emergency`, {
+            method: "GET",
+            credentials: "include",
+            headers: {
+                "Content-Type": "application/json",
+                ...getAuthHeader()
+            },
+        });
+        return handleResponse(response);
+    },
+
+    delete: async (id: string) => {
+        const response = await fetch(`${API_URL}/emergency/${id}`, {
+            method: "DELETE",
+            credentials: "include",
+            headers: {
+                "Content-Type": "application/json",
+                ...getAuthHeader()
+            },
+        });
+        return handleResponse(response);
+    },
+};
+
+export const notificationApi = {
+    getAll: async () => {
+        const response = await fetch(`${API_URL}/notification`, {
+            method: "GET",
+            credentials: "include",
+            headers: {
+                "Content-Type": "application/json",
+                ...getAuthHeader()
+            },
+        });
+        return handleResponse(response);
+    },
+
+    markAsRead: async (id: string) => {
+        const response = await fetch(`${API_URL}/notification/${id}`, {
+            method: "PUT",
+            credentials: "include",
+            headers: {
+                "Content-Type": "application/json",
+                ...getAuthHeader()
+            },
+        });
+        return handleResponse(response);
+    },
+
+    clearAll: async () => {
+        const response = await fetch(`${API_URL}/notification`, {
+            method: "DELETE",
+            credentials: "include",
+            headers: {
+                "Content-Type": "application/json",
+                ...getAuthHeader()
+            },
+        });
+        return handleResponse(response);
+    },
+};
+
+
+
+// Payment API
+
+
 // Payment API
 export const paymentApi = {
     createOrder: async (amount: number) => {

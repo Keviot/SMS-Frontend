@@ -1,55 +1,111 @@
-import { useState, useEffect } from "react";
-import { securityApi } from "../../../services/api";
+import { useState, useEffect, useMemo } from "react";
+import { securityApi, authApi, residentApi } from "../../../services/api";
 import toast from "react-hot-toast";
-import { Loader2 } from "lucide-react";
+import { Loader2, Plus, ChevronDown } from "lucide-react";
+import Button from "../../../ui/Button";
+import AddVisitorModal from "../../../components/security panel/AddVisitorModal";
+
 
 type VisitorLog = {
     id: string;
     visitorName: string;
     phoneNumber: string;
+    rawDate: string;
     date: string;
     wing: string;
     unitNumber: string;
     time: string;
-    avatar: string;
 };
+type unitOption = {
+    wing: string;
+    unit: string;
+}
+type FilterType = "Today" | "Week" | "Month" | "All";
 
 export default function VisitorLogs() {
     const [logs, setLogs] = useState<VisitorLog[]>([]);
     const [loading, setLoading] = useState(true);
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [societyId, setSocietyId] = useState("");
 
-    // Fetch visitor logs on component mount
+    const [selectedFilter, setSelectedFilter] = useState<FilterType>("Week");
+    const [isFilterOpen, setIsFilterOpen] = useState(false);
+
+    const filterOptions: FilterType[] = ["Today", "Week", "Month", "All"];
+    const [unitOption, setUnitOption] = useState<unitOption[]>([]);
+    const fetchUnits = async () => {
+        try {
+            const response = await residentApi.getAll();
+            const residentsData = response || [];
+
+            const options: unitOption[] = residentsData
+                .map((item: any) => ({
+                    wing: item.wing,
+                    unit: item.unit,
+                }))
+                .filter((item: unitOption) => item.wing && item.unit);
+
+            const uniqueOptions = Array.from(
+                new Map(
+                    options.map((item) => [`${item.wing}-${item.unit}`, item])
+                ).values()
+            );
+
+            setUnitOption(uniqueOptions);
+        } catch (error) {
+            console.error("Failed to fetch unit options:", error);
+            setUnitOption([]);
+        }
+    };
     useEffect(() => {
+        const fetchProfile = async () => {
+            try {
+                const profile = await authApi.getProfile();
+
+                if (profile.user?.society) {
+                    setSocietyId(profile.user.society);
+                } else if (profile.user?.societies?.length > 0) {
+                    setSocietyId(profile.user.societies[0]._id);
+                }
+            } catch (error) {
+                console.error("Failed to fetch profile:", error);
+            }
+        };
+
+        fetchProfile();
         fetchVisitorLogs();
+        fetchUnits();
     }, []);
 
     const fetchVisitorLogs = async () => {
         try {
             setLoading(true);
 
-            // Fetch visitor logs - backend uses req.user.society from auth token
             const response = await securityApi.getAllVisitors();
-
-            // Backend returns { data: [...] }
             const visitorsData = response.data || [];
 
-            if (!visitorsData || visitorsData.length === 0) {
-                setLogs([]);
-                setLoading(false);
-                return;
-            }
+            const transformedLogs: VisitorLog[] = visitorsData.map((item: any) => {
+                const visitorDate = item.date || item.createdAt;
 
-            // Transform backend data to frontend format
-            const transformedLogs = visitorsData.map((item: any) => ({
-                id: item._id,
-                visitorName: item.name,
-                phoneNumber: item.phoneNumber,
-                date: item.date ? new Date(item.date).toLocaleDateString("en-GB") : new Date(item.createdAt).toLocaleDateString("en-GB"),
-                wing: item.wing,
-                unitNumber: item.unit,
-                time: item.time || new Date(item.createdAt).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true }),
-                avatar: item.avatar || `https://i.pravatar.cc/80?img=${Math.floor(Math.random() * 70)}`,
-            }));
+                return {
+                    id: item._id,
+                    visitorName: item.name || "Unknown",
+                    phoneNumber: item.phoneNumber || "-",
+                    rawDate: visitorDate,
+                    date: visitorDate
+                        ? new Date(visitorDate).toLocaleDateString("en-GB")
+                        : "-",
+                    wing: item.wing || "-",
+                    unitNumber: item.unit || "-",
+                    time:
+                        item.time ||
+                        new Date(item.createdAt).toLocaleTimeString("en-US", {
+                            hour: "numeric",
+                            minute: "2-digit",
+                            hour12: true,
+                        }),
+                };
+            });
 
             setLogs(transformedLogs);
         } catch (error: any) {
@@ -61,77 +117,209 @@ export default function VisitorLogs() {
         }
     };
 
+    const filteredLogs = useMemo(() => {
+        const today = new Date();
+
+        return logs.filter((log) => {
+            if (selectedFilter === "All") return true;
+
+            const logDate = new Date(log.rawDate);
+
+            if (Number.isNaN(logDate.getTime())) return false;
+
+            const todayStart = new Date(
+                today.getFullYear(),
+                today.getMonth(),
+                today.getDate()
+            );
+
+            const logDayStart = new Date(
+                logDate.getFullYear(),
+                logDate.getMonth(),
+                logDate.getDate()
+            );
+
+            if (selectedFilter === "Today") {
+                return logDayStart.getTime() === todayStart.getTime();
+            }
+
+            if (selectedFilter === "Week") {
+                const sevenDaysAgo = new Date(todayStart);
+                sevenDaysAgo.setDate(todayStart.getDate() - 6);
+
+                return logDayStart >= sevenDaysAgo && logDayStart <= todayStart;
+            }
+
+            if (selectedFilter === "Month") {
+                return (
+                    logDate.getMonth() === today.getMonth() &&
+                    logDate.getFullYear() === today.getFullYear()
+                );
+            }
+
+            return true;
+        });
+    }, [logs, selectedFilter]);
+
+    const getInitial = (name: string) => {
+        return name?.trim()?.charAt(0)?.toUpperCase() || "?";
+    };
+
     return (
-        <>
-            <div className="w-full">
-                <section className="rounded-[15px] bg-white p-5 shadow-sm">
-                    <div className="mb-5">
-                        <h1 className="text-xl font-bold leading-6 text-[#202224]">
-                            Visitor Logs
-                        </h1>
-                    </div>
+        <div className="w-full">
+            <section className="rounded-2xl bg-white p-6 shadow-sm border border-[#F4F4F4]">
+                <div className="mb-6 flex items-center justify-between gap-4">
+                    <h1 className="text-xl font-bold text-[#202224]">
+                        Visitor Tracking
+                    </h1>
 
-                    <div className="overflow-hidden rounded-[10px] bg-white">
-                        <div className="overflow-x-auto">
-                            <div className="min-w-[900px]">
-                                <div className="grid grid-cols-[1.5fr_1.2fr_1fr_1fr_1fr] items-center rounded-t-[10px] bg-[#F1F4FF] px-4 py-4 text-sm font-bold leading-5 text-[#202224]">
-                                    <div>Visitor Name</div>
-                                    <div>Phone Number</div>
-                                    <div>Date</div>
-                                    <div>Unit Number</div>
-                                    <div className="text-center">Time</div>
+                    <div className="flex items-center gap-4">
+                        <div className="relative">
+                            <button
+                                type="button"
+                                onClick={() => setIsFilterOpen((prev) => !prev)}
+                                className="flex items-center gap-2 rounded-xl border border-[#D3D3D3] bg-white px-4 py-2.5 text-sm font-semibold text-[#202224] transition-all hover:bg-gray-50"
+                            >
+                                {selectedFilter}
+                                <ChevronDown
+                                    size={16}
+                                    className={`transition-transform ${isFilterOpen ? "rotate-180" : ""
+                                        }`}
+                                />
+                            </button>
+
+                            {isFilterOpen && (
+                                <div className="absolute right-0 z-20 mt-2 w-36 overflow-hidden rounded-xl border border-[#E5E7EB] bg-white shadow-lg">
+                                    {filterOptions.map((option) => (
+                                        <button
+                                            key={option}
+                                            type="button"
+                                            onClick={() => {
+                                                setSelectedFilter(option);
+                                                setIsFilterOpen(false);
+                                            }}
+                                            className={`block w-full px-4 py-2.5 text-left text-sm font-medium transition-colors hover:bg-[#FFF4EF] ${selectedFilter === option
+                                                ? "bg-[#FFF4EF] text-[#FE512E]"
+                                                : "text-[#202224]"
+                                                }`}
+                                        >
+                                            {option}
+                                        </button>
+                                    ))}
                                 </div>
-
-                                <div className="max-h-[calc(100vh-280px)] overflow-y-auto scrollbar-thin scrollbar-track-gray-100 scrollbar-thumb-gray-300">
-                                    {loading ? (
-                                        <div className="flex items-center justify-center py-12">
-                                            <Loader2 className="h-8 w-8 animate-spin text-orange-500" />
-                                            <span className="ml-3 text-gray-600">Loading visitor logs...</span>
-                                        </div>
-                                    ) : logs.length === 0 ? (
-                                        <div className="flex flex-col items-center justify-center py-12 text-center">
-                                            <p className="text-gray-500">No visitor logs found</p>
-                                        </div>
-                                    ) : (
-                                        logs.map((log) => (
-                                            <div
-                                                key={log.id}
-                                                className="grid grid-cols-[1.5fr_1.2fr_1fr_1fr_1fr] items-center border-b border-[#E5E7EB] px-4 py-4 text-sm font-medium leading-5 text-[#202224] last:border-b-0"
-                                            >
-                                                <div className="flex items-center gap-3">
-                                                    <img
-                                                        src={log.avatar}
-                                                        alt={log.visitorName}
-                                                        className="size-9 shrink-0 rounded-full object-cover"
-                                                    />
-                                                    <span className="truncate">{log.visitorName}</span>
-                                                </div>
-
-                                                <div className="text-[#4F4F4F]">{log.phoneNumber}</div>
-
-                                                <div className="text-[#4F4F4F]">{log.date}</div>
-
-                                                <div className="flex items-center gap-2">
-                                                    <span className="flex size-6 items-center justify-center rounded-full bg-[#F1F6FF] text-xs font-bold text-[#5678E9]">
-                                                        {log.wing}
-                                                    </span>
-                                                    <span>{log.unitNumber}</span>
-                                                </div>
-
-                                                <div className="flex justify-center">
-                                                    <span className="inline-flex min-w-20 items-center justify-center rounded-full bg-[#F6F8FB] px-3 py-1.5 text-sm font-medium leading-5 text-[#202224]">
-                                                        {log.time}
-                                                    </span>
-                                                </div>
-                                            </div>
-                                        ))
-                                    )}
-                                </div>
-                            </div>
+                            )}
                         </div>
+
+                        <Button
+                            onClick={() => setIsModalOpen(true)}
+                            className="flex items-center gap-2 rounded-xl border-none bg-gradient-to-r from-[#FE512E] to-[#F09633] px-5 py-2.5 text-sm font-bold text-white shadow-[0_4px_15px_rgba(255,107,53,0.2)] transition-all hover:shadow-[0_6px_20px_rgba(255,107,53,0.3)]"
+                        >
+                            <Plus size={18} />
+                            Add Visitor details
+                        </Button>
                     </div>
-                </section>
-            </div>
-        </>
+                </div>
+
+                <div className="overflow-x-auto">
+                    <table className="w-full min-w-[900px]">
+                        <thead>
+                            <tr className="bg-[#F1F4FF] text-left">
+                                <th className="rounded-tl-xl px-6 py-4 text-sm font-bold text-[#202224]">
+                                    Visitor Name
+                                </th>
+                                <th className="px-6 py-4 text-sm font-bold text-[#202224]">
+                                    Phone Number
+                                </th>
+                                <th className="px-6 py-4 text-sm font-bold text-[#202224]">
+                                    Date
+                                </th>
+                                <th className="px-6 py-4 text-sm font-bold text-[#202224]">
+                                    Unit Number
+                                </th>
+                                <th className="rounded-tr-xl px-6 py-4 text-sm font-bold text-[#202224]">
+                                    Time
+                                </th>
+                            </tr>
+                        </thead>
+
+                        <tbody className="divide-y divide-[#F4F4F4]">
+                            {loading ? (
+                                <tr>
+                                    <td colSpan={5} className="py-20 text-center">
+                                        <div className="flex flex-col items-center gap-3">
+                                            <Loader2 className="h-10 w-10 animate-spin text-[#FF6B35]" />
+                                            <span className="text-sm font-medium text-[#A7A7A7]">
+                                                Loading visitor logs...
+                                            </span>
+                                        </div>
+                                    </td>
+                                </tr>
+                            ) : filteredLogs.length === 0 ? (
+                                <tr>
+                                    <td colSpan={5} className="py-20 text-center">
+                                        <p className="text-sm font-medium text-[#A7A7A7]">
+                                            No visitor logs found
+                                        </p>
+                                    </td>
+                                </tr>
+                            ) : (
+                                filteredLogs.map((log) => (
+                                    <tr
+                                        key={log.id}
+                                        className="transition-colors hover:bg-[#F9F9F9]"
+                                    >
+                                        <td className="px-6 py-4">
+                                            <div className="flex items-center gap-3">
+                                                <div className="flex h-10 w-10 items-center justify-center rounded-full border border-[#E5E7EB] bg-white text-sm font-bold text-[#202224] shadow-sm">
+                                                    {getInitial(log.visitorName)}
+                                                </div>
+
+                                                <span className="text-sm font-semibold text-[#202224]">
+                                                    {log.visitorName}
+                                                </span>
+                                            </div>
+                                        </td>
+
+                                        <td className="px-6 py-4 text-sm font-medium text-[#4F4F4F]">
+                                            {log.phoneNumber}
+                                        </td>
+
+                                        <td className="px-6 py-4 text-sm font-medium text-[#4F4F4F]">
+                                            {log.date}
+                                        </td>
+
+                                        <td className="px-6 py-4">
+                                            <div className="flex items-center gap-2">
+                                                <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#F1F6FF] text-[10px] font-bold text-[#5678E9]">
+                                                    {log.wing}
+                                                </span>
+
+                                                <span className="text-sm font-semibold text-[#4F4F4F]">
+                                                    {log.unitNumber}
+                                                </span>
+                                            </div>
+                                        </td>
+
+                                        <td className="px-6 py-4">
+                                            <span className="inline-flex items-center justify-center rounded-full bg-[#F6F8FB] px-4 py-1.5 text-xs font-semibold text-[#202224]">
+                                                {log.time}
+                                            </span>
+                                        </td>
+                                    </tr>
+                                ))
+                            )}
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <AddVisitorModal
+                isOpen={isModalOpen}
+                onClose={() => setIsModalOpen(false)}
+                onSuccess={fetchVisitorLogs}
+                societyId={societyId}
+                unitOptions={unitOption}
+            />
+        </div>
     );
 }
