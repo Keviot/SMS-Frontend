@@ -7,6 +7,7 @@ import NotificationDropdown from "../components/NotificationDropdown";
 import { useSocket } from "../context/SocketContext";
 import Button from "../ui/Button";
 import Input from "../ui/Input";
+import Avatar from "../components/Avatar";
 
 type HeaderProps = {
   onMenuClick: () => void;
@@ -194,31 +195,11 @@ export default function Header({ onMenuClick }: HeaderProps) {
               size="md"
               className="h-[45px] gap-2 rounded-xl p-0 hover:bg-transparent lg:h-[50px] lg:gap-3"
             >
-              <div className="h-[45px] w-[45px] flex-shrink-0 overflow-hidden rounded-full lg:h-[50px] lg:w-[50px]">
-                {profileImageUrl ? (
-                  <img
-                    src={profileImageUrl}
-                    alt={userName}
-                    className="h-full w-full object-cover"
-                    onError={(e) => {
-                      // Fallback to initials if image fails to load
-                      const target = e.currentTarget;
-                      target.style.display = 'none';
-                      if (target.parentElement) {
-                        target.parentElement.innerHTML = `
-                        <div class="grid h-full w-full place-items-center bg-gradient-to-br from-[var(--primary-gradient-start)] to-[var(--primary-gradient-end)] text-[13px] font-black text-white lg:text-[14px]">
-                          ${userInitials}
-                        </div>
-                      `;
-                      }
-                    }}
-                  />
-                ) : (
-                  <div className="grid h-full w-full place-items-center bg-gradient-to-br from-[var(--primary-gradient-start)] to-[var(--primary-gradient-end)] text-[13px] font-black text-white lg:text-[14px]">
-                    {userInitials}
-                  </div>
-                )}
-              </div>
+              <Avatar
+                src={profileImageUrl || ""}
+                name={userName}
+                className="lg:h-[50px] lg:w-[50px]"
+              />
 
               <div className="hidden text-left sm:block">
                 <h4 className="text-[13px] font-bold leading-tight text-[var(--text-primary)] lg:text-[14px]">

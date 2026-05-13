@@ -14,6 +14,7 @@ import {
 import { requestTrackingApi, authApi, societyApi } from "../../../services/api";
 import toast from "react-hot-toast";
 import { Loader2 } from "lucide-react";
+import Avatar from "../../../components/Avatar";
 
 type Priority = "Medium" | "Low" | "High";
 type RequestStatus = "Pending" | "Open" | "Solved";
@@ -161,7 +162,7 @@ export default function RequestTracking() {
       const transformedRequests = requestsData.map((item: any) => ({
         id: item._id,
         requesterName: item.requesterName,
-        avatar: item.avatar || `https://i.pravatar.cc/80?img=${Math.floor(Math.random() * 70)}`,
+        avatar: item.avatar || "",
         requestName: item.requestName,
         description: item.description || "",
         requestDate: item.createdAt ? new Date(item.createdAt).toLocaleDateString('en-GB') : "",
@@ -373,10 +374,10 @@ export default function RequestTracking() {
                     >
                       <td className="px-5 py-4">
                         <div className="flex items-center gap-3">
-                          <img
+                          <Avatar
                             src={request.avatar}
-                            alt={request.requesterName}
-                            className="size-10 shrink-0 rounded-full object-cover"
+                            name={request.requesterName}
+                            className="size-10"
                           />
                           <span className="text-sm font-medium text-[#434A57]">
                             {request.requesterName}

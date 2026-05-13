@@ -1,4 +1,5 @@
 import { X } from "lucide-react";
+import Avatar from "../../../components/Avatar";
 
 interface ComplaintViewData {
     complainerName: string;
@@ -70,7 +71,11 @@ export default function ComplaintViewModal({
 
                 {/* Avatar + Name + Date */}
                 <div className="mb-5 flex items-center gap-4">
-                    {data.initials}
+                    <Avatar
+                        name={data.complainerName}
+                        className="size-14"
+                        size="lg"
+                    />
 
                     <div>
                         <h3 className="text-base font-semibold leading-6 text-[#202224]">

@@ -1,4 +1,5 @@
 import { X, Sun, Moon, User as UserIcon, Clock } from "lucide-react";
+import Avatar from "../../../components/Avatar";
 
 interface ViewSecurityModalProps {
   open: boolean;
@@ -33,12 +34,13 @@ export default function ViewSecurityModal({ open, onClose, data }: ViewSecurityM
         <div className="p-8 space-y-8">
           {/* Profile Header */}
           <div className="flex items-center gap-4">
-            <div className="h-16 w-16 rounded-full bg-gray-100 border-2 border-gray-50 overflow-hidden flex items-center justify-center">
-              {data.profileImage ? (
-                <img src={data.profileImage} alt="" className="h-full w-full object-cover" />
-              ) : (
-                <UserIcon size={32} className="text-gray-300" />
-              )}
+            <div className="h-16 w-16 flex-shrink-0">
+              <Avatar
+                src={data.profileImage}
+                name={data.name || `${data.firstname} ${data.lastname}`}
+                size="md"
+                className="h-16 w-16"
+              />
             </div>
             <div>
               <h3 className="text-lg font-bold text-gray-900">{data.name || `${data.firstname} ${data.lastname}`}</h3>

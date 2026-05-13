@@ -15,6 +15,7 @@ import {
 import toast from "react-hot-toast";
 import { cn } from "../../../lib/cn";
 import ChatSidebar, { type Contact } from "../components/ChatSidebar";
+import Avatar from "../../../components/Avatar";
 import { chatApi, authApi } from "../../../services/api";
 import { useSocket } from "../../../context/SocketContext";
 
@@ -69,17 +70,23 @@ export default function AccessForums() {
                     typing: false
                 };
 
-                const fetchedContacts = response.members.map((m: any) => ({
-                    id: m._id,
-                    name: `${m.firstname} ${m.lastname}`,
-                    lastMessage: "",
-                    time: "",
-                    avatar: m.profileImage || `https://ui-avatars.com/api/?name=${m.firstname}+${m.lastname}&background=E5E7EB&color=202224`,
-                    unit: m.unit ? `(${m.wing}/${m.unit})` : "",
-                    status: "offline",
-                    unread: 0,
-                    typing: false
-                }));
+                const fetchedContacts = response.members.map((m: any) => {
+                    const firstName = m.firstname || "";
+                    const lastName = m.lastname || "";
+                    const fullName = `${firstName} ${lastName}`.trim();
+                    
+                    return {
+                        id: m._id,
+                        name: fullName.endsWith('-') ? fullName.slice(0, -1).trim() : fullName,
+                        lastMessage: "",
+                        time: "",
+                        avatar: m.profileImage || "",
+                        unit: m.unit ? `(${m.wing}/${m.unit})` : "",
+                        status: "offline",
+                        unread: 0,
+                        typing: false
+                    };
+                });
 
                 const allContacts = [communityForum, ...fetchedContacts];
                 setContacts(allContacts);
@@ -132,26 +139,70 @@ export default function AccessForums() {
         if (!socket) return;
 
         const handleNewMessage = (msg: any) => {
-            // If it's a community message and we are in community forum
-            if (!msg.receiver && activeContact?.id === "community") {
-                appendMessage(msg);
-            } 
-            // If it's a personal message from the current active contact
-            else if (msg.receiver && (msg.sender._id === activeContact?.id || msg.sender._id === currentUser?._id)) {
-                appendMessage(msg);
-            }
-        };
+            const senderId = msg.sender._id;
+            const isCommunity = !msg.receiver;
+            const contactId = isCommunity ? "community" : senderId;
 
-        const appendMessage = (m: any) => {
-            setMessages(prev => [...prev, {
-                id: m._id,
-                sender: m.sender._id === currentUser?._id ? "me" : "them",
-                text: m.message,
-                time: new Date(m.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-                type: "text",
-                senderName: `${m.sender.firstname} ${m.sender.lastname}`,
-                senderAvatar: m.sender.profileImage
-            }]);
+            // 1. Update Messages if it belongs to the active chat
+            const isMsgForActiveChat = isCommunity 
+                ? activeContact?.id === "community" 
+                : (senderId === activeContact?.id || senderId === currentUser?._id);
+
+            if (isMsgForActiveChat) {
+                setMessages(prev => [...prev, {
+                    id: msg._id,
+                    sender: msg.sender._id === currentUser?._id ? "me" : "them",
+                    text: msg.message,
+                    time: new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                    type: "text",
+                    senderName: `${msg.sender.firstname} ${msg.sender.lastname}`,
+                    senderAvatar: msg.sender.profileImage
+                }]);
+            }
+
+            // 2. Update Contacts list (move to top, update last message, increment unread)
+            setContacts(prevContacts => {
+                const contactIndex = prevContacts.findIndex(c => String(c.id) === String(contactId));
+                if (contactIndex === -1) return prevContacts;
+
+                const updatedContact = { ...prevContacts[contactIndex] };
+                updatedContact.lastMessage = msg.message;
+                updatedContact.time = new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                
+                // Increment unread if message is not for active chat and not from me
+                const isCurrentActive = String(contactId) === String(activeContact?.id);
+                const isFromMe = String(senderId) === String(currentUser?._id);
+
+                if (!isCurrentActive && !isFromMe) {
+                    updatedContact.unread = (updatedContact.unread || 0) + 1;
+                    
+                    // Show Notification
+                    toast(`${updatedContact.name}: ${msg.message}`, {
+                        icon: '💬',
+                        position: 'top-right',
+                        duration: 4000,
+                        style: {
+                            borderRadius: '12px',
+                            background: '#fff',
+                            color: '#202224',
+                            boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)',
+                            borderLeft: '4px solid #5678E9',
+                            padding: '16px',
+                        }
+                    });
+
+                    // Optional: Play sound
+                    try {
+                        const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2354/2354-preview.mp3');
+                        audio.play().catch(() => {}); // Ignore if browser blocks autoplay
+                    } catch (e) {}
+                }
+
+                const newContacts = [...prevContacts];
+                newContacts.splice(contactIndex, 1);
+                newContacts.unshift(updatedContact);
+                return newContacts;
+            });
         };
 
         socket.on("new-message", handleNewMessage);
@@ -174,6 +225,22 @@ export default function AccessForums() {
         };
 
         socket.emit("chat-message", messageData);
+
+        // Optimistically update contacts list to move current to top and update last message
+        setContacts(prev => {
+            const contactIndex = prev.findIndex(c => String(c.id) === String(activeContact.id));
+            if (contactIndex === -1) return prev;
+
+            const updatedContact = { ...prev[contactIndex] };
+            updatedContact.lastMessage = newMessage;
+            updatedContact.time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+            const newContacts = [...prev];
+            newContacts.splice(contactIndex, 1);
+            newContacts.unshift(updatedContact);
+            return newContacts;
+        });
+
         setNewMessage("");
     };
 
@@ -194,7 +261,12 @@ export default function AccessForums() {
             <ChatSidebar
                 contacts={contacts}
                 activeContactId={activeContact?.id || ""}
-                onContactSelect={setActiveContact}
+                onContactSelect={(contact) => {
+                    setActiveContact(contact);
+                    setContacts(prev => prev.map(c => 
+                        c.id === contact.id ? { ...c, unread: 0 } : c
+                    ));
+                }}
             />
 
             {/* Chat Area */}
@@ -204,10 +276,9 @@ export default function AccessForums() {
                         {/* Header */}
                         <div className="flex items-center justify-between border-b border-[#F4F4F4] px-6 py-4">
                             <div className="flex items-center gap-3">
-                                <img
+                                <Avatar
                                     src={activeContact.avatar}
-                                    alt={activeContact.name}
-                                    className="h-10 w-10 rounded-full object-cover border border-[#F1F1F1]"
+                                    name={activeContact.name}
                                 />
                                 <div>
                                     <h3 className="text-sm font-bold text-[#202224]">

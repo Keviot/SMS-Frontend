@@ -17,6 +17,7 @@ import Modal from "../../../ui/Modal";
 import toast from "react-hot-toast";
 import { cn } from "../../../lib/cn";
 import FormInput from "../../../ui/FormInput";
+import Avatar from "../../../components/Avatar";
 import { pollApi, authApi } from "../../../services/api";
 
 interface Option {
@@ -235,10 +236,10 @@ export default function Polls() {
                                 <div key={poll._id} className="group relative rounded-2xl border border-[#F4F4F4] p-5 transition-all hover:shadow-md hover:border-[#5678E9]/20">
                                     <div className="mb-4 flex items-center justify-between">
                                         <div className="flex items-center gap-2">
-                                            <img 
-                                                src={poll.createdBy?.profileImage || `https://ui-avatars.com/api/?name=${authorName}&background=E5E7EB&color=202224`} 
-                                                alt="Author" 
-                                                className="h-8 w-8 rounded-full border border-[#F1F1F1] object-cover" 
+                                            <Avatar
+                                                src={poll.createdBy?.profileImage || ""}
+                                                name={authorName}
+                                                size="sm"
                                             />
                                             <div>
                                                 <h3 className="text-xs font-bold text-[#202224] truncate max-w-[100px]">{authorName}</h3>

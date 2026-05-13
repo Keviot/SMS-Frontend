@@ -1,4 +1,5 @@
 import { X } from "lucide-react";
+import Avatar from "../../../components/Avatar";
 
 interface RequestViewData {
     requesterName: string;
@@ -70,10 +71,11 @@ export default function RequestViewModal({
 
                 {/* Avatar + Name + Date */}
                 <div className="mb-5 flex items-center gap-4">
-                    <img
+                    <Avatar
                         src={data.avatar}
-                        alt={data.requesterName}
-                        className="size-14 rounded-full object-cover"
+                        name={data.requesterName}
+                        className="size-14"
+                        size="lg"
                     />
 
                     <div>

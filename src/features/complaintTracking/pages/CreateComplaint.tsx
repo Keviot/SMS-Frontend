@@ -12,6 +12,7 @@ import {
 import { complaintApi, authApi, societyApi } from "../../../services/api";
 import toast from "react-hot-toast";
 import { Loader2 } from "lucide-react";
+import Avatar from "../../../components/Avatar";
 
 
 type Priority = "Medium" | "Low" | "High";
@@ -430,9 +431,10 @@ export default function CreateComplaint() {
                                             >
                                                 <td className="px-5 py-4">
                                                     <div className="flex items-center gap-3">
-                                                        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#F6F8FB] text-sm font-bold uppercase text-[#5678E9]">
-                                                            {complaint.initials || complaint.complainerName?.charAt(0)?.toUpperCase() || "?"}
-                                                        </div>
+                                                    <Avatar
+                                                        name={complaint.complainerName}
+                                                        className="size-11"
+                                                    />
                                                         <span className="text-sm font-medium text-[#434A57]">
                                                             {complaint.complainerName}
                                                         </span>

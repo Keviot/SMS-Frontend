@@ -9,6 +9,7 @@ import { residentApi, BASE_URL } from "../../../services/api";
 import toast from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
 import ResidentViewModal from "../components/ResidentViewModal";
+import Avatar from "../../../components/Avatar";
 
 interface Resident {
   id: string;
@@ -93,22 +94,11 @@ export default function ResidentManagement() {
       header: "Full Name",
       render: (row) => (
         <div className="flex items-center gap-3">
-          <div className="h-10 w-10 overflow-hidden rounded-full bg-[#F6F8FB] flex items-center justify-center">
-            {row.fullName !== "-" && row.avatar ? (
-              <img 
-                src={row.avatar} 
-                alt={row.fullName} 
-                className="h-full w-full object-cover"
-                onError={(e: any) => {
-                  e.target.onerror = null;
-                  e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(row.fullName)}&background=F6F8FB&color=5678E9&bold=true`;
-                }}
-              />
-            ) : (
-              <div className="flex h-full w-full items-center justify-center text-[#A3AED0]">
-                <User size={20} />
-              </div>
-            )}
+          <div className="h-10 w-10 flex-shrink-0">
+            <Avatar
+              src={row.avatar}
+              name={row.fullName}
+            />
           </div>
           <span className={row.fullName === "-" ? "text-gray-400" : "text-gray-900"}>{row.fullName}</span>
         </div>
