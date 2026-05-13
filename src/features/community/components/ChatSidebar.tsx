@@ -1,5 +1,6 @@
 import { Search, CheckCheck } from "lucide-react";
 import { cn } from "../../../lib/cn";
+import Avatar from "../../../components/Avatar";
 
 export interface Contact {
     id: string;
@@ -47,10 +48,9 @@ export default function ChatSidebar({ contacts, activeContactId, onContactSelect
                         )}
                     >
                         <div className="relative shrink-0">
-                            <img
+                            <Avatar
                                 src={contact.avatar}
-                                alt={contact.name}
-                                className="h-10 w-10 rounded-full object-cover border border-[#F1F1F1]"
+                                name={contact.name}
                             />
                             {contact.status === "online" && (
                                 <div className="absolute -right-0.5 -top-0.5 h-3 w-3 rounded-full border-2 border-white bg-[#5678E9]" />
