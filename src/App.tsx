@@ -17,7 +17,6 @@ import ResidentForm from './features/residentManagement/pages/ResidentForm'
 import FacilityManagement from './features/facilityManagement/pages/FacilityManagement'
 import SecurityManagement from './features/securityManagement/pages/SecurityProtocols'
 import Announcement from './features/announcement/pages/Announcement'
-import Profile from './features/profile/pages/Profile'
 import PersonalDetail from './features/profile/pages/PersonalDetail'
 import Income from './features/financialManagement/pages/Income'
 import CreatePassword from './features/auth/pages/CreatePassword'
@@ -29,6 +28,7 @@ import RequestTracking from './features/complaintTracking/pages/RequestTracking'
 import { SocketProvider } from './context/SocketContext'
 import VisitorLogs from './features/securityManagement/pages/VisitorLogs'
 import SecurityProtocols from './features/securityManagement/pages/SecurityProtocols'
+import ResidentSecurityProtocols from './features/securityManagement/pages/ResidentSecurityProtocols'
 import SecurityGuard from './features/securityManagement/pages/SecurityGuard'
 import EmergencyManagement from './features/securityManagement/pages/EmergencyManagement'
 
@@ -124,8 +124,9 @@ function App() {
             <Route path="/complaint-tracking/request-tracking" element={<RequestTracking />} />
             <Route path="/security-management" element={<SecurityManagement />} />
             <Route path="/security-management/visitor-logs" element={<VisitorLogs />} />
-            <Route path="/security-management/emergency" element={<EmergencyManagement />} />
             <Route path="/security-management/security-protocols" element={<SecurityProtocols />} />
+            <Route path="/security-management/protocols" element={<ResidentSecurityProtocols />} />
+            <Route path="/security-management/emergency" element={<EmergencyManagement />} />
             <Route path="/security-guard" element={<SecurityGuard />} />
             <Route path="/announcement" element={<Announcement />} />
             <Route path="/profile" element={<PersonalDetail />} />

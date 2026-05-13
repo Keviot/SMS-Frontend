@@ -9,6 +9,9 @@ import ConfirmPopup from "../../../ui/ConfirmPopup";
 import ImportantNumberFormModal, {
   type ImportantNumberFormValues,
 } from "../../../components/modals/ImportantNumberFormModal";
+import { importantNumberApi, authApi, societyApi } from "../../../services/api";
+import toast from "react-hot-toast";
+import { Loader2 } from "lucide-react";
 
 type ImportantNumber = {
   id: string;
@@ -20,6 +23,7 @@ type ImportantNumber = {
 type ImportantNumbersCardProps = {
   data: ImportantNumber[];
   role?: string | null;
+  onDataChange?: () => void; // Callback to refresh dashboard data
 };
 
 function ActionButton({
@@ -46,8 +50,10 @@ function ActionButton({
 export default function ImportantNumbersCard({
   data,
   role,
+  onDataChange,
 }: ImportantNumbersCardProps) {
   const [numbers, setNumbers] = useState<ImportantNumber[]>(data);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     setNumbers(data);
@@ -88,39 +94,90 @@ export default function ImportantNumbersCard({
     setDeleteTarget(null);
   };
 
-  const handleSave = (values: ImportantNumberFormValues) => {
-    if (modalMode === "edit" && selectedNumber) {
-      setNumbers((current) =>
-        current.map((item) =>
-          item.id === selectedNumber.id
-            ? {
-                ...item,
-                ...values,
-              }
-            : item
-        )
-      );
-    } else {
-      setNumbers((current) => [
-        {
-          id: crypto.randomUUID(),
-          ...values,
-        },
-        ...current,
-      ]);
-    }
+  const handleSave = async (values: ImportantNumberFormValues) => {
+    try {
+      setLoading(true);
 
-    closeFormModal();
+      if (modalMode === "edit" && selectedNumber) {
+        // Edit existing number
+        await importantNumberApi.edit(selectedNumber.id, {
+          name: values.name,
+          number: values.phone,
+          work: values.work,
+        });
+        toast.success("Important number updated successfully");
+      } else {
+        // Create new number - need society ID
+        const profileResponse = await authApi.getProfile();
+        const user = profileResponse.user;
+
+        if (!user) {
+          toast.error("Unable to fetch user profile. Please try again.");
+          return;
+        }
+
+        // Get society ID
+        let societyId = user.society;
+
+        if (!societyId && user.societies && user.societies.length > 0) {
+          societyId = user.societies[0]._id;
+        }
+
+        if (!societyId && user.selectSociety && user.selectSociety.length > 0) {
+          const societies = await societyApi.getAll();
+          const matchingSociety = societies.data.find(
+            (s: any) => user.selectSociety.includes(s.societyName)
+          );
+          if (matchingSociety) {
+            societyId = matchingSociety._id;
+          }
+        }
+
+        if (!societyId) {
+          toast.error("Society information not found. Please contact administrator.");
+          return;
+        }
+
+        await importantNumberApi.create({
+          name: values.name,
+          number: values.phone,
+          work: values.work,
+          society: societyId,
+        });
+        toast.success("Important number added successfully");
+      }
+
+      closeFormModal();
+
+      // Refresh dashboard data
+      if (onDataChange) {
+        onDataChange();
+      }
+    } catch (error: any) {
+      toast.error(error.message || "Failed to save important number");
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleDelete = () => {
+  const handleDelete = async () => {
     if (!deleteTarget) return;
 
-    setNumbers((current) =>
-      current.filter((item) => item.id !== deleteTarget.id)
-    );
+    try {
+      setLoading(true);
+      await importantNumberApi.delete(deleteTarget.id);
+      toast.success("Important number deleted successfully");
+      closeDeleteModal();
 
-    closeDeleteModal();
+      // Refresh dashboard data
+      if (onDataChange) {
+        onDataChange();
+      }
+    } catch (error: any) {
+      toast.error(error.message || "Failed to delete important number");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -145,46 +202,56 @@ export default function ImportantNumbersCard({
 
         <div className="mt-4 min-h-0 flex-1 overflow-hidden">
           <div className="max-h-[320px] space-y-3 overflow-y-auto pr-1">
-            {numbers.map((item) => (
-              <div
-                key={item.id}
-                className="flex min-h-[75px] justify-between gap-3 rounded-[10px] border border-[#F1F1F1] bg-white p-2.5 transition hover:border-[#EDF0F5] hover:shadow-[0_6px_18px_rgba(15,23,42,0.04)]"
-              >
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-xs font-medium leading-[18px] text-[#202224]">
-                    <span className="font-semibold">Name :</span>{" "}
-                    <span className="text-[#4F4F4F]">{item.name}</span>
-                  </p>
-
-                  <p className="mt-1 truncate text-[11px] font-medium leading-4 text-[#A7A7A7]">
-                    Ph Number :{" "}
-                    <span className="text-[#4F4F4F]">{item.phone}</span>
-                  </p>
-
-                  <p className="mt-1 truncate text-[11px] font-medium leading-4 text-[#A7A7A7]">
-                    Work : <span className="text-[#4F4F4F]">{item.work}</span>
-                  </p>
-                </div>
-
-                {!isResident && (
-                  <div className="flex shrink-0 items-start gap-1.5">
-                    <ActionButton
-                      label="Delete important number"
-                      onClick={() => openDeleteModal(item)}
-                    >
-                      <TrashIcon />
-                    </ActionButton>
-
-                    <ActionButton
-                      label="Edit important number"
-                      onClick={() => openEditModal(item)}
-                    >
-                      <EditIcon />
-                    </ActionButton>
-                  </div>
-                )}
+            {loading ? (
+              <div className="flex h-[280px] items-center justify-center">
+                <Loader2 className="h-6 w-6 animate-spin text-orange-500" />
               </div>
-            ))}
+            ) : numbers.length === 0 ? (
+              <div className="flex h-[280px] flex-col items-center justify-center text-center">
+                <p className="text-sm text-gray-500">No important numbers added yet</p>
+              </div>
+            ) : (
+              numbers.map((item) => (
+                <div
+                  key={item.id}
+                  className="flex min-h-[75px] justify-between gap-3 rounded-[10px] border border-[#F1F1F1] bg-white p-2.5 transition hover:border-[#EDF0F5] hover:shadow-[0_6px_18px_rgba(15,23,42,0.04)]"
+                >
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-xs font-medium leading-[18px] text-[#202224]">
+                      <span className="font-semibold">Name :</span>{" "}
+                      <span className="text-[#4F4F4F]">{item.name}</span>
+                    </p>
+
+                    <p className="mt-1 truncate text-[11px] font-medium leading-4 text-[#A7A7A7]">
+                      Ph Number :{" "}
+                      <span className="text-[#4F4F4F]">{item.phone}</span>
+                    </p>
+
+                    <p className="mt-1 truncate text-[11px] font-medium leading-4 text-[#A7A7A7]">
+                      Work : <span className="text-[#4F4F4F]">{item.work}</span>
+                    </p>
+                  </div>
+
+                  {!isResident && (
+                    <div className="flex shrink-0 items-start gap-1.5">
+                      <ActionButton
+                        label="Delete important number"
+                        onClick={() => openDeleteModal(item)}
+                      >
+                        <TrashIcon />
+                      </ActionButton>
+
+                      <ActionButton
+                        label="Edit important number"
+                        onClick={() => openEditModal(item)}
+                      >
+                        <EditIcon />
+                      </ActionButton>
+                    </div>
+                  )}
+                </div>
+              ))
+            )}
           </div>
         </div>
       </Card>
@@ -195,10 +262,10 @@ export default function ImportantNumbersCard({
         initialValues={
           selectedNumber
             ? {
-                name: selectedNumber.name,
-                phone: selectedNumber.phone,
-                work: selectedNumber.work,
-              }
+              name: selectedNumber.name,
+              phone: selectedNumber.phone,
+              work: selectedNumber.work,
+            }
             : undefined
         }
         onClose={closeFormModal}
