@@ -4,11 +4,10 @@ import ComplaintTable from "../components/ComplaintTable";
 import UpcomingActivityCard from "../components/UpcomingActivityCard";
 import PendingMaintenanceCard from "../components/PendingMaintenanceCard";
 import ImportantNumbersCard from "../components/ImportantNumbersCard";
-import { statCards } from "../../../data/dashboard.data";
 import { Loader2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
-import { authApi, complaintApi, importantNumberApi, financialApi, announcementApi } from "../../../services/api";
+import { authApi, complaintApi, importantNumberApi, financialApi, announcementApi, residentApi } from "../../../services/api";
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -61,14 +60,16 @@ export default function Dashboard() {
             maintenanceData,
             announcementsData,
             otherIncomeData,
-            expenseData
+            expenseData,
+            residentsData
           ] = await Promise.all([
             fetchWithFallback(complaintApi.getAllComplaints(societyId), { complainList: [] }),
             fetchWithFallback(importantNumberApi.getAll(), { data: [] }),
             fetchWithFallback(financialApi.getMaintenanceRecords(), { data: [] }),
             fetchWithFallback(announcementApi.getAll(societyId), { announcement: [] }),
             fetchWithFallback(financialApi.getOtherIncome(), { data: [] }),
-            fetchWithFallback(financialApi.getExpenses(), { data: [] })
+            fetchWithFallback(financialApi.getExpenses(), { data: [] }),
+            fetchWithFallback(residentApi.getAll(), { data: [] })
           ]);
 
           // Safe date formatting helper
@@ -134,6 +135,10 @@ export default function Dashboard() {
           const totalExpense = allExpenses.reduce((sum: number, e: any) => sum + (Number(e.amount) || 0), 0);
           const totalBalance = totalIncome - totalExpense;
 
+          // Calculate Total Units from residents
+          const allResidents = ensureArray(residentsData);
+          const totalUnit = allResidents.length;
+
           // Map Pending Maintenances
           const mappedMaintenance = allMaintenance
             .filter((m: any) => m && m.status?.toLowerCase() === "pending")
@@ -173,7 +178,7 @@ export default function Dashboard() {
               totalBalance,
               totalIncome,
               totalExpense,
-              totalUnit: 20550 // Kept from design
+              totalUnit
             }
           });
         }
@@ -223,10 +228,26 @@ export default function Dashboard() {
   }
 
   const liveStatCards = [
-    { title: "Total Balance", value: data.stats.totalBalance.toLocaleString(), type: "balance" },
-    { title: "Total Income", value: data.stats.totalIncome.toLocaleString(), type: "income" },
-    { title: "Total Expense", value: data.stats.totalExpense.toLocaleString(), type: "expense" },
-    { title: "Total Unit", value: data.stats.totalUnit.toLocaleString(), type: "unit" },
+    {
+      title: "Total Balance",
+      value: `${data.stats.totalBalance.toLocaleString()}`,
+      type: "balance" as const
+    },
+    {
+      title: "Total Income",
+      value: `${data.stats.totalIncome.toLocaleString()}`,
+      type: "income" as const
+    },
+    {
+      title: "Total Expense",
+      value: `${data.stats.totalExpense.toLocaleString()}`,
+      type: "expense" as const
+    },
+    {
+      title: "Total Unit",
+      value: data.stats.totalUnit.toString(),
+      type: "unit" as const
+    },
   ];
 
   return (
@@ -238,7 +259,7 @@ export default function Dashboard() {
             key={card.title}
             title={card.title}
             value={card.value}
-            type={card.type as any}
+            type={card.type}
           />
         ))}
       </section>

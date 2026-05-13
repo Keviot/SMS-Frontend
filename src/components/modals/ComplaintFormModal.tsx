@@ -96,13 +96,13 @@ export default function ComplaintFormModal({
     <AppModal
       open={open}
       title={mode === "add" ? "Create Complaint" : "Edit Complaint"}
-      widthClassName="w-[410px]"
-      panelClassName="h-[720px]"
+      widthClassName="max-w-[410px]"
+      panelClassName="max-h-[720px]"
       showHeaderDivider
       titleClassName="text-[20px] font-semibold leading-[25px] text-[#202224]"
     >
-      <form onSubmit={handleSubmit} className="mt-[20px] w-[370px]">
-        <div className="flex h-[403px] w-[370px] flex-col gap-[5px]">
+      <form onSubmit={handleSubmit} className="mt-[20px] w-full">
+        <div className="flex flex-col gap-[5px]">
           <FormInput
             label="Complainer Name"
             required
@@ -131,7 +131,7 @@ export default function ComplaintFormModal({
             onChange={(value) => updateValue("description", value)}
           />
 
-          <div className="grid h-[96px] w-[370px] grid-cols-2 gap-[20px]">
+          <div className="grid grid-cols-2 gap-[20px]">
             <FormInput
               label="Wing"
               required
@@ -154,13 +154,13 @@ export default function ComplaintFormModal({
           </div>
         </div>
 
-        <div className="flex h-[144px] w-[369px] flex-col gap-[10px]">
-          <div className="w-[369px]">
+        <div className="flex flex-col gap-[10px]">
+          <div className="w-full">
             <p className="mb-[5px] text-[16px] font-medium leading-[20px] text-[#202224]">
               Priority<span className="text-[#E74C3C]">*</span>
             </p>
 
-            <div className="grid h-[41px] w-[369px] grid-cols-3 gap-[20px]">
+            <div className="grid grid-cols-3 gap-[20px]">
               {(["High", "Medium", "Low"] as Priority[]).map((priority) => (
                 <OptionButton
                   key={priority}
@@ -172,12 +172,12 @@ export default function ComplaintFormModal({
             </div>
           </div>
 
-          <div className="w-[369px]">
+          <div className="w-full">
             <p className="mb-[5px] text-[16px] font-medium leading-[20px] text-[#202224]">
               Status<span className="text-[#E74C3C]">*</span>
             </p>
 
-            <div className="grid h-[41px] w-[369px] grid-cols-3 gap-[20px]">
+            <div className="grid grid-cols-3 gap-[20px]">
               {(["Open", "Pending", "Solve"] as ComplaintStatus[]).map(
                 (status) => (
                   <OptionButton
@@ -192,7 +192,7 @@ export default function ComplaintFormModal({
           </div>
         </div>
 
-        <div className="mt-[20px] grid h-[51px] w-[370px] grid-cols-2 gap-[20px]">
+        <div className="mt-[20px] grid grid-cols-2 gap-[20px]">
           <button
             type="button"
             onClick={onClose}
