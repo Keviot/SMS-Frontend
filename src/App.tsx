@@ -30,8 +30,13 @@ import VisitorLogs from './features/securityManagement/pages/VisitorLogs'
 import SecurityProtocols from './features/securityManagement/pages/SecurityProtocols'
 import ResidentSecurityProtocols from './features/securityManagement/pages/ResidentSecurityProtocols'
 import SecurityGuard from './features/securityManagement/pages/SecurityGuard'
-import EmergencyManagement from './features/securityManagement/pages/EmergencyManagement'
 import EventsParticipation from './features/eventsParticipation/pages/EventsParticipation'
+
+
+import EmergencyManagement from './features/securityManagement/pages/EmergencyManagement'
+import AccessForums from './features/community/pages/AccessForums'
+import Polls from './features/community/pages/Polls'
+import CommunitiesDiscussion from './features/community/pages/CommunitiesDiscussion'
 
 
 function App() {
@@ -130,7 +135,10 @@ function App() {
             <Route path="/security-management/emergency" element={<EmergencyManagement />} />
             <Route path="/security-guard" element={<SecurityGuard />} />
             <Route path="/announcement" element={<Announcement />} />
-            <Route path="/events-participation" element={<EventsParticipation />} />
+                    <Route path="/events-participation" element={<EventsParticipation />} />
+            <Route path="/community/access-forums" element={<AccessForums />} />
+            <Route path="/community/polls" element={<Polls />} />
+            <Route path="/community/discussion" element={<CommunitiesDiscussion />} />
             <Route path="/profile" element={<PersonalDetail />} />
           </Route>
         </Routes>
