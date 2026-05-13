@@ -107,7 +107,12 @@ export const residentNavigation: NavItem[] = [
   {
     label: "Community",
     icon: Users,
-    path: "/community",
+    path: "/community/access-forums",
+    children: [
+      { label: "Access Forums", path: "/community/access-forums" },
+      { label: "Polls", path: "/community/polls" },
+      { label: "Communities Discussion", path: "/community/discussion" },
+    ],
   },
   {
     label: "Facility",

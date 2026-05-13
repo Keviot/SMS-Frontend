@@ -1077,3 +1077,45 @@ export const paymentApi = {
         return handleResponse(response);
     },
 };
+
+// Poll API
+export const pollApi = {
+    create: async (data: any) => {
+        const response = await fetch(`${API_URL}/poll/create`, {
+            method: "POST",
+            credentials: "include",
+            headers: {
+                "Content-Type": "application/json",
+                ...getAuthHeader()
+            },
+            body: JSON.stringify(data),
+        });
+        return handleResponse(response);
+    },
+
+    getAll: async (societyId?: string) => {
+        const url = societyId ? `${API_URL}/poll/get?societyId=${societyId}` : `${API_URL}/poll/get`;
+        const response = await fetch(url, {
+            method: "GET",
+            credentials: "include",
+            headers: {
+                "Content-Type": "application/json",
+                ...getAuthHeader()
+            },
+        });
+        return handleResponse(response);
+    },
+
+    answer: async (data: { pollId: string; optionIds: string[] }) => {
+        const response = await fetch(`${API_URL}/poll/answer`, {
+            method: "POST",
+            credentials: "include",
+            headers: {
+                "Content-Type": "application/json",
+                ...getAuthHeader()
+            },
+            body: JSON.stringify(data),
+        });
+        return handleResponse(response);
+    },
+};
