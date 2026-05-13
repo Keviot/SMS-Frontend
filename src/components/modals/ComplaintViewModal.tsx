@@ -1,6 +1,5 @@
 import AppModal from "./AppModal";
 import type { ComplaintStatus, Priority } from "../../data/dashboard.data";
-import { data } from "react-router-dom";
 
 export type ComplaintViewData = {
   id: string;
@@ -47,15 +46,15 @@ function MetaItem({
   className?: string;
 }) {
   return (
-    <div className={`flex h-[55px] flex-col items-center justify-start text-center ${className}`}>
+    <div className={`flex flex-col items-center justify-start text-center ${className}`}>
       <p className="w-full text-center text-[16px] font-normal leading-[16px] text-[#A7A7A7]">
         {label}
       </p>
 
-      <div className="mt-[8px] flex h-[31px] w-full items-center justify-center">
+      <div className="mt-[8px] flex items-center justify-center">
         {badgeClassName ? (
           <span
-            className={`inline-flex h-[31px] items-center justify-center rounded-full px-[10px] text-[14px] font-normal leading-none sm:px-[12px] sm:text-[16px] ${badgeClassName} ${badgeClassExtra}`}
+            className={`inline-flex items-center justify-center rounded-full px-[10px] py-1.5 text-[14px] font-normal leading-none sm:px-[12px] sm:text-[16px] ${badgeClassName} ${badgeClassExtra}`}
           >
             {value}
           </span>
@@ -83,8 +82,8 @@ export default function ComplaintViewModal({
     <AppModal
       open={open}
       title="View Complain"
-      widthClassName="w-[410px]"
-      panelClassName="!h-[416px]"
+      widthClassName="max-w-[410px]"
+      panelClassName="!max-h-[416px]"
       showHeaderDivider
       headerRight={
         <button
@@ -97,9 +96,9 @@ export default function ComplaintViewModal({
         </button>
       }
     >
-      <div className="mt-[20px] flex h-[283px] w-full max-w-[370px] flex-col">
+      <div className="mt-[20px] flex flex-col w-full">
         {/* User Row */}
-        <div className="flex h-[70px] w-[285px] items-center gap-[15px]">
+        <div className="flex items-center gap-[15px]">
           <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-[#F6F8FB] text-base font-bold uppercase text-[#5678E9]">
             {complaint.initials || complaint.complainerName?.charAt(0)?.toUpperCase() || "?"}
           </div>
@@ -127,7 +126,7 @@ export default function ComplaintViewModal({
         </div>
 
         {/* Description */}
-        <div className="mt-[25px] h-[75px] w-full max-w-[370px]">
+        <div className="mt-[25px] w-full">
           <p className="text-[16px] font-normal leading-[16px] text-[#A7A7A7]">
             Description
           </p>
@@ -139,7 +138,7 @@ export default function ComplaintViewModal({
         </div>
 
         {/* Bottom Meta Row - no outer box, only vertical dividers */}
-        <div className="mt-[25px] grid h-[55px] w-full max-w-[364px] grid-cols-[22%_22%_31%_25%]">
+        <div className="mt-[25px] grid w-full grid-cols-[22%_22%_31%_25%]">
           <MetaItem
             label="Wing"
             value={complaint.wing ?? "A"}

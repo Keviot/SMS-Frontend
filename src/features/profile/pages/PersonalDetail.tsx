@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { User, Mail, Phone, MapPin, Calendar, Users, Car, CreditCard, AlertCircle, Clock, FileText } from "lucide-react";
-import { authApi, announcementApi, financialApi } from "../../../services/api";
+import { authApi, announcementApi, financialApi, paymentApi } from "../../../services/api";
 import toast from "react-hot-toast";
+
 
 export default function PersonalDetail() {
   const [loading, setLoading] = useState(true);
@@ -10,34 +11,77 @@ export default function PersonalDetail() {
   const [maintenanceRecords, setMaintenanceRecords] = useState<any[]>([]);
   const [activeTab, setActiveTab] = useState<"Owner" | "Tenant">("Owner");
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setLoading(true);
-        const profileData = await authApi.getProfile();
-        if (profileData.user) {
-          setProfile(profileData.user);
-          setActiveTab(profileData.user.residentStatus || "Owner");
+  const fetchData = async () => {
+    try {
+      setLoading(true);
+      const profileData = await authApi.getProfile();
+      if (profileData.user) {
+        setProfile(profileData.user);
+        setActiveTab(profileData.user.residentStatus || "Owner");
 
-          const societyId = profileData.user.society?._id || profileData.user.society;
+        const societyId = profileData.user.society?._id || profileData.user.society;
 
-          // Fetch announcements and maintenance in parallel
-          const [announcementData, maintenanceData] = await Promise.all([
-            societyId ? announcementApi.getAll(societyId) : Promise.resolve({ announcement: [] }),
-            financialApi.getMaintenanceRecords()
-          ]);
+        // Fetch announcements and maintenance in parallel
+        const [announcementData, maintenanceData] = await Promise.all([
+          societyId ? announcementApi.getAll(societyId) : Promise.resolve({ announcement: [] }),
+          financialApi.getMaintenanceRecords()
+        ]);
 
-          setAnnouncements(announcementData.announcement || []);
-          setMaintenanceRecords(maintenanceData.data || []);
-        }
-      } catch (error: any) {
-        toast.error("Failed to load details");
-      } finally {
-        setLoading(false);
+        setAnnouncements(announcementData.announcement || []);
+        setMaintenanceRecords(maintenanceData.data || []);
       }
-    };
+    } catch (error: any) {
+      toast.error("Failed to load details");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
     fetchData();
   }, []);
+
+  const handlePayment = async (amount: number, recordId: string) => {
+    try {
+      const data = await paymentApi.createOrder(amount);
+
+      const options = {
+        key: import.meta.env.VITE_RAZORPAY_KEY_ID, 
+        amount: data.order.amount,
+        currency: data.order.currency,
+        name: "SMS Project",
+        description: "Resident Payment",
+        order_id: data.order.id,
+        handler: async function (response: any) {
+          try {
+            await paymentApi.verify({ ...response, recordId });
+            toast.success("Payment Successful & Verified");
+            // Refresh data to show updated status
+            fetchData();
+          } catch (err: any) {
+            toast.error("Payment verification failed");
+            console.error(err);
+          }
+        },
+        prefill: {
+          name: profile?.name || "Resident",
+          email: profile?.email || "",
+          contact: profile?.phoneNumber || "",
+        },
+        theme: {
+          color: "#3399cc",
+        },
+      };
+
+      const razor = new (window as any).Razorpay(options);
+      razor.open();
+    } catch (error: any) {
+      console.error("Payment failed:", error);
+      toast.error(error.message || "Payment initialization failed");
+    }
+  };
+
+
 
   if (loading) return <div className="p-8 text-center text-gray-500 font-medium">Loading personal details...</div>;
   if (!profile) return <div className="p-8 text-center text-red-500 font-medium">Profile not found</div>;
@@ -244,7 +288,12 @@ export default function PersonalDetail() {
             {maintenanceRecords
               .filter(r => r.status?.toLowerCase() === "pending")
               .map((record) => (
-                <MaintenanceCard key={record._id} record={record} status="Pending" />
+                <MaintenanceCard 
+                  key={record._id} 
+                  record={record} 
+                  status="Pending" 
+                  onPay={(total) => handlePayment(total, record._id)}
+                />
               ))}
           </div>
         </div>
@@ -265,7 +314,12 @@ export default function PersonalDetail() {
             {maintenanceRecords
               .filter(r => r.status?.toLowerCase() === "due")
               .map((record) => (
-                <MaintenanceCard key={record._id} record={record} status="Due" />
+                <MaintenanceCard 
+                  key={record._id} 
+                  record={record} 
+                  status="Due" 
+                  onPay={(total) => handlePayment(total, record._id)}
+                />
               ))}
           </div>
         </div>
@@ -361,7 +415,7 @@ function DocumentCard({ label, size, url }: { label: string; size: string; url?:
   return content;
 }
 
-function MaintenanceCard({ record, status }: { record: any; status: "Pending" | "Due" }) {
+function MaintenanceCard({ record, status, onPay }: { record: any; status: "Pending" | "Due"; onPay: (total: number) => void }) {
   const amount = Number(record.maintenanceSetup?.maintenanceAmount || record.amount || 0);
   const penalty = Number(record.penalty || 0);
   const total = amount + penalty;
@@ -407,7 +461,7 @@ function MaintenanceCard({ record, status }: { record: any; status: "Pending" | 
           <span className="font-bold text-[#39973D]">₹ {total.toLocaleString()}</span>
         </div>
       </div>
-      <button className="w-full h-12 rounded-xl bg-gradient-to-r from-[#FE512E] to-[#F09619] text-white font-bold shadow-lg shadow-orange-500/20 hover:opacity-90 transition-all active:scale-[0.98]">
+      <button onClick={() => onPay(total)} className="w-full h-12 rounded-xl bg-gradient-to-r from-[#FE512E] to-[#F09619] text-white font-bold shadow-lg shadow-orange-500/20 hover:opacity-90 transition-all active:scale-[0.98]">
         Pay Now
       </button>
     </div>
