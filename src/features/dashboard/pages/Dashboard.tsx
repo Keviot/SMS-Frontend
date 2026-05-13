@@ -4,6 +4,7 @@ import ComplaintTable from "../components/ComplaintTable";
 import UpcomingActivityCard from "../components/UpcomingActivityCard";
 import PendingMaintenanceCard from "../components/PendingMaintenanceCard";
 import ImportantNumbersCard from "../components/ImportantNumbersCard";
+import Card from "../../../ui/Card";
 import { Loader2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
@@ -28,167 +29,167 @@ export default function Dashboard() {
     }
   });
 
-  useEffect(() => {
-    const fetchDashboardData = async () => {
-      try {
-        setLoading(true);
-        const profileData = await authApi.getProfile();
+  const fetchDashboardData = async () => {
+    try {
+      setLoading(true);
+      const profileData = await authApi.getProfile();
 
-        if (profileData.user) {
-          const userRole = profileData.user.role?.toLowerCase();
-          setRole(userRole);
+      if (profileData.user) {
+        const userRole = profileData.user.role?.toLowerCase();
+        setRole(userRole);
 
-          let societyId = profileData.user.society?._id || profileData.user.society;
-          if (!societyId && profileData.user.societies && profileData.user.societies.length > 0) {
-            societyId = profileData.user.societies[0]._id;
+        let societyId = profileData.user.society?._id || profileData.user.society;
+        if (!societyId && profileData.user.societies && profileData.user.societies.length > 0) {
+          societyId = profileData.user.societies[0]._id;
+        }
+
+        const fetchWithFallback = async (apiCall: Promise<any>, fallback: any = []) => {
+          try {
+            const res = await apiCall;
+            return res;
+          } catch (err) {
+            console.error("API Call failed:", err);
+            return fallback;
           }
+        };
 
-          const fetchWithFallback = async (apiCall: Promise<any>, fallback: any = []) => {
-            try {
-              const res = await apiCall;
-              return res;
-            } catch (err) {
-              console.error("API Call failed:", err);
-              return fallback;
-            }
-          };
+        // Fetch all dashboard data in parallel
+        const [
+          complaintsData,
+          numbersData,
+          maintenanceData,
+          announcementsData,
+          otherIncomeData,
+          expenseData,
+          residentsData
+        ] = await Promise.all([
+          fetchWithFallback(complaintApi.getAllComplaints(societyId), { complainList: [] }),
+          fetchWithFallback(importantNumberApi.getAll(), { data: [] }),
+          fetchWithFallback(financialApi.getMaintenanceRecords(), { data: [] }),
+          fetchWithFallback(announcementApi.getAll(societyId), { announcement: [] }),
+          fetchWithFallback(financialApi.getOtherIncome(), { data: [] }),
+          fetchWithFallback(financialApi.getExpenses(), { data: [] }),
+          fetchWithFallback(residentApi.getAll(), { data: [] })
+        ]);
 
-          // Fetch all dashboard data in parallel
-          const [
-            complaintsData,
-            numbersData,
-            maintenanceData,
-            announcementsData,
-            otherIncomeData,
-            expenseData,
-            residentsData
-          ] = await Promise.all([
-            fetchWithFallback(complaintApi.getAllComplaints(societyId), { complainList: [] }),
-            fetchWithFallback(importantNumberApi.getAll(), { data: [] }),
-            fetchWithFallback(financialApi.getMaintenanceRecords(), { data: [] }),
-            fetchWithFallback(announcementApi.getAll(societyId), { announcement: [] }),
-            fetchWithFallback(financialApi.getOtherIncome(), { data: [] }),
-            fetchWithFallback(financialApi.getExpenses(), { data: [] }),
-            fetchWithFallback(residentApi.getAll(), { data: [] })
-          ]);
+        // Safe date formatting helper
+        const formatDate = (dateVal: any) => {
+          const d = new Date(dateVal);
+          return isNaN(d.getTime()) ? "N/A" : d.toLocaleDateString("en-GB");
+        };
 
-          // Safe date formatting helper
-          const formatDate = (dateVal: any) => {
-            const d = new Date(dateVal);
-            return isNaN(d.getTime()) ? "N/A" : d.toLocaleDateString("en-GB");
-          };
+        // Helper to safely extract arrays from various backend response formats
+        const ensureArray = (dataObj: any, key?: string) => {
+          if (!dataObj) return [];
+          if (Array.isArray(dataObj)) return dataObj;
+          if (key && Array.isArray(dataObj[key])) return dataObj[key];
+          if (Array.isArray(dataObj.data)) return dataObj.data;
+          return [];
+        };
 
-          // Helper to safely extract arrays from various backend response formats
-          const ensureArray = (dataObj: any, key?: string) => {
-            if (!dataObj) return [];
-            if (Array.isArray(dataObj)) return dataObj;
-            if (key && Array.isArray(dataObj[key])) return dataObj[key];
-            if (Array.isArray(dataObj.data)) return dataObj.data;
-            return [];
-          };
+        // Map Complaints
+        const allComplaints = ensureArray(complaintsData, "complainList");
+        const mappedComplaints = allComplaints.map((c: any) => ({
+          id: c._id,
+          complainerName: c.compainerName || "N/A",
+          complaintName: c.complainName || "N/A",
+          date: formatDate(c.createdAt),
+          priority: c.priority || "Medium",
+          status: c.status || "Pending"
+        }));
 
-          // Map Complaints
-          const allComplaints = ensureArray(complaintsData, "complainList");
-          const mappedComplaints = allComplaints.map((c: any) => ({
-            id: c._id,
-            complainerName: c.compainerName || "N/A",
-            complaintName: c.complainName || "N/A",
-            date: formatDate(c.createdAt),
-            priority: c.priority || "Medium",
-            status: c.status || "Pending"
+        // Map Important Numbers
+        const allNumbers = ensureArray(numbersData, "importantNumber");
+        const mappedNumbers = allNumbers.map((n: any) => ({
+          id: n._id,
+          name: n.name || "N/A",
+          phone: n.phoneNumber || n.number || n.phone || "N/A",
+          work: n.work || "N/A"
+        }));
+
+        // Map Upcoming Activities (Announcements)
+        const allAnnouncements = ensureArray(announcementsData, "announcement");
+        const mappedActivities = allAnnouncements.map((a: any) => ({
+          id: a._id,
+          letter: (a.title || "A").charAt(0).toUpperCase(),
+          title: a.title || "Untitled",
+          time: a.time || "N/A",
+          date: formatDate(a.date)
+        }));
+
+        // Financial Calculations
+        const allMaintenance = ensureArray(maintenanceData);
+        const allOtherIncome = ensureArray(otherIncomeData);
+        const allExpenses = ensureArray(expenseData);
+
+        const collectedMaintenance = allMaintenance
+          .filter((m: any) => m && ["paid", "done"].includes(m.status?.toLowerCase()))
+          .reduce((sum: number, m: any) => {
+            const amount = m.amount || m.maintenanceSetup?.maintenanceAmount || 0;
+            const penalty = m.penalty || 0;
+            return sum + (Number(amount) || 0) + (Number(penalty) || 0);
+          }, 0);
+
+        const totalOtherIncome = allOtherIncome.reduce((sum: number, i: any) => sum + (Number(i.amount) || 0), 0);
+        const totalIncome = collectedMaintenance + totalOtherIncome;
+        const totalExpense = allExpenses.reduce((sum: number, e: any) => sum + (Number(e.amount) || 0), 0);
+        const totalBalance = totalIncome - totalExpense;
+
+        // Calculate Total Units from residents
+        const allResidents = ensureArray(residentsData);
+        const totalUnit = allResidents.length;
+
+        // Map Pending Maintenances
+        const mappedMaintenance = allMaintenance
+          .filter((m: any) => m && m.status?.toLowerCase() === "pending")
+          .map((m: any) => ({
+            id: m._id,
+            name: m.name || (m.resident?.name || "Resident"),
+            pending: "Pending",
+            amount: (m.amount || m.maintenanceSetup?.maintenanceAmount || 0).toString()
           }));
 
-          // Map Important Numbers
-          const allNumbers = ensureArray(numbersData, "importantNumber");
-          const mappedNumbers = allNumbers.map((n: any) => ({
-            id: n._id,
-            name: n.name || "N/A",
-            phone: n.phoneNumber || n.number || n.phone || "N/A",
-            work: n.work || "N/A"
-          }));
-
-          // Map Upcoming Activities (Announcements)
-          const allAnnouncements = ensureArray(announcementsData, "announcement");
-          const mappedActivities = allAnnouncements.map((a: any) => ({
-            id: a._id,
-            letter: (a.title || "A").charAt(0).toUpperCase(),
-            title: a.title || "Untitled",
-            time: a.time || "N/A",
-            date: formatDate(a.date)
-          }));
-
-          // Financial Calculations
-          const allMaintenance = ensureArray(maintenanceData);
-          const allOtherIncome = ensureArray(otherIncomeData);
-          const allExpenses = ensureArray(expenseData);
-
-          const collectedMaintenance = allMaintenance
-            .filter((m: any) => m && ["paid", "done"].includes(m.status?.toLowerCase()))
-            .reduce((sum: number, m: any) => {
+        // Monthly Chart Data (Income)
+        const monthlyIncome = new Array(12).fill(0);
+        allMaintenance
+          .filter((m: any) => m && ["paid", "done"].includes(m.status?.toLowerCase()))
+          .forEach((m: any) => {
+            const date = new Date(m.date || m.createdAt);
+            if (!isNaN(date.getTime()) && date.getFullYear() === new Date().getFullYear()) {
               const amount = m.amount || m.maintenanceSetup?.maintenanceAmount || 0;
               const penalty = m.penalty || 0;
-              return sum + (Number(amount) || 0) + (Number(penalty) || 0);
-            }, 0);
-
-          const totalOtherIncome = allOtherIncome.reduce((sum: number, i: any) => sum + (Number(i.amount) || 0), 0);
-          const totalIncome = collectedMaintenance + totalOtherIncome;
-          const totalExpense = allExpenses.reduce((sum: number, e: any) => sum + (Number(e.amount) || 0), 0);
-          const totalBalance = totalIncome - totalExpense;
-
-          // Calculate Total Units from residents
-          const allResidents = ensureArray(residentsData);
-          const totalUnit = allResidents.length;
-
-          // Map Pending Maintenances
-          const mappedMaintenance = allMaintenance
-            .filter((m: any) => m && m.status?.toLowerCase() === "pending")
-            .map((m: any) => ({
-              id: m._id,
-              name: m.name || (m.resident?.name || "Resident"),
-              pending: "Pending",
-              amount: (m.amount || m.maintenanceSetup?.maintenanceAmount || 0).toString()
-            }));
-
-          // Monthly Chart Data (Income)
-          const monthlyIncome = new Array(12).fill(0);
-          allMaintenance
-            .filter((m: any) => m && ["paid", "done"].includes(m.status?.toLowerCase()))
-            .forEach((m: any) => {
-              const date = new Date(m.date || m.createdAt);
-              if (!isNaN(date.getTime()) && date.getFullYear() === new Date().getFullYear()) {
-                const amount = m.amount || m.maintenanceSetup?.maintenanceAmount || 0;
-                const penalty = m.penalty || 0;
-                monthlyIncome[date.getMonth()] += ((Number(amount) || 0) + (Number(penalty) || 0));
-              }
-            });
-          allOtherIncome.forEach((i: any) => {
-            const date = new Date(i.date);
-            if (!isNaN(date.getTime()) && date.getFullYear() === new Date().getFullYear()) {
-              monthlyIncome[date.getMonth()] += Number(i.amount) || 0;
+              monthlyIncome[date.getMonth()] += ((Number(amount) || 0) + (Number(penalty) || 0));
             }
           });
+        allOtherIncome.forEach((i: any) => {
+          const date = new Date(i.date);
+          if (!isNaN(date.getTime()) && date.getFullYear() === new Date().getFullYear()) {
+            monthlyIncome[date.getMonth()] += Number(i.amount) || 0;
+          }
+        });
 
-          setData({
-            complaints: mappedComplaints,
-            importantNumbers: mappedNumbers,
-            pendingMaintenances: mappedMaintenance,
-            upcomingActivities: mappedActivities,
-            monthlyBalance: monthlyIncome,
-            stats: {
-              totalBalance,
-              totalIncome,
-              totalExpense,
-              totalUnit
-            }
-          });
-        }
-      } catch (error) {
-        console.error("Dashboard data fetch failed:", error);
-      } finally {
-        setLoading(false);
+        setData({
+          complaints: mappedComplaints,
+          importantNumbers: mappedNumbers,
+          pendingMaintenances: mappedMaintenance,
+          upcomingActivities: mappedActivities,
+          monthlyBalance: monthlyIncome,
+          stats: {
+            totalBalance,
+            totalIncome,
+            totalExpense,
+            totalUnit
+          }
+        });
       }
-    };
+    } catch (error) {
+      console.error("Dashboard data fetch failed:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  useEffect(() => {
     fetchDashboardData();
   }, []);
 
@@ -267,8 +268,22 @@ export default function Dashboard() {
       {/* Row 2: Balance Chart | Important Numbers | Pending Maintenances */}
       <section className="grid grid-cols-1 gap-5 xl:grid-cols-[minmax(0,2fr)_minmax(16rem,1fr)_minmax(16rem,1fr)]">
         <BalanceChart data={data.monthlyBalance} total={data.stats.totalBalance} />
-        <ImportantNumbersCard data={data.importantNumbers} role={role} />
-        <PendingMaintenanceCard data={data.pendingMaintenances} />
+        <ImportantNumbersCard
+          data={data.importantNumbers}
+          role={role}
+          onDataChange={fetchDashboardData}
+        />
+        {role !== "resident" && <PendingMaintenanceCard data={data.pendingMaintenances} />}
+        {role === "resident" && (
+          <Card className="flex h-[27rem] flex-col p-5">
+            <h2 className="text-base font-semibold leading-5 text-[#202224]">
+              Upcoming Events
+            </h2>
+            <div className="mt-3 flex flex-1 items-center justify-center">
+              <p className="text-sm text-gray-500">Check announcements for upcoming events</p>
+            </div>
+          </Card>
+        )}
       </section>
 
       {/* Row 3: Complaint List | Upcoming Activity */}
