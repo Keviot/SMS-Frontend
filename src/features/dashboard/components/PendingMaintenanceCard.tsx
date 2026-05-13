@@ -1,3 +1,4 @@
+import { useNavigate } from "react-router-dom";
 import Button from "../../../ui/Button";
 import Card from "../../../ui/Card";
 
@@ -15,6 +16,12 @@ type PendingMaintenanceCardProps = {
 export default function PendingMaintenanceCard({
   data,
 }: PendingMaintenanceCardProps) {
+  const navigate = useNavigate();
+
+  const handleViewAll = () => {
+    navigate("/financial-management/income");
+  };
+
   return (
     <Card className="flex h-[27rem] flex-col p-5">
       <div className="flex items-center justify-between gap-3">
@@ -24,7 +31,8 @@ export default function PendingMaintenanceCard({
 
         <Button
           variant="ghost"
-          className="h-auto rounded-none p-0 text-xs font-medium text-[#5678E9] hover:bg-transparent hover:text-[#5678E9]"
+          onClick={handleViewAll}
+          className="h-auto rounded-none p-0 text-xs font-medium text-[#5678E9] hover:bg-transparent hover:text-[#5678E9] hover:underline"
         >
           View all
         </Button>
