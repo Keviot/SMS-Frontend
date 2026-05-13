@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import type { ComplaintStatus, Priority } from "../../../data/dashboard.data";
 import {
   EditIcon,
@@ -22,7 +22,7 @@ type ComplaintRow = {
   date: string;
   priority: Priority;
   status: ComplaintStatus;
-  avatar?: string;
+  initials: string;
   description?: string;
   wing?: string;
   unit?: string;
@@ -94,6 +94,11 @@ function ActionButton({
 export default function ComplaintTable({ data, role }: ComplaintTableProps) {
   const [rows, setRows] = useState<ComplaintRow[]>(data);
 
+  // Sync rows with data prop when it changes
+  useEffect(() => {
+    setRows(data);
+  }, [data]);
+
   const [selectedComplaint, setSelectedComplaint] =
     useState<ComplaintViewData | null>(null);
 
@@ -146,15 +151,15 @@ export default function ComplaintTable({ data, role }: ComplaintTableProps) {
       current.map((item) =>
         item.id === editingComplaint.id
           ? {
-              ...item,
-              complainerName: values.complainerName,
-              complaintName: values.complaintName,
-              description: values.description,
-              wing: values.wing,
-              unit: values.unit,
-              priority: values.priority,
-              status: values.status,
-            }
+            ...item,
+            complainerName: values.complainerName,
+            complaintName: values.complaintName,
+            description: values.description,
+            wing: values.wing,
+            unit: values.unit,
+            priority: values.priority,
+            status: values.status,
+          }
           : item
       )
     );
@@ -220,14 +225,10 @@ export default function ComplaintTable({ data, role }: ComplaintTableProps) {
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-2.5">
                         <div className="grid size-[30px] shrink-0 place-items-center overflow-hidden rounded-full bg-[#FFF1E9] text-[11px] font-semibold text-[#FE512E]">
-                          {row.avatar ? (
-                            <img
-                              src={row.avatar}
-                              alt={row.complainerName}
-                              className="size-full object-cover"
-                            />
+                          {row.initials ? (
+                            row.initials
                           ) : (
-                            row.complainerName.charAt(0)
+                            (row.complainerName || "C").charAt(0)
                           )}
                         </div>
 
@@ -305,14 +306,14 @@ export default function ComplaintTable({ data, role }: ComplaintTableProps) {
         initialValues={
           editingComplaint
             ? {
-                complainerName: editingComplaint.complainerName,
-                complaintName: editingComplaint.complaintName,
-                description: editingComplaint.description ?? editDescription,
-                wing: editingComplaint.wing ?? "A",
-                unit: editingComplaint.unit ?? "1001",
-                priority: editingComplaint.priority,
-                status: editingComplaint.status,
-              }
+              complainerName: editingComplaint.complainerName,
+              complaintName: editingComplaint.complaintName,
+              description: editingComplaint.description ?? editDescription,
+              wing: editingComplaint.wing ?? "A",
+              unit: editingComplaint.unit ?? "1001",
+              priority: editingComplaint.priority,
+              status: editingComplaint.status,
+            }
             : undefined
         }
         onClose={closeEditModal}

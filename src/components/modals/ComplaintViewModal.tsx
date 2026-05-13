@@ -1,5 +1,6 @@
 import AppModal from "./AppModal";
 import type { ComplaintStatus, Priority } from "../../data/dashboard.data";
+import { data } from "react-router-dom";
 
 export type ComplaintViewData = {
   id: string;
@@ -8,7 +9,7 @@ export type ComplaintViewData = {
   date: string;
   priority: Priority;
   status: ComplaintStatus;
-  avatar?: string;
+  initials: string;
   description?: string;
   wing?: string;
   unit?: string;
@@ -99,16 +100,8 @@ export default function ComplaintViewModal({
       <div className="mt-[20px] flex h-[283px] w-full max-w-[370px] flex-col">
         {/* User Row */}
         <div className="flex h-[70px] w-[285px] items-center gap-[15px]">
-          <div className="grid h-[70px] w-[70px] shrink-0 place-items-center overflow-hidden rounded-full bg-[#FFF1E9] text-[26px] font-semibold text-[#FE512E]">
-            {complaint.avatar ? (
-              <img
-                src={complaint.avatar}
-                alt={complaint.complainerName}
-                className="h-full w-full object-cover"
-              />
-            ) : (
-              complaint.complainerName.charAt(0)
-            )}
+          <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-[#F6F8FB] text-base font-bold uppercase text-[#5678E9]">
+            {complaint.initials || complaint.complainerName?.charAt(0)?.toUpperCase() || "?"}
           </div>
 
           <div className="min-w-0">

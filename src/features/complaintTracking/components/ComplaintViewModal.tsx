@@ -2,7 +2,7 @@ import { X } from "lucide-react";
 
 interface ComplaintViewData {
     complainerName: string;
-    avatar: string;
+    initials: string;
     date: string;
     complaintName: string;
     description: string;
@@ -70,11 +70,7 @@ export default function ComplaintViewModal({
 
                 {/* Avatar + Name + Date */}
                 <div className="mb-5 flex items-center gap-4">
-                    <img
-                        src={data.avatar}
-                        alt={data.complainerName}
-                        className="size-14 rounded-full object-cover"
-                    />
+                    {data.initials}
 
                     <div>
                         <h3 className="text-base font-semibold leading-6 text-[#202224]">
