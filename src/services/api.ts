@@ -962,3 +962,32 @@ export const securityGuardApi = {
         return handleResponse(response);
     },
 };
+
+// Payment API
+export const paymentApi = {
+    createOrder: async (amount: number) => {
+        const response = await fetch(`${API_URL}/payment/create-order`, {
+            method: "POST",
+            credentials: "include",
+            headers: {
+                "Content-Type": "application/json",
+                ...getAuthHeader()
+            },
+            body: JSON.stringify({ amount }),
+        });
+        return handleResponse(response);
+    },
+
+    verify: async (paymentData: any) => {
+        const response = await fetch(`${API_URL}/payment/verify`, {
+            method: "POST",
+            credentials: "include",
+            headers: {
+                "Content-Type": "application/json",
+                ...getAuthHeader()
+            },
+            body: JSON.stringify(paymentData),
+        });
+        return handleResponse(response);
+    },
+};
