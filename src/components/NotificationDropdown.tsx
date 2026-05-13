@@ -77,16 +77,24 @@ export default function NotificationDropdown({ onClose }: NotificationDropdownPr
 
       <div className="overflow-y-auto max-h-[400px] pr-1 custom-scrollbar">
         {list.map((item) => (
-          <div 
-            key={item.id} 
+          <div
+            key={item.id}
             onClick={() => handleNotificationClick(item)}
             className="border-b border-[#F4F4F4] py-5 last:border-b-0 cursor-pointer hover:bg-gray-50/50 transition-colors rounded-lg px-2 -mx-2"
           >
             <div className="flex items-start gap-4">
               {/* Icon Section */}
               <div className="flex-shrink-0">
-                {item.title.toLowerCase().includes("ganesh") || item.type === "facility" ? (
-                   <div className="h-10 w-10 shrink-0 bg-[#F1F4FF] rounded-full flex items-center justify-center">
+                {item.title.toLowerCase().includes("emergency") || item.type === "error" ? (
+                  <div className="h-10 w-10 shrink-0 bg-[#FFF1F1] rounded-full flex items-center justify-center border border-[#FFDADA]">
+                    <span className="text-[#E74C3C] font-extrabold text-lg">E</span>
+                  </div>
+                ) : item.title.toLowerCase().includes("warning") || item.type === "warning" ? (
+                  <div className="h-10 w-10 shrink-0 bg-[#FFF8EB] rounded-full flex items-center justify-center border border-[#FFE7BA]">
+                    <span className="text-[#F39C12] font-extrabold text-lg">W</span>
+                  </div>
+                ) : item.title.toLowerCase().includes("ganesh") || item.type === "facility" ? (
+                  <div className="h-10 w-10 shrink-0 bg-[#F1F4FF] rounded-full flex items-center justify-center">
                     <span className="text-[#5678E9] font-bold text-lg">G</span>
                   </div>
                 ) : item.title.toLowerCase().includes("maintenance") || item.type === "payment" ? (

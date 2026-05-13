@@ -130,13 +130,14 @@ export const securityNavigation: NavItem[] = [
   {
     label: "Security",
     icon: Shield,
-    path: "/security",
+    path: "/security-management",
     children: [
-      { label: "Visitor Tracking", path: "/security-guard" },
-      { label: "Emergency Management", path: "/security-management/protocols" },
+      { label: "Visitor Tracking", path: "/security-management/visitor-logs" },
+      { label: "Emergency Management", path: "/security-management/emergency" },
     ],
   },
 ];
+
 
 export const footerNavigation = [
   {
