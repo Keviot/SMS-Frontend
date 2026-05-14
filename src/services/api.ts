@@ -1315,3 +1315,30 @@ export const discussionApi = {
         return handleResponse(response);
     }
 };
+
+export const eventPaymentApi = {
+    create: async (data: any) => {
+        const response = await fetch(`${API_URL}/event-payment/create`, {
+            method: "POST",
+            credentials: "include",
+            headers: {
+                "Content-Type": "application/json",
+                ...getAuthHeader()
+            },
+            body: JSON.stringify(data),
+        });
+        return handleResponse(response);
+    },
+
+    get: async () => {
+        const response = await fetch(`${API_URL}/event-payment/get`, {
+            method: "GET",
+            credentials: "include",
+            headers: {
+                "Content-Type": "application/json",
+                ...getAuthHeader()
+            },
+        });
+        return handleResponse(response);
+    },
+};

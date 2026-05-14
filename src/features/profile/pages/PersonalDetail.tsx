@@ -10,6 +10,7 @@ export default function PersonalDetail() {
   const [profile, setProfile] = useState<any>(null);
   const [announcements, setAnnouncements] = useState<any[]>([]);
   const [maintenanceRecords, setMaintenanceRecords] = useState<any[]>([]);
+  const [eventPayments, setEventPayments] = useState<any[]>([]);
   const [activeTab, setActiveTab] = useState<"Owner" | "Tenant">("Owner");
 
   const fetchData = async () => {
@@ -22,14 +23,16 @@ export default function PersonalDetail() {
 
         const societyId = profileData.user.society?._id || profileData.user.society;
 
-        // Fetch announcements and maintenance in parallel
-        const [announcementData, maintenanceData] = await Promise.all([
+        // Fetch announcements, maintenance and event payments in parallel
+        const [announcementData, maintenanceData, eventPaymentData] = await Promise.all([
           societyId ? announcementApi.getAll(societyId) : Promise.resolve({ announcement: [] }),
-          financialApi.getMaintenanceRecords()
+          financialApi.getMaintenanceRecords(),
+          import("../../../services/api").then(m => m.eventPaymentApi.get()).catch(() => ({ data: [] }))
         ]);
 
         setAnnouncements(announcementData.announcement || []);
         setMaintenanceRecords(maintenanceData.data || []);
+        setEventPayments(eventPaymentData.data || []);
       }
     } catch (error: any) {
       toast.error("Failed to load details");
@@ -61,6 +64,53 @@ export default function PersonalDetail() {
             fetchData();
           } catch (err: any) {
             toast.error("Payment verification failed");
+            console.error(err);
+          }
+        },
+        prefill: {
+          name: profile?.name || "Resident",
+          email: profile?.email || "",
+          contact: profile?.phoneNumber || "",
+        },
+        theme: {
+          color: "#3399cc",
+        },
+      };
+
+      const razor = new (window as any).Razorpay(options);
+      razor.open();
+    } catch (error: any) {
+      console.error("Payment failed:", error);
+      toast.error(error.message || "Payment initialization failed");
+    }
+  };
+
+  const handleEventPayment = async (amount: number, eventId: string) => {
+    try {
+      const data = await paymentApi.createOrder(amount);
+
+      const options = {
+        key: import.meta.env.VITE_RAZORPAY_KEY_ID, 
+        amount: data.order.amount,
+        currency: data.order.currency,
+        name: "SMS Project",
+        description: "Event Participation Payment",
+        order_id: data.order.id,
+        handler: async function (response: any) {
+          try {
+            const societyId = profile.society?._id || profile.society;
+            await import("../../../services/api").then(m => m.eventPaymentApi.create({
+              event: eventId,
+              resident: profile._id,
+              amount: amount,
+              payment: "Online",
+              society: societyId,
+              status: "Paid"
+            }));
+            toast.success("Participation Confirmed!");
+            fetchData();
+          } catch (err: any) {
+            toast.error("Failed to record participation");
             console.error(err);
           }
         },
@@ -322,31 +372,62 @@ export default function PersonalDetail() {
         <h2 className="text-xl font-bold text-gray-900">Announcement Details</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {announcements.length > 0 ? (
-            announcements.map((announcement: any) => (
-              <div key={announcement._id} className="bg-white p-5 rounded-2xl shadow-sm border border-gray-50 space-y-3">
-                <div className="bg-[#5678E9] text-white px-4 py-2 rounded-t-lg -mx-5 -mt-5 font-bold text-sm">
-                  {announcement.title}
+            announcements.map((announcement: any) => {
+              const isEvent = Array.isArray(announcement.announcementType) 
+                ? announcement.announcementType[0] === "Event" 
+                : announcement.announcementType === "Event";
+              const hasAmount = announcement.amount > 0;
+              const hasParticipated = eventPayments.some(p => p.event?._id === announcement._id || p.event === announcement._id);
+
+              return (
+                <div key={announcement._id} className="bg-white p-5 rounded-2xl shadow-sm border border-gray-50 space-y-3 flex flex-col">
+                  <div className="bg-[#5678E9] text-white px-4 py-2 rounded-t-lg -mx-5 -mt-5 font-bold text-sm">
+                    {announcement.title}
+                  </div>
+                  <div className="space-y-2 pt-2 flex-1">
+                    <div className="flex justify-between items-center text-xs">
+                      <span className="text-gray-400">Announcement Date</span>
+                      <span className="font-bold text-gray-800 text-right">
+                        {new Date(announcement.date).toLocaleDateString("en-GB")}
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center text-xs">
+                      <span className="text-gray-400">Announcement Time</span>
+                      <span className="font-bold text-gray-800 text-right">{announcement.time}</span>
+                    </div>
+                    {isEvent && hasAmount && (
+                      <div className="flex justify-between items-center text-xs">
+                        <span className="text-gray-400">Participation Amount</span>
+                        <span className="font-bold text-[#39973D] text-right">₹ {announcement.amount}</span>
+                      </div>
+                    )}
+                    <div className="space-y-1">
+                      <span className="text-xs text-gray-400">Description</span>
+                      <p className="text-[11px] text-gray-600 leading-relaxed line-clamp-2">
+                        {announcement.description}
+                      </p>
+                    </div>
+                  </div>
+                  
+                  {isEvent && hasAmount && (
+                    <div className="pt-2">
+                      {hasParticipated ? (
+                        <div className="w-full h-10 rounded-xl bg-green-50 text-[#39973D] flex items-center justify-center font-bold text-xs border border-green-100">
+                          Already Participated
+                        </div>
+                      ) : (
+                        <button 
+                          onClick={() => handleEventPayment(announcement.amount, announcement._id)}
+                          className="w-full h-10 rounded-xl bg-gradient-to-r from-[#FE512E] to-[#F09619] text-white font-bold text-xs shadow-md shadow-orange-500/10 hover:opacity-90 transition-all active:scale-[0.98]"
+                        >
+                          Participate Now
+                        </button>
+                      )}
+                    </div>
+                  )}
                 </div>
-                <div className="space-y-2 pt-2">
-                  <div className="flex justify-between items-center text-xs">
-                    <span className="text-gray-400">Announcement Date</span>
-                    <span className="font-bold text-gray-800 text-right">
-                      {new Date(announcement.date).toLocaleDateString("en-GB")}
-                    </span>
-                  </div>
-                  <div className="flex justify-between items-center text-xs">
-                    <span className="text-gray-400">Announcement Time</span>
-                    <span className="font-bold text-gray-800 text-right">{announcement.time}</span>
-                  </div>
-                  <div className="space-y-1">
-                    <span className="text-xs text-gray-400">Description</span>
-                    <p className="text-[11px] text-gray-600 leading-relaxed line-clamp-2">
-                      {announcement.description}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            ))
+              );
+            })
           ) : (
             <div className="col-span-full py-12 text-center bg-white rounded-2xl border border-dashed border-gray-200">
               <p className="text-gray-400 font-medium">No announcements found for your society.</p>

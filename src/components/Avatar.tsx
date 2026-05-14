@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { User } from "lucide-react";
 import { cn } from "../lib/cn";
 
 interface AvatarProps {
@@ -18,11 +19,15 @@ export default function Avatar({ src, name, className, size = "md" }: AvatarProp
 
     const getInitials = (name: string) => {
         if (!name) return "";
-        const parts = name.split(" ");
+        const parts = name.trim().split(/\s+/).filter(p => /^[a-zA-Z]/.test(p));
+        
         if (parts.length >= 2) {
             return (parts[0][0] + parts[1][0]).toUpperCase();
         }
-        return name.slice(0, 2).toUpperCase();
+        if (parts.length === 1) {
+            return parts[0].slice(0, 2).toUpperCase();
+        }
+        return name.trim().slice(0, 2).toUpperCase();
     };
 
     const sizeClasses = {
@@ -57,7 +62,11 @@ export default function Avatar({ src, name, className, size = "md" }: AvatarProp
                 className
             )}
         >
-            {getInitials(name)}
+            {name === "-" || !name ? (
+                <User size={size === "xs" ? 14 : size === "sm" ? 18 : size === "md" ? 22 : 26} className="text-gray-400" />
+            ) : (
+                getInitials(name)
+            )}
         </div>
     );
 }

@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { User, Building2, Plus, Loader2 } from "lucide-react";
+import { cn } from "../../../lib/cn";
 import DataTable, { type DataTableColumn } from "../../../ui/DataTable";
 import StatusBadge from "../../../ui/StatusBadge";
 import Button from "../../../ui/Button";
@@ -94,7 +95,7 @@ export default function ResidentManagement() {
       header: "Full Name",
       render: (row) => (
         <div className="flex items-center gap-3">
-          <div className="h-10 w-10 flex-shrink-0">
+          <div className="h-10 w-10 flex shrink-0">
             <Avatar
               src={row.avatar}
               name={row.fullName}
@@ -107,14 +108,27 @@ export default function ResidentManagement() {
     {
       key: "unitNumber",
       header: "Unit Number",
-      render: (row) => (
-        <div className="flex items-center gap-2">
-          <span className="flex h-7 w-7 items-center justify-center rounded-full bg-blue-50 text-xs font-bold text-blue-500">
-            {row.unitNumber.charAt(0)}
-          </span>
-          <span className="font-semibold text-white-black">{row.unitNumber.split(" ")[1]}</span>
-        </div>
-      ),
+      render: (row) => {
+        const wing = row.unitNumber.split(" ")[0] || "-";
+        const unit = row.unitNumber.split(" ")[1] || "-";
+        const getWingClass = (w: string) => {
+          switch (w.toUpperCase()) {
+            case 'A': return "bg-blue-50 text-blue-500";
+            case 'B': return "bg-purple-50 text-purple-500";
+            case 'C': return "bg-teal-50 text-teal-500";
+            case 'D': return "bg-pink-50 text-pink-500";
+            default: return "bg-blue-50 text-blue-500";
+          }
+        };
+        return (
+          <div className="flex items-center gap-2">
+            <span className={cn("flex h-7 w-7 items-center justify-center rounded-full text-xs font-bold", getWingClass(wing))}>
+              {wing}
+            </span>
+            <span className="font-semibold text-white-black">{unit}</span>
+          </div>
+        );
+      },
     },
     {
       key: "unitStatus",
@@ -161,13 +175,17 @@ export default function ResidentManagement() {
       header: "Member",
       className: "text-center",
       render: (row) => (
-        row.fullName !== "-" && row.member !== 0 ? (
-          <span className="text-gray-600 font-medium">{row.member}</span>
-        ) : (
-          <span className="inline-flex h-8 min-w-25 items-center justify-center rounded-full bg-gray-light-grey  text-sm font-semibold text-gray-400">
-            -
-          </span>
-        )
+        <div className="flex justify-center">
+          {row.fullName !== "-" && row.member !== 0 ? (
+            <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-[#F6F8FB] text-sm font-semibold text-gray-700">
+              {row.member}
+            </span>
+          ) : (
+            <span className="inline-flex h-8 min-w-25 items-center justify-center rounded-full bg-gray-light-grey text-sm font-semibold text-gray-400">
+              -
+            </span>
+          )}
+        </div>
       ),
     },
     {
@@ -175,13 +193,17 @@ export default function ResidentManagement() {
       header: "Vehicle",
       className: "text-center",
       render: (row) => (
-        row.fullName !== "-" && row.vehicle !== 0 ? (
-          <span className="text-gray-600 font-medium">{row.vehicle}</span>
-        ) : (
-          <span className="inline-flex h-8 min-w-25 items-center justify-center rounded-full bg-gray-light-grey  text-sm font-semibold text-gray-400">
-            -
-          </span>
-        )
+        <div className="flex justify-center">
+          {row.fullName !== "-" && row.vehicle !== 0 ? (
+            <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-[#F6F8FB] text-sm font-semibold text-gray-700">
+              {row.vehicle}
+            </span>
+          ) : (
+            <span className="inline-flex h-8 min-w-25 items-center justify-center rounded-full bg-gray-light-grey text-sm font-semibold text-gray-400">
+              -
+            </span>
+          )}
+        </div>
       ),
     },
     {

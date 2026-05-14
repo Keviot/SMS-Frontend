@@ -20,6 +20,7 @@ export default function CreateAnnouncementModal({ open, onClose, announcement, o
     announcementType: "Community Initiatives",
     date: "",
     time: "",
+    amount: "",
   });
 
   useEffect(() => {
@@ -30,6 +31,7 @@ export default function CreateAnnouncementModal({ open, onClose, announcement, o
         announcementType: Array.isArray(announcement.announcementType) ? announcement.announcementType[0] : (announcement.announcementType || "Notice"),
         date: announcement.date ? new Date(announcement.date).toISOString().split('T')[0] : "",
         time: announcement.time || "",
+        amount: announcement.amount || "",
       });
     } else {
       setFormData({
@@ -38,6 +40,7 @@ export default function CreateAnnouncementModal({ open, onClose, announcement, o
         announcementType: "Community Initiatives",
         date: "",
         time: "",
+        amount: "",
       });
     }
   }, [announcement, open]);
@@ -56,19 +59,23 @@ export default function CreateAnnouncementModal({ open, onClose, announcement, o
     setLoading(true);
 
     // Defensive check: ensure we don't double wrap if it's already an array
-    const actualType = Array.isArray(formData.announcementType) 
-      ? formData.announcementType[0] 
+    const actualType = Array.isArray(formData.announcementType)
+      ? formData.announcementType[0]
       : formData.announcementType;
 
-    const dataToSubmit = {
+    const dataToSubmit: any = {
       ...formData,
       announcementType: [actualType]
     };
+
+    if (actualType !== "Event") {
+      delete dataToSubmit.amount;
+    }
     try {
       // Fetch profile to get society ID
       const profile = await authApi.getProfile();
       const user = profile.user;
-      
+
       // Get society ID - handle direct field or societies array for admins
       const societyId = user?.society || (user?.societies && user.societies[0]?._id);
 
@@ -97,11 +104,11 @@ export default function CreateAnnouncementModal({ open, onClose, announcement, o
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 sm:p-6">
       {/* Backdrop */}
-      <div 
+      <div
         className="absolute inset-0 bg-black/60 backdrop-blur-sm"
         onClick={onClose}
       />
-      
+
       {/* Modal Content */}
       <div className="relative w-full max-w-md bg-white rounded-[15px] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
         <div className="p-6 border-b border-gray-100 flex justify-between items-center">
@@ -115,7 +122,7 @@ export default function CreateAnnouncementModal({ open, onClose, announcement, o
           <div className="space-y-4">
             <div className="space-y-1.5">
               <label className="text-sm font-semibold text-gray-800">Announcement Title<span className="text-red-500">*</span></label>
-              <Input 
+              <Input
                 name="title"
                 value={formData.title}
                 onChange={handleChange}
@@ -128,7 +135,7 @@ export default function CreateAnnouncementModal({ open, onClose, announcement, o
             <div className="space-y-1.5">
               <label className="text-sm font-semibold text-gray-800">Announcement Type<span className="text-red-500">*</span></label>
               <div className="relative">
-                <select 
+                <select
                   name="announcementType"
                   value={formData.announcementType}
                   onChange={handleChange}
@@ -141,15 +148,30 @@ export default function CreateAnnouncementModal({ open, onClose, announcement, o
                 </select>
                 <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none">
                   <svg width="12" height="8" viewBox="0 0 12 8" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M1 1L6 6L11 1" stroke="#202224" strokeWidth="2" strokeLinecap="round"/>
+                    <path d="M1 1L6 6L11 1" stroke="#202224" strokeWidth="2" strokeLinecap="round" />
                   </svg>
                 </div>
               </div>
             </div>
 
+            {formData.announcementType === "Event" && (
+              <div className="space-y-1.5">
+                <label className="text-sm font-semibold text-gray-800">Participation Amount<span className="text-red-500">*</span></label>
+                <Input
+                  name="amount"
+                  type="number"
+                  value={formData.amount}
+                  onChange={handleChange}
+                  placeholder="Enter Participation Amount"
+                  className="h-11 rounded-lg border-gray-200"
+                  required
+                />
+              </div>
+            )}
+
             <div className="space-y-1.5">
               <label className="text-sm font-semibold text-gray-800">Description<span className="text-red-500">*</span></label>
-              <textarea 
+              <textarea
                 name="description"
                 value={formData.description}
                 onChange={handleChange}
@@ -162,7 +184,7 @@ export default function CreateAnnouncementModal({ open, onClose, announcement, o
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1.5">
                 <label className="text-sm font-semibold text-gray-800">Announcement Date<span className="text-red-500">*</span></label>
-                <Input 
+                <Input
                   name="date"
                   type="date"
                   value={formData.date}
@@ -174,7 +196,7 @@ export default function CreateAnnouncementModal({ open, onClose, announcement, o
 
               <div className="space-y-1.5">
                 <label className="text-sm font-semibold text-gray-800">Announcement Time<span className="text-red-500">*</span></label>
-                <Input 
+                <Input
                   name="time"
                   type="time"
                   value={formData.time}
@@ -187,14 +209,14 @@ export default function CreateAnnouncementModal({ open, onClose, announcement, o
           </div>
 
           <div className="flex gap-4 pt-4">
-            <button 
+            <button
               type="button"
               onClick={onClose}
               className="flex-1 h-12 rounded-lg border border-gray-200 text-gray-700 font-bold hover:bg-gray-50 transition-all"
             >
               Cancel
             </button>
-            <button 
+            <button
               type="submit"
               disabled={loading}
               className="flex-1 h-12 rounded-lg bg-gradient-to-r from-[#FE512E] to-[#F09633] text-white font-bold shadow-lg hover:opacity-90 transition-all active:scale-[0.98] disabled:opacity-50"
