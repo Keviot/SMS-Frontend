@@ -380,6 +380,7 @@ export const financialApi = {
         date: string;
         description: string;
         uploadBill: string;
+        society:string;
     }) => {
         const response = await fetch(`${API_URL}/expanse/add`, {
             method: "POST",
@@ -446,6 +447,7 @@ export const financialApi = {
         title: string;
         description: string;
         date: string;
+        society:string;
     }) => {
         const response = await fetch(`${API_URL}/note/add`, {
             method: "POST",
@@ -1212,6 +1214,20 @@ export const chatApi = {
         });
         return handleResponse(response);
     },
+
+    upload: async (file: File) => {
+        const formData = new FormData();
+        formData.append("file", file);
+        const response = await fetch(`${API_URL}/chat/upload`, {
+            method: "POST",
+            credentials: "include",
+            headers: {
+                ...getAuthHeader()
+            },
+            body: formData
+        });
+        return handleResponse(response);
+    },
 };
 
 export const videoApi = {
@@ -1227,4 +1243,75 @@ export const videoApi = {
         });
         return handleResponse(response);
     },
+};
+
+export const discussionApi = {
+    getAll: async (societyId: string) => {
+        const response = await fetch(`${API_URL}/discussion/all?societyId=${societyId}`, {
+            method: "GET",
+            credentials: "include",
+            headers: { ...getAuthHeader() }
+        });
+        return handleResponse(response);
+    },
+    getById: async (id: string) => {
+        const response = await fetch(`${API_URL}/discussion/${id}`, {
+            method: "GET",
+            credentials: "include",
+            headers: { ...getAuthHeader() }
+        });
+        return handleResponse(response);
+    },
+    create: async (data: { title: string; content: string; society: string }) => {
+        const response = await fetch(`${API_URL}/discussion/create`, {
+            method: "POST",
+            credentials: "include",
+            headers: {
+                "Content-Type": "application/json",
+                ...getAuthHeader()
+            },
+            body: JSON.stringify(data)
+        });
+        return handleResponse(response);
+    },
+    createAnswer: async (data: { discussionId: string; content: string }) => {
+        const response = await fetch(`${API_URL}/discussion/answer/create`, {
+            method: "POST",
+            credentials: "include",
+            headers: {
+                "Content-Type": "application/json",
+                ...getAuthHeader()
+            },
+            body: JSON.stringify(data)
+        });
+        return handleResponse(response);
+    },
+    getAnswers: async (discussionId: string) => {
+        const response = await fetch(`${API_URL}/discussion/answers`, {
+            method: "POST",
+            credentials: "include",
+            headers: {
+                "Content-Type": "application/json",
+                ...getAuthHeader()
+            },
+            body: JSON.stringify({ discussionId })
+        });
+        return handleResponse(response);
+    },
+    voteDiscussion: async (id: string) => {
+        const response = await fetch(`${API_URL}/discussion/vote/discussion/${id}`, {
+            method: "POST",
+            credentials: "include",
+            headers: { ...getAuthHeader() }
+        });
+        return handleResponse(response);
+    },
+    voteAnswer: async (id: string) => {
+        const response = await fetch(`${API_URL}/discussion/vote/answer/${id}`, {
+            method: "POST",
+            credentials: "include",
+            headers: { ...getAuthHeader() }
+        });
+        return handleResponse(response);
+    }
 };

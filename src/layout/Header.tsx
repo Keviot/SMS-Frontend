@@ -133,7 +133,7 @@ export default function Header({ onMenuClick }: HeaderProps) {
                   "add": "Owner Form",
                   "financial-management": "Financial Management",
                   "facility-management": "Facility Management",
-                  "complaint-tracking": "Complaint Tracking",
+                  "complaint-tracking": "Service And Complaint",
                   "security-management": "Security Management",
                   "security-guard": "Security Guard",
                   "announcement": "Announcement",
