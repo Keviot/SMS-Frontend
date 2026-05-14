@@ -46,7 +46,7 @@ export default function Header({ onMenuClick }: HeaderProps) {
     ? `${profile.firstname?.[0] || ""}${profile.lastname?.[0] || ""}`.toUpperCase()
     : "FL";
   const userName = profile
-    ? `${profile.firstname || ""} ${profile.lastname || ""}`.trim()
+    ? `${profile.firstname || ""} ${profile.lastname && profile.lastname !== "-" ? profile.lastname : ""}`.trim()
     : "First Lastname";
   const profileImageUrl = profile?.profileImage
     ? profile.profileImage.startsWith("http")
@@ -116,10 +116,10 @@ export default function Header({ onMenuClick }: HeaderProps) {
             </>
           ) : (
             /* Breadcrumbs */
-            <div className="hidden sm:flex items-center gap-2 text-[14px] font-medium">
+            <div className="hidden sm:flex items-center gap-2 text-sm font-medium">
               <Link
                 to="/dashboard"
-                className="text-text-light hover:text-primary transition-colors"
+                className="text-[#A7A7A7] hover:text-primary transition-colors"
               >
                 Home
               </Link>
@@ -150,15 +150,15 @@ export default function Header({ onMenuClick }: HeaderProps) {
 
                 return (
                   <div key={path} className="flex items-center gap-2">
-                    <span className="text-text-light">{">"}</span>
+                    <span className="text-[#202224] font-bold">{">"}</span>
                     {isLast ? (
-                      <span className="text-blue font-semibold">
+                      <span className="text-[#5678E9] font-semibold">
                         {friendlyName}
                       </span>
                     ) : (
                       <Link
                         to={path}
-                        className="text-text-light hover:text-primary transition-colors"
+                        className="text-[#A7A7A7] hover:text-primary transition-colors"
                       >
                         {friendlyName}
                       </Link>

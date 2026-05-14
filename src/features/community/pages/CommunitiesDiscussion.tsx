@@ -3,30 +3,30 @@ import {
     MoreVertical,
     Eye,
     ArrowUp,
-    ArrowDown,
     ChevronLeft,
-    ExternalLink,
+    ThumbsUp,
+    MessageSquare,
+    Loader2,
+    X,
+    Clock
 } from "lucide-react";
 import toast from "react-hot-toast";
 import { cn } from "../../../lib/cn";
 import Button from "../../../ui/Button";
-import ChatSidebar, { type Contact } from "../components/ChatSidebar";
 import Avatar from "../../../components/Avatar";
 import { StreamVideoClient, StreamVideo } from "@stream-io/video-react-sdk";
 import { authApi, videoApi, discussionApi } from "../../../services/api";
-import { Loader2, Plus, ThumbsUp, MessageSquare } from "lucide-react";
+import ChatSidebar, { type Contact } from "../components/ChatSidebar";
 
 const apiKey = import.meta.env.VITE_STREAM_API_KEY || "YOUR_STREAM_API_KEY";
 
-// Mock data for contacts
 const contacts: Contact[] = [
     {
         id: "1",
         name: "Michael John",
         lastMessage: "Hi, John! how are you doing?",
         time: "10:27",
-        avatar:
-            "https://ui-avatars.com/api/?name=Michael+John&background=E5E7EB&color=202224",
+        avatar: "https://ui-avatars.com/api/?name=Michael+John&background=E5E7EB&color=202224",
         status: "offline",
         unread: 0,
         typing: false,
@@ -37,8 +37,7 @@ const contacts: Contact[] = [
         name: "Jenny Wilson",
         lastMessage: "Hello, Jenny",
         time: "7:00",
-        avatar:
-            "https://ui-avatars.com/api/?name=Jenny+Wilson&background=E5E7EB&color=202224",
+        avatar: "https://ui-avatars.com/api/?name=Jenny+Wilson&background=E5E7EB&color=202224",
         status: "offline",
         unread: 7,
         typing: false,
@@ -48,8 +47,7 @@ const contacts: Contact[] = [
         name: "Community",
         lastMessage: "Typing...",
         time: "9:20",
-        avatar:
-            "https://ui-avatars.com/api/?name=Community&background=F3F4F6&color=A7A7A7",
+        avatar: "https://ui-avatars.com/api/?name=Community&background=F3F4F6&color=A7A7A7",
         status: "online",
         unread: 0,
         typing: true,
@@ -59,8 +57,7 @@ const contacts: Contact[] = [
         name: "Esther Howard",
         lastMessage: "Hello, Esther",
         time: "10:27",
-        avatar:
-            "https://ui-avatars.com/api/?name=Esther+Howard&background=E5E7EB&color=202224",
+        avatar: "https://ui-avatars.com/api/?name=Esther+Howard&background=E5E7EB&color=202224",
         status: "offline",
         unread: 0,
         typing: false,
@@ -71,8 +68,7 @@ const contacts: Contact[] = [
         name: "Cody Fisher",
         lastMessage: "Thank you for your order!",
         time: "7:00",
-        avatar:
-            "https://ui-avatars.com/api/?name=Cody+Fisher&background=E5E7EB&color=202224",
+        avatar: "https://ui-avatars.com/api/?name=Cody+Fisher&background=E5E7EB&color=202224",
         status: "offline",
         unread: 0,
         typing: false,
@@ -81,16 +77,17 @@ const contacts: Contact[] = [
 ];
 
 export default function CommunitiesDiscussion() {
-    const [view, setView] = useState<"list" | "ask" | "detail">("list");
-    const [activeContact, setActiveContact] = useState(contacts[2]);
+    const [view, setView] = useState<"list" | "detail">("list");
     const [selectedDiscussion, setSelectedDiscussion] = useState<any>(null);
     const [discussions, setDiscussions] = useState<any[]>([]);
     const [answers, setAnswers] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
+    const [submitting, setSubmitting] = useState(false);
     const [currentUser, setCurrentUser] = useState<any>(null);
     const [videoClient, setVideoClient] = useState<StreamVideoClient | null>(null);
 
-    // Form states
+    // Modal states
+    const [showAskModal, setShowAskModal] = useState(false);
     const [newQuestion, setNewQuestion] = useState({ title: "", description: "" });
     const [answerText, setAnswerText] = useState("");
 
@@ -120,27 +117,28 @@ export default function CommunitiesDiscussion() {
     };
 
     const loadDiscussionDetail = async (discussion: any) => {
-        setSelectedDiscussion(discussion);
-        setView("detail");
         setLoading(true);
         try {
             const res = await discussionApi.getById(discussion._id);
             setSelectedDiscussion(res.discussion);
             setAnswers(res.answers || []);
+            setView("detail");
         } catch (error) {
             console.error("Failed to load details:", error);
+            toast.error("Failed to load discussion details");
         } finally {
             setLoading(false);
         }
     };
 
-    const handleVoteDiscussion = async (id: string) => {
+    const handleVoteDiscussion = async (id: string, e: React.MouseEvent) => {
+        e.stopPropagation();
         try {
             const res = await discussionApi.voteDiscussion(id);
             if (selectedDiscussion?._id === id) {
-                setSelectedDiscussion((p: any) => ({ ...p, upvotes: res.upvotes }));
+                setSelectedDiscussion((p: any) => ({ ...p, votes: Array(res.votesCount).fill(null) }));
             }
-            setDiscussions(prev => prev.map(d => d._id === id ? { ...d, upvotes: res.upvotes } : d));
+            setDiscussions(prev => prev.map(d => d._id === id ? { ...d, votes: Array(res.votesCount).fill(null) } : d));
         } catch (error: any) {
             toast.error(error.message);
         }
@@ -149,7 +147,7 @@ export default function CommunitiesDiscussion() {
     const handleVoteAnswer = async (id: string) => {
         try {
             const res = await discussionApi.voteAnswer(id);
-            setAnswers(prev => prev.map(a => a._id === id ? { ...a, upvotes: res.upvotes } : a));
+            setAnswers(prev => prev.map(a => a._id === id ? { ...a, votes: Array(res.votesCount).fill(null) } : a));
         } catch (error: any) {
             toast.error(error.message);
         }
@@ -188,16 +186,12 @@ export default function CommunitiesDiscussion() {
         };
     }, []);
 
-    const handleAskQuestion = () => {
-        setNewQuestion({ title: "", description: "" });
-        setView("ask");
-    };
-
     const submitQuestion = async () => {
         if (!newQuestion.title.trim() || !newQuestion.description.trim()) {
             return toast.error("Please fill all fields");
         }
 
+        setSubmitting(true);
         try {
             const societyId = currentUser.society?._id || currentUser.society || currentUser.societies?.[0]?._id;
             await discussionApi.create({
@@ -206,16 +200,20 @@ export default function CommunitiesDiscussion() {
                 society: societyId
             });
             toast.success("Discussion posted!");
-            setView("list");
+            setShowAskModal(false);
+            setNewQuestion({ title: "", description: "" });
             fetchDiscussions(currentUser);
         } catch (error: any) {
             toast.error(error.message);
+        } finally {
+            setSubmitting(false);
         }
     };
 
     const handlePostAnswer = async () => {
         if (!answerText.trim()) return toast.error("Please type an answer");
 
+        setSubmitting(true);
         try {
             await discussionApi.createAnswer({
                 discussionId: selectedDiscussion._id,
@@ -223,44 +221,99 @@ export default function CommunitiesDiscussion() {
             });
             toast.success("Answer posted!");
             setAnswerText("");
-            loadDiscussionDetail(selectedDiscussion); // Refresh answers
+            const res = await discussionApi.getById(selectedDiscussion._id);
+            setAnswers(res.answers || []);
         } catch (error: any) {
             toast.error(error.message);
+        } finally {
+            setSubmitting(false);
         }
     };
+
+    const renderAskModal = () => (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm transition-all">
+            <div className="w-full max-w-lg overflow-hidden rounded-3xl bg-white shadow-2xl transition-all scale-100">
+                <div className="flex items-center justify-between border-b border-[#F4F4F4] px-8 py-6">
+                    <h2 className="text-xl font-bold text-[#202224]">Ask a Question</h2>
+                    <button onClick={() => setShowAskModal(false)} className="rounded-full p-2 text-[#A7A7A7] hover:bg-gray-100 hover:text-[#FE512E] transition-all">
+                        <X size={20} />
+                    </button>
+                </div>
+                <div className="p-8 space-y-6">
+                    <div className="space-y-2">
+                        <label className="text-sm font-bold text-[#202224]">Title</label>
+                        <input
+                            type="text"
+                            value={newQuestion.title}
+                            onChange={(e) => setNewQuestion(p => ({ ...p, title: e.target.value }))}
+                            placeholder="Summarize your problem in a one-line title"
+                            className="w-full rounded-xl border border-[#D9D9D9] px-4 py-3 text-sm outline-none focus:border-[#5678E9] transition-all"
+                        />
+                    </div>
+                    <div className="space-y-2">
+                        <label className="text-sm font-bold text-[#202224]">Description</label>
+                        <textarea
+                            value={newQuestion.description}
+                            onChange={(e) => setNewQuestion(p => ({ ...p, description: e.target.value }))}
+                            placeholder="Include all the information someone would need to answer your question"
+                            className="w-full min-h-[150px] rounded-xl border border-[#D9D9D9] px-4 py-3 text-sm outline-none focus:border-[#5678E9] transition-all resize-none"
+                        />
+                    </div>
+                    <div className="flex justify-end gap-4 pt-2">
+                        <Button
+                            variant="outline"
+                            onClick={() => setShowAskModal(false)}
+                            className="h-12 px-8 rounded-xl border-[#D9D9D9] text-[#202224] font-bold"
+                        >
+                            Cancel
+                        </Button>
+                        <Button
+                            onClick={submitQuestion}
+                            disabled={submitting}
+                            className="bg-[#FF6B35] hover:bg-[#E85D2A] text-white border-none rounded-xl font-bold h-12 px-10 shadow-lg shadow-[#FF6B35]/20"
+                        >
+                            {submitting ? <Loader2 className="animate-spin" size={20} /> : "Post Question"}
+                        </Button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
 
     const renderContent = () => (
         <div className="flex h-[calc(100vh-120px)] w-full overflow-hidden rounded-2xl bg-white shadow-sm border border-[#F4F4F4]">
             <ChatSidebar
                 contacts={contacts}
-                activeContactId={activeContact.id}
-                onContactSelect={setActiveContact}
+                activeContactId={contacts[2].id}
+                onContactSelect={() => {}}
                 title="Chat"
             />
 
-            <div className="flex-1 flex flex-col overflow-hidden">
+            <div className="flex-1 flex flex-col overflow-hidden bg-white">
                 {/* Header */}
                 <div className="flex items-center justify-between border-b border-[#F4F4F4] px-6 py-4 bg-white sticky top-0 z-10">
                     <div className="flex items-center gap-3">
                         {view !== "list" && (
                             <button
                                 onClick={() => setView("list")}
-                                className="mr-2 p-1 rounded-full hover:bg-gray-100 transition-colors"
+                                className="mr-2 p-2 rounded-full hover:bg-gray-100 transition-colors"
                             >
                                 <ChevronLeft size={20} />
                             </button>
                         )}
-                        <Avatar src={contacts[2].avatar} name="Community" />
+                        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#F6F8FB]">
+                            <MessageSquare className="text-[#5678E9]" size={20} />
+                        </div>
                         <div>
-                            <h3 className="text-sm font-bold text-[#202224]">Community</h3>
+                            <h3 className="text-sm font-bold text-[#202224]">Community Discussion</h3>
                             <p className="text-[10px] text-[#A7A7A7]">9:00 Pm</p>
                         </div>
                     </div>
                     <div className="flex items-center gap-3">
                         {view === "list" && (
                             <Button
-                                onClick={handleAskQuestion}
-                                className="bg-[#FF6B35] hover:bg-[#E85D2A] text-white border-none rounded-xl font-bold h-10 px-6"
+                                onClick={() => setShowAskModal(true)}
+                                className="bg-[#FF6B35] hover:bg-[#E85D2A] text-white border-none rounded-xl font-bold h-10 px-6 transition-all active:scale-95"
                             >
                                 Ask Question
                             </Button>
@@ -271,64 +324,68 @@ export default function CommunitiesDiscussion() {
                     </div>
                 </div>
 
-                {/* Content */}
+                {/* Content Area */}
                 <div className="flex-1 overflow-y-auto p-6 custom-scrollbar bg-[#F9FBFF]/30">
-                    {view === "list" && (
-                        <div className="space-y-4">
-                            {loading ? (
-                                <div className="flex h-64 items-center justify-center">
-                                    <Loader2 className="h-10 w-10 animate-spin text-[#FF6B35]" />
-                                </div>
-                            ) : discussions.length === 0 ? (
-                                <div className="flex h-64 flex-col items-center justify-center text-gray-400">
-                                    <p>No community questions yet. Be the first to ask!</p>
+                    {loading && view === "list" ? (
+                        <div className="flex h-64 items-center justify-center">
+                            <Loader2 className="h-10 w-10 animate-spin text-[#FF6B35]" />
+                        </div>
+                    ) : view === "list" ? (
+                        <div className="space-y-4 max-w-5xl mx-auto">
+                            {discussions.length === 0 ? (
+                                <div className="flex h-64 flex-col items-center justify-center text-[#A7A7A7] space-y-4">
+                                    <MessageSquare size={48} className="opacity-20" />
+                                    <p className="font-medium text-lg italic">No community questions yet. Be the first to ask!</p>
                                 </div>
                             ) : (
                                 discussions.map((d) => (
                                     <div
                                         key={d._id}
                                         onClick={() => loadDiscussionDetail(d)}
-                                        className="group cursor-pointer rounded-2xl bg-white p-5 border border-[#F4F4F4] hover:border-[#5678E9]/30 hover:shadow-md transition-all flex gap-8 items-start"
+                                        className="group cursor-pointer rounded-2xl bg-white p-5 border border-[#F4F4F4] hover:border-[#5678E9]/30 hover:shadow-xl transition-all flex gap-8 items-start duration-300"
                                     >
-                                        <div className="flex flex-col items-center gap-3 min-w-[80px]">
-                                            <div className="text-center">
-                                                <p className="text-[10px] font-bold text-[#A7A7A7] uppercase tracking-wider mb-1">
-                                                    votes
+                                        {/* Metrics Column */}
+                                        <div className="flex flex-col items-center gap-4 min-w-[70px] pt-1">
+                                            <div className="text-center group-hover:transform group-hover:scale-110 transition-transform">
+                                                <p className="text-[10px] font-bold text-[#A7A7A7] uppercase tracking-wider mb-1">votes</p>
+                                                <p className={cn("text-sm font-bold", (d.votes?.length || 0) > 0 ? "text-[#FF6B35]" : "text-[#202224]")}>
+                                                    {d.votes?.length || 0}
                                                 </p>
-                                                <p className="text-sm font-bold text-[#202224]">
-                                                    {d.upvotes?.length || 0}
+                                            </div>
+                                            <div className="text-center group-hover:transform group-hover:scale-110 transition-transform delay-75">
+                                                <p className="text-[10px] font-bold text-[#A7A7A7] uppercase tracking-wider mb-1">answers</p>
+                                                <p className={cn("text-sm font-bold", d.answersCount > 0 ? "text-[#5678E9]" : "text-[#A7A7A7]")}>
+                                                    {d.answersCount || 0}
                                                 </p>
                                             </div>
                                             <div className="text-center">
-                                                <p className="text-[10px] font-bold text-[#A7A7A7] uppercase tracking-wider mb-1">
-                                                    views
-                                                </p>
-                                                <p className="text-sm font-bold text-[#5678E9]">
-                                                    {d.views || 0}
-                                                </p>
+                                                <p className="text-[10px] font-bold text-[#A7A7A7] uppercase tracking-wider mb-1">views</p>
+                                                <p className="text-sm font-bold text-[#A7A7A7]">{d.views || 0}</p>
                                             </div>
                                         </div>
 
-                                        <div className="flex-1">
-                                            <div className="flex items-center justify-between mb-2">
-                                                <h4 className="text-sm font-bold text-[#202224] group-hover:text-[#5678E9] transition-colors">
-                                                    {d.title}
+                                        {/* Content Column */}
+                                        <div className="flex-1 space-y-3">
+                                            <div className="flex items-start justify-between">
+                                                <h4 className="text-base font-bold text-[#202224] group-hover:text-[#5678E9] transition-colors line-clamp-1 leading-tight">
+                                                    {d.question}
                                                 </h4>
-                                                <div className="flex items-center gap-1.5 text-[#A7A7A7]">
-                                                    <Avatar src={d.createdBy?.profileImage} name={`${d.createdBy?.firstname} ${d.createdBy?.lastname}`} size="xs" />
-                                                    <span className="text-[10px] font-bold">{d.createdBy?.firstname}</span>
+                                                <div className="flex items-center gap-2 bg-[#F6F8FB] px-3 py-1 rounded-full shrink-0">
+                                                    <Clock size={12} className="text-[#A7A7A7]" />
+                                                    <span className="text-[10px] font-bold text-[#A7A7A7]">{new Date(d.createdAt).toLocaleDateString()}</span>
                                                 </div>
                                             </div>
-                                            <p className="text-[11px] leading-relaxed text-[#A7A7A7] line-clamp-2 mb-4">
-                                                {d.content}
+                                            <p className="text-xs leading-relaxed text-[#A7A7A7] line-clamp-2 min-h-[32px]">
+                                                {d.description}
                                             </p>
-                                            <div className="flex justify-end">
-                                                <button 
-                                                    onClick={(e) => {
-                                                        e.stopPropagation();
-                                                        loadDiscussionDetail(d);
-                                                    }}
-                                                    className="flex items-center gap-2 text-[11px] font-bold text-[#5678E9] hover:bg-[#5678E9]/10 px-3 py-1.5 rounded-lg transition-colors"
+                                            <div className="flex items-center justify-between pt-2">
+                                                <div className="flex items-center gap-2">
+                                                    <Avatar src={d.user?.profileImage} name={`${d.user?.firstname} ${d.user?.lastname}`} size="xs" />
+                                                    <span className="text-[11px] font-bold text-[#202224]">{d.user?.firstname} {d.user?.lastname}</span>
+                                                </div>
+                                                <button
+                                                    onClick={(e) => { e.stopPropagation(); loadDiscussionDetail(d); }}
+                                                    className="flex items-center gap-2 text-[11px] font-bold text-[#5678E9] hover:bg-[#5678E9]/10 px-4 py-2 rounded-xl transition-colors"
                                                 >
                                                     <MessageSquare size={14} />
                                                     Reply to Topic
@@ -339,189 +396,149 @@ export default function CommunitiesDiscussion() {
                                 ))
                             )}
                         </div>
-                    )}
-
-                    {view === "ask" && (
-                        <div className="max-w-4xl mx-auto space-y-6">
-                            <div className="rounded-2xl border-2 border-[#D3D3D3] border-dashed p-8 bg-[#F1F4FF]/50">
-                                <h4 className="text-lg font-bold text-[#202224] mb-4">
-                                    Writing a good question
-                                </h4>
-                                <p className="text-sm text-[#202224] mb-4">
-                                    You're ready to{" "}
-                                    <span className="text-[#5678E9] cursor-pointer">
-                                        ask a programming-related question
-                                    </span>{" "}
-                                    and this form will help guide you through the process.
-                                    <br />
-                                    Looking to ask a non-programming question? See{" "}
-                                    <span className="text-[#5678E9] cursor-pointer">
-                                        the topics here
-                                    </span>{" "}
-                                    to find a relevant site.
-                                </p>
-                                <div className="space-y-3">
-                                    <p className="text-sm font-bold text-[#202224]">Steps</p>
-                                    <ul className="text-sm text-[#202224] space-y-2 list-disc list-inside">
-                                        <li>Summarize your problem in a one-line title.</li>
-                                        <li>Describe your problem in more detail.</li>
-                                        <li>
-                                            Describe what you tried and what you expected to happen.
-                                        </li>
-                                        <li>
-                                            Add "tags" which help surface your question to members of
-                                            the community.
-                                        </li>
-                                        <li>Review your question and post it to the site.</li>
-                                    </ul>
-                                </div>
-                            </div>
-
-                            <div className="rounded-2xl bg-white p-8 border border-[#F4F4F4] shadow-sm space-y-6">
-                                <div className="space-y-2">
-                                    <label className="text-sm font-bold text-[#202224]">
-                                        Title
-                                    </label>
-                                    <p className="text-[11px] text-[#A7A7A7]">
-                                        Be specific and imagine you're asking a question to another
-                                        person.
-                                    </p>
-                                    <input
-                                        type="text"
-                                        value={newQuestion.title}
-                                        onChange={(e) => setNewQuestion(p => ({ ...p, title: e.target.value }))}
-                                        placeholder="e.g. Is there an R function for finding the index of an element in a vector?"
-                                        className="w-full rounded-xl border-2 border-[#D3D3D3] px-4 py-3 text-sm outline-none focus:border-[#5678E9] transition-all"
-                                    />
-                                </div>
-                                <div className="space-y-2">
-                                    <label className="text-sm font-bold text-[#202224]">
-                                        Description
-                                    </label>
-                                    <p className="text-[11px] text-[#A7A7A7]">
-                                        Include all the information someone would need to answer your question.
-                                    </p>
-                                    <textarea
-                                        value={newQuestion.description}
-                                        onChange={(e) => setNewQuestion(p => ({ ...p, description: e.target.value }))}
-                                        placeholder="What are the details of your problem?"
-                                        className="w-full min-h-[150px] rounded-xl border-2 border-[#D3D3D3] px-4 py-3 text-sm outline-none focus:border-[#5678E9] transition-all resize-none"
-                                    />
-                                </div>
-                                <Button
-                                    onClick={submitQuestion}
-                                    className="bg-[#FF6B35] hover:bg-[#E85D2A] text-white border-none rounded-xl font-bold h-11 px-8"
-                                >
-                                    Post Your Question
-                                </Button>
-                            </div>
-                        </div>
-                    )}
-
-                    {view === "detail" && selectedDiscussion && (
-                        <div className="max-w-5xl mx-auto space-y-8 pb-12">
+                    ) : (
+                        /* Detail View */
+                        <div className="max-w-4xl mx-auto space-y-8 pb-12 animate-in fade-in slide-in-from-bottom-4 duration-500">
                             {/* Question Section */}
-                            <div className="flex gap-6">
-                                <div className="flex flex-col items-center gap-3 py-2">
-                                    <button 
-                                        onClick={() => handleVoteDiscussion(selectedDiscussion._id)}
+                            <div className="flex gap-8">
+                                <div className="flex flex-col items-center gap-4 py-2">
+                                    <button
+                                        onClick={(e) => handleVoteDiscussion(selectedDiscussion._id, e)}
                                         className={cn(
-                                            "p-2 rounded-full border transition-all",
-                                            selectedDiscussion.upvotes?.includes(currentUser?._id) 
-                                                ? "bg-[#FF6B35] border-[#FF6B35] text-white" 
-                                                : "bg-gray-50 border-[#D3D3D3] text-gray-400 hover:border-[#FF6B35] hover:text-[#FF6B35]"
+                                            "group flex flex-col items-center justify-center p-3 rounded-2xl border transition-all duration-300",
+                                            selectedDiscussion.votes?.includes(currentUser?._id)
+                                                ? "bg-[#FF6B35] border-[#FF6B35] text-white shadow-lg shadow-[#FF6B35]/30"
+                                                : "bg-white border-[#D9D9D9] text-[#A7A7A7] hover:border-[#FF6B35] hover:text-[#FF6B35]"
                                         )}
                                     >
-                                        <ArrowUp size={18} />
+                                        <ArrowUp size={20} className="transition-transform group-active:-translate-y-1" />
+                                        <span className="mt-1 text-sm font-bold">{selectedDiscussion.votes?.length || 0}</span>
                                     </button>
-                                    <span className="text-lg font-bold text-[#FF6B35]">
-                                        {selectedDiscussion.upvotes?.length || 0}
-                                    </span>
+                                    <div className="flex flex-col items-center gap-1 text-[#A7A7A7]">
+                                        <Eye size={18} />
+                                        <span className="text-[10px] font-bold uppercase">{selectedDiscussion.views || 0} views</span>
+                                    </div>
                                 </div>
 
                                 <div className="flex-1 space-y-6">
-                                    <div className="flex items-center justify-between">
-                                        <h2 className="text-xl font-bold text-[#202224]">
-                                            {selectedDiscussion.title}
+                                    <div className="space-y-2">
+                                        <div className="flex items-center gap-2 text-[10px] font-bold text-[#A7A7A7] uppercase tracking-widest">
+                                            <span>Discussion Topic</span>
+                                            <span>•</span>
+                                            <span className="text-[#5678E9]">General</span>
+                                        </div>
+                                        <h2 className="text-2xl font-bold text-[#202224] leading-tight">
+                                            {selectedDiscussion.question}
                                         </h2>
-                                        <div className="flex items-center gap-2">
-                                            <Avatar src={selectedDiscussion.createdBy?.profileImage} name={`${selectedDiscussion.createdBy?.firstname} ${selectedDiscussion.createdBy?.lastname}`} size="sm" />
-                                            <span className="text-xs font-bold text-gray-500">{selectedDiscussion.createdBy?.firstname}</span>
+                                    </div>
+
+                                    <div className="flex items-center gap-4 py-3 border-y border-[#F4F4F4]">
+                                        <Avatar src={selectedDiscussion.user?.profileImage} name={`${selectedDiscussion.user?.firstname} ${selectedDiscussion.user?.lastname}`} size="sm" />
+                                        <div className="flex-1">
+                                            <p className="text-xs font-bold text-[#202224]">{selectedDiscussion.user?.firstname} {selectedDiscussion.user?.lastname}</p>
+                                            <p className="text-[10px] text-[#A7A7A7]">{new Date(selectedDiscussion.createdAt).toLocaleString()}</p>
+                                        </div>
+                                        <div className="flex items-center gap-2 px-4 py-2 bg-[#F6F8FB] rounded-xl">
+                                            <MessageSquare size={16} className="text-[#5678E9]" />
+                                            <span className="text-xs font-bold text-[#5678E9]">{answers.length} Answers</span>
                                         </div>
                                     </div>
-                                    <p className="text-sm leading-relaxed text-[#202224]">
-                                        {selectedDiscussion.content}
-                                    </p>
 
-                                    <div className="space-y-4">
-                                        <h4 className="text-sm font-bold text-[#5678E9]">
-                                            Answers ({answers.length || 0})
-                                        </h4>
-                                        <div className="space-y-6 pl-4 border-l-2 border-[#F4F4F4]">
-                                            {answers.map((a: any) => (
-                                                <div key={a._id} className="space-y-2 bg-gray-50/50 p-4 rounded-xl border border-gray-100 relative">
-                                                    <div className="flex items-center justify-between mb-2">
-                                                        <div className="flex items-center gap-2">
-                                                            <Avatar src={a.createdBy?.profileImage} name={`${a.createdBy?.firstname} ${a.createdBy?.lastname}`} size="sm" />
-                                                            <span className="text-[10px] font-bold text-[#5678E9]">{a.createdBy?.firstname} {a.createdBy?.lastname}</span>
-                                                            <span className="text-[10px] text-gray-400">• {new Date(a.createdAt).toLocaleDateString()}</span>
+                                    <div className="prose prose-sm max-w-none text-[#4B5563] leading-relaxed">
+                                        {selectedDiscussion.description}
+                                    </div>
+
+                                    {/* Answers List */}
+                                    <div className="space-y-6 pt-10">
+                                        <div className="flex items-center justify-between">
+                                            <h4 className="text-base font-bold text-[#202224]">Discussion Threads</h4>
+                                            <div className="h-[2px] flex-1 mx-6 bg-[#F4F4F4]" />
+                                        </div>
+
+                                        <div className="space-y-6">
+                                            {answers.length > 0 ? (
+                                                answers.map((a: any) => (
+                                                    <div key={a._id} className="relative pl-12 group">
+                                                        <div className="absolute left-4 top-0 bottom-0 w-[2px] bg-[#F4F4F4] group-last:bottom-auto group-last:h-4" />
+                                                        <div className="absolute left-3.5 top-4 size-1.5 rounded-full bg-[#5678E9] border-2 border-white ring-4 ring-white" />
+                                                        
+                                                        <div className="bg-[#F9FBFF] rounded-2xl p-5 border border-[#F4F4F4] transition-all hover:border-[#5678E9]/20">
+                                                            <div className="flex items-center justify-between mb-4">
+                                                                <div className="flex items-center gap-3">
+                                                                    <Avatar src={a.author?.profileImage} name={`${a.author?.firstname} ${a.author?.lastname}`} size="xs" />
+                                                                    <div>
+                                                                        <span className="text-[11px] font-bold text-[#202224]">{a.author?.firstname} {a.author?.lastname}</span>
+                                                                        <p className="text-[10px] text-[#A7A7A7]">{new Date(a.createdAt).toLocaleDateString()}</p>
+                                                                    </div>
+                                                                </div>
+                                                                <button
+                                                                    onClick={() => handleVoteAnswer(a._id)}
+                                                                    className={cn(
+                                                                        "flex items-center gap-2 px-3 py-1.5 rounded-lg border text-[11px] font-bold transition-all",
+                                                                        a.votes?.includes(currentUser?._id)
+                                                                            ? "bg-[#FF6B35] border-[#FF6B35] text-white"
+                                                                            : "bg-white border-[#D9D9D9] text-[#A7A7A7] hover:border-[#FF6B35] hover:text-[#FF6B35]"
+                                                                    )}
+                                                                >
+                                                                    <ThumbsUp size={12} />
+                                                                    {a.votes?.length || 0}
+                                                                </button>
+                                                            </div>
+                                                            <p className="text-xs leading-relaxed text-[#4B5563]">
+                                                                {a.content}
+                                                            </p>
                                                         </div>
-                                                        <button 
-                                                            onClick={() => handleVoteAnswer(a._id)}
-                                                            className={cn(
-                                                                "flex items-center gap-1 px-2 py-1 rounded-lg border text-[10px] font-bold transition-all",
-                                                                a.upvotes?.includes(currentUser?._id)
-                                                                    ? "bg-[#FF6B35] border-[#FF6B35] text-white"
-                                                                    : "bg-white border-gray-200 text-gray-400 hover:border-[#FF6B35] hover:text-[#FF6B35]"
-                                                            )}
-                                                        >
-                                                            <ThumbsUp size={12} />
-                                                            {a.upvotes?.length || 0}
-                                                        </button>
                                                     </div>
-                                                    <p className="text-[13px] leading-relaxed text-[#202224]">
-                                                        {a.content}
-                                                    </p>
+                                                ))
+                                            ) : (
+                                                <div className="flex flex-col items-center justify-center py-10 text-[#A7A7A7]">
+                                                    <p className="text-xs italic">No replies yet. Be the first to share your thoughts!</p>
                                                 </div>
-                                            ))}
-                                            {answers.length === 0 && (
-                                                <p className="text-xs text-gray-400 italic">No answers yet.</p>
                                             )}
                                         </div>
                                     </div>
-                                </div>
-                            </div>
 
-                            {/* Answer Box */}
-                            <div className="space-y-4 pt-8 border-t border-gray-100">
-                                <label className="text-sm font-bold text-[#202224]">
-                                    Your Answer
-                                </label>
-                                <textarea
-                                    value={answerText}
-                                    autoFocus
-                                    onChange={(e) => setAnswerText(e.target.value)}
-                                    placeholder="Type your answer here..."
-                                    className="w-full min-h-[140px] rounded-2xl border-2 border-[#D3D3D3] p-6 text-sm outline-none focus:border-[#5678E9] transition-all resize-none shadow-inner"
-                                />
-                                <div className="flex justify-end">
-                                    <Button
-                                        onClick={handlePostAnswer}
-                                        className="bg-[#FF6B35] hover:bg-[#E85D2A] text-white border-none rounded-xl font-bold h-12 px-10 shadow-lg"
-                                    >
-                                        Post Your Answer
-                                    </Button>
+                                    {/* Answer Input */}
+                                    <div className="space-y-4 pt-10">
+                                        <div className="flex items-center gap-2 mb-2">
+                                            <div className="size-2 rounded-full bg-[#FF6B35]" />
+                                            <label className="text-sm font-bold text-[#202224]">Your Perspective</label>
+                                        </div>
+                                        <div className="relative group">
+                                            <textarea
+                                                value={answerText}
+                                                onChange={(e) => setAnswerText(e.target.value)}
+                                                placeholder="Write your answer here..."
+                                                className="w-full min-h-[160px] rounded-3xl border-2 border-[#F4F4F4] p-6 text-sm outline-none focus:border-[#5678E9] focus:bg-white bg-white transition-all resize-none shadow-sm group-hover:border-[#D9D9D9]"
+                                            />
+                                            <div className="absolute bottom-6 right-6">
+                                                <Button
+                                                    onClick={handlePostAnswer}
+                                                    disabled={submitting || !answerText.trim()}
+                                                    className="bg-[#FF6B35] hover:bg-[#E85D2A] text-white border-none rounded-2xl font-bold h-12 px-10 shadow-xl shadow-[#FF6B35]/30 active:scale-95 transition-all disabled:opacity-50 disabled:scale-100"
+                                                >
+                                                    {submitting ? <Loader2 className="animate-spin" size={20} /> : "Post Answer"}
+                                                </Button>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     )}
                 </div>
             </div>
+            {showAskModal && renderAskModal()}
         </div>
     );
 
     if (!videoClient) {
-        return <div className="flex items-center justify-center h-full">Loading Video...</div>;
+        return (
+            <div className="flex flex-col items-center justify-center h-full space-y-4 text-[#A7A7A7]">
+                <Loader2 className="h-10 w-10 animate-spin text-[#FF6B35]" />
+                <p className="font-medium animate-pulse">Initializing Community Discussions...</p>
+            </div>
+        );
     }
 
     return (

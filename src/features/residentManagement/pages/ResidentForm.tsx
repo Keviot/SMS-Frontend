@@ -115,7 +115,7 @@ export default function ResidentForm() {
 
       // Build FormData to handle file uploads
       const formDataToSend = new FormData();
-      
+
       // Append basic fields
       Object.entries(formData).forEach(([key, value]) => {
         formDataToSend.append(key, value);
@@ -124,11 +124,11 @@ export default function ResidentForm() {
       formDataToSend.append("society", societyId);
       formDataToSend.append("residentStatus", activeTab.charAt(0).toUpperCase() + activeTab.slice(1));
       formDataToSend.append("memberCount", memberCount.toString());
-      
+
       // Append arrays as JSON strings - filter out empty items
       const cleanedMembers = members.slice(0, memberCount).filter(m => m && Object.keys(m).length > 0 && m.name);
       const cleanedVehicles = vehicles.slice(0, vehicleCount).filter(v => v && Object.keys(v).length > 0 && v.vehicleName);
-      
+
       formDataToSend.append("members", JSON.stringify(cleanedMembers));
       formDataToSend.append("vehicles", JSON.stringify(cleanedVehicles));
 
@@ -158,7 +158,7 @@ export default function ResidentForm() {
   const vehicleOptions = Array.from({ length: 11 }, (_, i) => ({ label: `${i}`, value: `${i}` }));
 
   return (
-    <div className="flex flex-col gap-5">
+    <div className="flex flex-col gap-0">
       {/* Tabs */}
       <div className="flex gap-0">
         <button
@@ -166,8 +166,8 @@ export default function ResidentForm() {
           className={cn(
             "h-12 w-32 rounded-t-xl text-sm font-bold transition-all",
             activeTab === "owner"
-              ? "bg-gradient-to-r from-[#FE512E] to-[#F09633] text-white shadow-md"
-              : "bg-white text-[#202224] hover:bg-gray-50 border-b border-[#F4F4F4]"
+              ? "bg-gradient-to-r from-[#FF512E] to-[#FD9A36] text-white shadow-md"
+              : "bg-white text-[#202224] hover:bg-gray-50 border-b-2 border-[#FF512E]"
           )}
         >
           Owner
@@ -177,8 +177,8 @@ export default function ResidentForm() {
           className={cn(
             "h-12 w-32 rounded-t-xl text-sm font-bold transition-all",
             activeTab === "tenant"
-              ? "bg-gradient-to-r from-[#FE512E] to-[#F09633] text-white shadow-md"
-              : "bg-white text-[#202224] hover:bg-gray-50 border-b border-[#F4F4F4]"
+              ? "bg-gradient-to-r from-[#FF512E] to-[#FD9A36] text-white shadow-md"
+              : "bg-white text-[#202224] hover:bg-gray-50 border-b-2 border-[#FF512E]"
           )}
         >
           Tenant
@@ -283,7 +283,7 @@ export default function ResidentForm() {
       </div>
 
       {/* Member Counting Card */}
-      <div className="mt-5 rounded-2xl bg-white p-6 shadow-sm">
+      <div className="mt-4 rounded-2xl bg-white p-6 shadow-sm">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <h3 className="text-lg font-bold text-[#202224]">Member Counting :</h3>
@@ -307,7 +307,7 @@ export default function ResidentForm() {
         </div>
 
         {isMembersOpen && memberCount > 0 && (
-          <div className="mt-6 flex flex-col gap-4">
+          <div className="mt-4 flex flex-col gap-4">
             {Array.from({ length: memberCount }).map((_, i) => (
               <div key={i} className="grid grid-cols-1 gap-4 md:grid-cols-6 border-t border-[#F4F4F4] pt-4">
                 <FormInput label="Full Name" value={members[i]?.name || ""} onChange={(val) => handleMemberChange(i, "name", val)} placeholder="Enter Full Name" className="h-auto" />
@@ -333,7 +333,7 @@ export default function ResidentForm() {
       </div>
 
       {/* Vehicle Counting Card */}
-      <div className="mt-5 rounded-2xl bg-white p-6 shadow-sm">
+      <div className="mt-4 rounded-2xl bg-white p-6 shadow-sm">
         <div className="flex items-center justify-between">
           <h3 className="text-lg font-bold text-[#202224]">Vehicle Counting :</h3>
           <div className="flex items-center gap-4">
@@ -354,7 +354,7 @@ export default function ResidentForm() {
         </div>
 
         {isVehiclesOpen && vehicleCount > 0 && (
-          <div className="mt-6 grid grid-cols-1 gap-6 md:grid-cols-2">
+          <div className="mt-5 grid grid-cols-1 gap-6 md:grid-cols-2">
             {Array.from({ length: vehicleCount }).map((_, i) => (
               <div key={i} className="grid grid-cols-1 gap-4 md:grid-cols-3 rounded-xl border border-[#F4F4F4] p-4">
                 <Select
@@ -377,7 +377,7 @@ export default function ResidentForm() {
       </div>
 
       {/* Footer Buttons */}
-      <div className="mt-10 flex justify-end gap-4 pb-8">
+      <div className="mt-8 flex justify-end gap-4 pb-8">
         <Button
           variant="outline"
           className="h-12 w-32 rounded-xl text-base font-bold text-[#202224] border-[#D3D3D3]"

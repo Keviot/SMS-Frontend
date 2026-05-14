@@ -121,7 +121,10 @@ const calculateSummary = (records: MaintenanceRecord[]): MaintenanceSummary => {
 };
 
 export default function Income() {
-    const [activeTab, setActiveTab] = useState<"maintenance" | "otherIncome">("maintenance");
+    const [selectedTab, setSelectedTab] = useState<"Maintenance" | "Other Income" | "Event Participation">("Maintenance");
+    const [maintenanceRecords, setMaintenanceRecords] = useState<any[]>([]);
+    const [otherIncomeRecords, setOtherIncomeRecords] = useState<any[]>([]);
+    const [eventPaymentRecords, setEventPaymentRecords] = useState<any[]>([]);
     const [selectedMonth, setSelectedMonth] = useState<"Month" | "Year">("Month");
     const [showMonthDropdown, setShowMonthDropdown] = useState(false);
     const [maintenanceData, setMaintenanceData] = useState<MaintenanceRecord[]>([]);
@@ -149,77 +152,60 @@ export default function Income() {
         const fetchData = async () => {
             try {
                 setLoading(true);
+                const [maintenanceRes, otherIncomeRes, eventPaymentRes] = await Promise.all([
+                    financialApi.getMaintenanceRecords(),
+                    financialApi.getOtherIncome(),
+                    import("../../../services/api").then(m => m.eventPaymentApi.get()).catch(() => ({ data: [] }))
+                ]);
 
-                if (activeTab === "maintenance") {
-                    const response = await financialApi.getMaintenanceRecords();
+                setMaintenanceRecords(maintenanceRes.data || []);
+                setOtherIncomeRecords(otherIncomeRes.data || []);
+                setEventPaymentRecords(eventPaymentRes.data || []);
 
+                if (selectedTab === "Maintenance") {
+                    const response = maintenanceRes;
                     if (!response.data || response.data.length === 0) {
                         setMaintenanceData([]);
                         setSummary({ maintenanceAmount: 0, penaltyAmount: 0, totalDue: 0, totalPending: 0 });
-                        return;
+                    } else {
+                        const transformedData = response.data.map(normalizeMaintenanceRecord);
+                        transformedData.sort((a, b) => {
+                            const wingA = a.unitNumber.split(" ")[0];
+                            const wingB = b.unitNumber.split(" ")[0];
+                            if (wingA !== wingB) return wingA.localeCompare(wingB);
+                            const unitA = parseInt(a.unitNumber.split(" ")[1]);
+                            const unitB = parseInt(b.unitNumber.split(" ")[1]);
+                            return unitA - unitB;
+                        });
+                        setMaintenanceData(transformedData);
+                        setSummary(calculateSummary(transformedData));
                     }
-
-                    const transformedData = response.data.map(normalizeMaintenanceRecord);
-
-                    // Sort by Unit Number (Wing first, then Unit)
-                    transformedData.sort((a, b) => {
-                        const wingA = a.unitNumber.split(" ")[0];
-                        const wingB = b.unitNumber.split(" ")[0];
-                        if (wingA !== wingB) return wingA.localeCompare(wingB);
-
-                        const unitA = parseInt(a.unitNumber.split(" ")[1]);
-                        const unitB = parseInt(b.unitNumber.split(" ")[1]);
-                        return unitA - unitB;
-                    });
-
-                    setMaintenanceData(transformedData);
-                    setSummary(calculateSummary(transformedData));
-                } else {
-                    // Fetch other income
-                    console.log("Fetching other income...");
-                    const response = await financialApi.getOtherIncome();
-                    console.log("Other income API response:", response);
-
+                } else if (selectedTab === "Other Income") {
+                    const response = otherIncomeRes;
                     if (!response.data || response.data.length === 0) {
-                        console.warn("No other income records found in response");
                         setOtherIncomeData([]);
-                        setLoading(false);
-                        return;
+                    } else {
+                        const transformedIncome = response.data.map((item: any) => ({
+                            id: item._id,
+                            title: item.title,
+                            amountPerMember: item.amount,
+                            totalMember: 12,
+                            date: new Date(item.date).toLocaleDateString("en-GB"),
+                            dueDate: new Date(item.dueDate).toLocaleDateString("en-GB"),
+                            description: item.description,
+                        }));
+                        setOtherIncomeData(transformedIncome);
                     }
-
-                    const transformedIncome = response.data.map((item: any) => ({
-                        id: item._id,
-                        title: item.title,
-                        amountPerMember: item.amount,
-                        totalMember: 12,
-                        date: new Date(item.date).toLocaleDateString("en-GB"),
-                        dueDate: new Date(item.dueDate).toLocaleDateString("en-GB"),
-                        description: item.description,
-                    }));
-
-                    console.log("Transformed other income data:", transformedIncome);
-                    setOtherIncomeData(transformedIncome);
                 }
             } catch (err: any) {
                 console.error("Error fetching data:", err);
-                console.error("Error details:", err.message, err.stack);
-
-                if (activeTab === "maintenance") {
-                    const mockData = getMockData();
-                    setMaintenanceData(mockData);
-                    setSummary({ maintenanceAmount: 0, penaltyAmount: 0, totalDue: 0, totalPending: 0 });
-                } else {
-                    // Don't use mock data for other income - show empty state instead
-                    console.warn("Failed to fetch other income, showing empty state");
-                    setOtherIncomeData([]);
-                }
             } finally {
                 setLoading(false);
             }
         };
 
         fetchData();
-    }, [activeTab]);
+    }, [selectedTab]);
 
     const handleSetMaintenance = () => {
         setShowPasswordModal(true);
@@ -508,7 +494,7 @@ export default function Income() {
         }
     };
 
-    const columns: DataTableColumn<MaintenanceRecord>[] = [
+    const maintenanceColumns: DataTableColumn<MaintenanceRecord>[] = [
         {
             key: "fullName",
             header: "Name",
@@ -610,6 +596,14 @@ export default function Income() {
         },
     ];
 
+    const otherIncomeColumns: DataTableColumn<any>[] = [
+        { key: "title", header: "Title" },
+        { key: "amount", header: "Amount", render: (row) => `₹ ${row.amount}` },
+        { key: "date", header: "Date", render: (row) => new Date(row.date).toLocaleDateString("en-GB") },
+        { key: "dueDate", header: "Due Date" },
+        { key: "description", header: "Description" },
+    ];
+
     const incomeParticipantRows = maintenanceData.length > 0 ? maintenanceData : getMockData();
 
     if (selectedIncomeForView) {
@@ -697,7 +691,7 @@ export default function Income() {
 
     return (
         <div className="flex flex-col gap-0">
-            {activeTab === "maintenance" && (
+            {selectedTab === "Maintenance" && (
                 <div className="mb-4 flex flex-col gap-4 rounded-2xl bg-white p-4 sm:p-5 lg:min-h-36 lg:flex-row lg:items-center lg:justify-between">
                     <div className="grid w-full grid-cols-1 gap-3 sm:grid-cols-2 lg:w-auto lg:flex lg:items-center lg:gap-2">
                         {/* Total Collected */}
@@ -729,10 +723,10 @@ export default function Income() {
             <div className="relative z-10 flex w-full items-end overflow-x-auto">
                 <button
                     type="button"
-                    onClick={() => setActiveTab("maintenance")}
+                    onClick={() => setSelectedTab("Maintenance")}
                     className={cn(
                         "min-h-14 min-w-32 shrink-0 px-5 py-4 text-sm font-semibold transition-all",
-                        activeTab === "maintenance"
+                        selectedTab === "Maintenance"
                             ? "rounded-t-xl bg-gradient-to-r from-[#FE512E] to-[#F09619] text-white"
                             : "rounded-t-xl border border-b-2 border-[#D9DCE5] border-b-[#F09619] bg-white text-[#202224] hover:bg-gray-50"
                     )}
@@ -740,21 +734,31 @@ export default function Income() {
                     Maintenance
                 </button>
                 <button
-                    type="button"
-                    onClick={() => setActiveTab("otherIncome")}
+                    onClick={() => setSelectedTab("Other Income")}
                     className={cn(
-                        "min-h-14 min-w-32 shrink-0 px-5 py-4 text-sm font-semibold transition-all",
-                        activeTab === "otherIncome"
-                            ? "rounded-t-xl bg-gradient-to-r from-[#FE512E] to-[#F09619] text-white"
-                            : "rounded-t-xl border border-b-2 border-[#D9DCE5] border-b-[#F09619] bg-white text-[#202224] hover:bg-gray-50"
+                        "flex h-12 w-[160px] items-center justify-center rounded-t-xl text-sm font-bold transition-all duration-200",
+                        selectedTab === "Other Income"
+                            ? "bg-gradient-to-r from-[#FF512E] to-[#FD9A36] text-white shadow-lg"
+                            : "bg-white text-gray-900 border-b-2 border-[#FF512E] hover:bg-gray-50"
                     )}
                 >
                     Other Income
                 </button>
+                <button
+                    onClick={() => setSelectedTab("Event Participation")}
+                    className={cn(
+                        "flex h-12 w-[180px] items-center justify-center rounded-t-xl text-sm font-bold transition-all duration-200",
+                        selectedTab === "Event Participation"
+                            ? "bg-gradient-to-r from-[#FF512E] to-[#FD9A36] text-white shadow-lg"
+                            : "bg-white text-gray-900 border-b-2 border-[#FF512E] hover:bg-gray-50"
+                    )}
+                >
+                    Event Participation
+                </button>
             </div>
 
             <div className="-mt-px rounded-2xl rounded-tl-none border border-[#D9DCE5] bg-white p-4 sm:p-5">
-                {activeTab === "maintenance" && (
+                {selectedTab === "Maintenance" && (
                     <>
                         <div className="mb-5 flex flex-col gap-3 pt-3 sm:flex-row sm:items-center sm:justify-between">
                             <h2 className="text-xl font-bold text-[#202224]">Maintenance Details</h2>
@@ -793,27 +797,15 @@ export default function Income() {
                                 )}
                             </div>
                         </div>
-
-                        {loading && (
-                            <div className="flex items-center justify-center py-12">
-                                <Loader2 className="size-8 animate-spin text-orange-500" />
-                                <span className="ml-3 text-gray-600">Loading maintenance data...</span>
-                            </div>
-                        )}
-
-                        {!loading && (
-                            <div className="overflow-hidden rounded-xl">
-                                <div className="overflow-x-auto">
-                                    <div className="max-h-[calc(100vh-28rem)] min-w-[56rem] overflow-y-auto pr-1">
-                                        <DataTable columns={columns} data={maintenanceData} getRowKey={(row) => row.id} />
-                                    </div>
-                                </div>
-                            </div>
-                        )}
+                        <DataTable
+                            columns={maintenanceColumns}
+                            data={maintenanceRecords.map(normalizeMaintenanceRecord).sort((a, b) => b.date.localeCompare(a.date))}
+                            isLoading={loading}
+                        />
                     </>
                 )}
 
-                {activeTab === "otherIncome" && (
+                {selectedTab === "Other Income" && (
                     <>
                         <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                             <h2 className="text-xl font-bold text-[#202224]">Other Income</h2>
@@ -825,37 +817,30 @@ export default function Income() {
                                 Create Other Income
                             </Button>
                         </div>
-
-                        {loading && (
-                            <div className="flex items-center justify-center py-12">
-                                <Loader2 className="size-8 animate-spin text-orange-500" />
-                                <span className="ml-3 text-gray-600">Loading income data...</span>
-                            </div>
-                        )}
-
-                        {!loading && (
-                            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-                                {otherIncomeData.map((income) => (
-                                    <OtherIncomeCard
-                                        key={income.id}
-                                        data={income}
-                                        onEdit={handleEditIncome}
-                                        onDelete={handleDeleteIncome}
-                                        onView={handleViewIncome}
-                                    />
-                                ))}
-                            </div>
-                        )}
-
-                        {!loading && otherIncomeData.length === 0 && (
-                            <div className="flex flex-col items-center justify-center py-12 text-center">
-                                <p className="text-gray-500">No other income records found</p>
-                                <Button leftIcon={<Plus size={18} />} onClick={handleCreateIncome} className="mt-4 min-h-12 rounded-xl px-6 py-3">
-                                    Create First Income
-                                </Button>
-                            </div>
-                        )}
+                        <DataTable
+                            columns={otherIncomeColumns}
+                            data={otherIncomeRecords.map((item) => ({
+                                ...item,
+                                id: item._id,
+                                dueDate: new Date(item.dueDate).toLocaleDateString("en-GB"),
+                            }))}
+                            isLoading={loading}
+                        />
                     </>
+                )}
+
+                {selectedTab === "Event Participation" && (
+                    <DataTable
+                        columns={[
+                            { key: "participatorName", header: "Participator Name", render: (row) => row.resident?.name || "N/A" },
+                            { key: "eventTitle", header: "Event Title", render: (row) => row.event?.title || "N/A" },
+                            { key: "amount", header: "Amount", className: "text-center text-[#39973D] font-bold", render: (row) => `₹ ${row.amount}` },
+                            { key: "date", header: "Payment Date", render: (row) => new Date(row.createdAt).toLocaleDateString("en-GB") },
+                            { key: "payment", header: "Payment Mode", className: "text-center" },
+                        ]}
+                        data={eventPaymentRecords.map(item => ({ ...item, id: item._id }))}
+                        isLoading={loading}
+                    />
                 )}
             </div>
 
