@@ -1,8 +1,24 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { Loader2 } from "lucide-react";
 import Button from "../../../ui/Button";
 import PaymentMethodModal from "../components/PaymentMethodModal";
 import CardPaymentModal from "../components/CardPaymentModal";
+import { financialApi, paymentApi } from "../../../services/api";
+import toast from "react-hot-toast";
+
+interface MaintenanceRecord {
+  _id: string;
+  date: string;
+  paymentDate?: string;
+  maintenanceSetup?: {
+    maintenanceAmount: number;
+  };
+  amount?: number;
+  penalty?: number;
+  status: string;
+  resident?: any;
+}
 
 interface MaintenanceCard {
   id: string;
@@ -13,73 +29,122 @@ interface MaintenanceCard {
   maintenanceAmount: number;
   penaltyAmount: number;
   grandTotal: number;
+  recordId: string;
 }
 
-const mockPendingMaintenance: MaintenanceCard[] = [
-  {
-    id: "1",
-    type: "pending",
-    billDate: "10/01/2024",
-    pendingDate: "10/01/2024",
-    maintenanceAmount: 1000,
-    penaltyAmount: 250,
-    grandTotal: 1250,
-  },
-  {
-    id: "2",
-    type: "pending",
-    billDate: "10/01/2024",
-    pendingDate: "10/01/2024",
-    maintenanceAmount: 1000,
-    penaltyAmount: 250,
-    grandTotal: 1250,
-  },
-  {
-    id: "3",
-    type: "pending",
-    billDate: "10/01/2024",
-    pendingDate: "10/01/2024",
-    maintenanceAmount: 1000,
-    penaltyAmount: 250,
-    grandTotal: 1250,
-  },
-];
-
-const mockDueMaintenance: MaintenanceCard[] = [
-  {
-    id: "4",
-    type: "due",
-    date: "10/01/2024",
-    maintenanceAmount: 1000,
-    penaltyAmount: 250,
-    grandTotal: 1250,
-  },
-  {
-    id: "5",
-    type: "due",
-    date: "10/01/2024",
-    maintenanceAmount: 1000,
-    penaltyAmount: 250,
-    grandTotal: 1250,
-  },
-];
 
 export default function ShowMaintenanceDetails() {
   const navigate = useNavigate();
   const [showPaymentMethodModal, setShowPaymentMethodModal] = useState(false);
   const [showCardPaymentModal, setShowCardPaymentModal] = useState(false);
   const [selectedCard, setSelectedCard] = useState<MaintenanceCard | null>(null);
+  const [maintenanceRecords, setMaintenanceRecords] = useState<MaintenanceRecord[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchMaintenanceData();
+  }, []);
+
+  const fetchMaintenanceData = async () => {
+    try {
+      setLoading(true);
+      const response = await financialApi.getMaintenanceRecords();
+      setMaintenanceRecords(response.data || []);
+    } catch (error: any) {
+      toast.error(error.message || "Failed to load maintenance data");
+      setMaintenanceRecords([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const formatDate = (dateString: string) => {
+    if (!dateString) return "N/A";
+    const date = new Date(dateString);
+    return date.toLocaleDateString("en-GB");
+  };
+
+  const convertToCard = (record: MaintenanceRecord, type: "pending" | "due"): MaintenanceCard => {
+    const amount = record.maintenanceSetup?.maintenanceAmount || record.amount || 0;
+    const penalty = record.penalty || 0;
+    const date = formatDate(record.date);
+
+    return {
+      id: record._id,
+      recordId: record._id,
+      type,
+      billDate: type === "pending" ? date : undefined,
+      pendingDate: type === "pending" ? date : undefined,
+      date: type === "due" ? date : undefined,
+      maintenanceAmount: amount,
+      penaltyAmount: penalty,
+      grandTotal: amount + penalty,
+    };
+  };
+
+  const pendingMaintenance = maintenanceRecords
+    .filter(r => r.status?.toLowerCase() === "pending")
+    .map(r => convertToCard(r, "pending"));
+
+  const dueMaintenance = maintenanceRecords
+    .filter(r => r.status?.toLowerCase() === "due")
+    .map(r => convertToCard(r, "due"));
+
+  const totalMaintenanceAmount = maintenanceRecords
+    .filter(r => r.status?.toLowerCase() === "pending")
+    .reduce((sum, r) => sum + (r.maintenanceSetup?.maintenanceAmount || r.amount || 0), 0);
+
+  const totalPenaltyAmount = maintenanceRecords
+    .filter(r => r.status?.toLowerCase() === "pending")
+    .reduce((sum, r) => sum + (r.penalty || 0), 0);
 
   const handlePayNow = (card: MaintenanceCard) => {
     setSelectedCard(card);
     setShowPaymentMethodModal(true);
   };
 
-  const handlePaymentMethodSelect = (method: string) => {
+  const handlePaymentMethodSelect = async (method: string) => {
     setShowPaymentMethodModal(false);
 
-    if (method === "card") {
-      setShowCardPaymentModal(true);
+    if (method === "card" || method === "online") {
+      if (selectedCard) {
+        try {
+          const data = await paymentApi.createOrder(selectedCard.grandTotal);
+
+          const options = {
+            key: import.meta.env.VITE_RAZORPAY_KEY_ID,
+            amount: data.order.amount,
+            currency: data.order.currency,
+            name: "SMS Project",
+            description: "Maintenance Payment",
+            order_id: data.order.id,
+            handler: async function (response: any) {
+              try {
+                await paymentApi.verify({ ...response, recordId: selectedCard.recordId });
+                toast.success("Payment Successful & Verified");
+                fetchMaintenanceData(); // Refresh data
+              } catch (err: any) {
+                toast.error("Payment verification failed");
+                console.error(err);
+              }
+            },
+            prefill: {
+              name: "Resident",
+              email: "",
+              contact: "",
+            },
+            theme: {
+              color: "#5678E9",
+            },
+          };
+
+          const razor = new (window as any).Razorpay(options);
+          razor.open();
+        } catch (error: any) {
+          toast.error(error.message || "Payment initialization failed");
+        }
+      }
+      setSelectedCard(null);
       return;
     }
 
@@ -186,67 +251,87 @@ export default function ShowMaintenanceDetails() {
 
   return (
     <div className="flex flex-col gap-[14px]">
-      <div className="rounded-[15px] bg-white px-[16px] py-[16px]">
-        <div className="flex min-h-[84px] flex-col gap-[16px] lg:flex-row lg:items-center lg:justify-between">
-          <h1 className="text-[18px] font-semibold leading-[24px] text-[#202224]">
-            Show Maintenance Details
-          </h1>
+      {loading ? (
+        <div className="flex h-[400px] items-center justify-center">
+          <Loader2 className="h-10 w-10 animate-spin text-[#5678E9]" />
+        </div>
+      ) : (
+        <>
+          <div className="rounded-[15px] bg-white px-[16px] py-[16px]">
+            <div className="flex min-h-[84px] flex-col gap-[16px] lg:flex-row lg:items-center lg:justify-between">
+              <h1 className="text-[18px] font-semibold leading-[24px] text-[#202224]">
+                Show Maintenance Details
+              </h1>
 
-          <div className="grid w-full grid-cols-1 gap-[10px] sm:grid-cols-2 lg:w-[470px]">
-            <div className="rounded-[10px] border border-[#E8ECEF] border-l-[3px] border-l-[#39973D] bg-white px-[16px] py-[14px]">
-              <p className="text-[13px] font-medium leading-[18px] text-[#202224]">
-                Maintenance Amount
-              </p>
-              <p className="mt-[8px] text-[24px] font-bold leading-[30px] text-[#39973D]">
-                ₹ 1,500
-              </p>
-            </div>
+              <div className="grid w-full grid-cols-1 gap-[10px] sm:grid-cols-2 lg:w-[470px]">
+                <div className="rounded-[10px] border border-[#E8ECEF] border-l-[3px] border-l-[#39973D] bg-white px-[16px] py-[14px]">
+                  <p className="text-[13px] font-medium leading-[18px] text-[#202224]">
+                    Maintenance Amount
+                  </p>
+                  <p className="mt-[8px] text-[24px] font-bold leading-[30px] text-[#39973D]">
+                    ₹ {totalMaintenanceAmount.toLocaleString()}
+                  </p>
+                </div>
 
-            <div className="rounded-[10px] border border-[#E8ECEF] border-l-[3px] border-l-[#FF8A8A] bg-white px-[16px] py-[14px]">
-              <p className="text-[13px] font-medium leading-[18px] text-[#202224]">
-                Penalty Amount
-              </p>
-              <p className="mt-[8px] text-[24px] font-bold leading-[30px] text-[#E74C3C]">
-                ₹ 500
-              </p>
+                <div className="rounded-[10px] border border-[#E8ECEF] border-l-[3px] border-l-[#FF8A8A] bg-white px-[16px] py-[14px]">
+                  <p className="text-[13px] font-medium leading-[18px] text-[#202224]">
+                    Penalty Amount
+                  </p>
+                  <p className="mt-[8px] text-[24px] font-bold leading-[30px] text-[#E74C3C]">
+                    ₹ {totalPenaltyAmount.toLocaleString()}
+                  </p>
+                </div>
+              </div>
             </div>
           </div>
-        </div>
-      </div>
 
-      <div className="rounded-[15px] bg-white px-[16px] py-[16px]">
-        <div className="mb-[18px] flex items-center justify-between gap-[12px]">
-          <h2 className="text-[16px] font-semibold leading-[22px] text-[#202224]">
-            Pending Maintenance
-          </h2>
+          {pendingMaintenance.length > 0 && (
+            <div className="rounded-[15px] bg-white px-[16px] py-[16px]">
+              <div className="mb-[18px] flex items-center justify-between gap-[12px]">
+                <h2 className="text-[16px] font-semibold leading-[22px] text-[#202224]">
+                  Pending Maintenance
+                </h2>
 
-          <button
-            type="button"
-            onClick={handleViewInvoice}
-            className="h-[40px] rounded-[9px] bg-gradient-to-r from-[#FE512E] to-[#F09619] px-[20px] text-[13px] font-semibold text-white"
-          >
-            View Invoice
-          </button>
-        </div>
+                <button
+                  type="button"
+                  onClick={handleViewInvoice}
+                  className="h-[40px] rounded-[9px] bg-gradient-to-r from-[#FE512E] to-[#F09619] px-[20px] text-[13px] font-semibold text-white"
+                >
+                  View Invoice
+                </button>
+              </div>
 
-        <div className="grid grid-cols-1 gap-[14px] sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
-          {mockPendingMaintenance.map((card) => (
-            <MaintenancePaymentCard key={card.id} card={card} />
-          ))}
-        </div>
-      </div>
+              <div className="grid grid-cols-1 gap-[14px] sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
+                {pendingMaintenance.map((card) => (
+                  <MaintenancePaymentCard key={card.id} card={card} />
+                ))}
+              </div>
+            </div>
+          )}
 
-      <div className="rounded-[15px] bg-white px-[16px] py-[16px]">
-        <h2 className="mb-[18px] text-[16px] font-semibold leading-[22px] text-[#202224]">
-          Due Maintenance
-        </h2>
+          {dueMaintenance.length > 0 && (
+            <div className="rounded-[15px] bg-white px-[16px] py-[16px]">
+              <h2 className="mb-[18px] text-[16px] font-semibold leading-[22px] text-[#202224]">
+                Due Maintenance
+              </h2>
 
-        <div className="grid grid-cols-1 gap-[14px] sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
-          {mockDueMaintenance.map((card) => (
-            <MaintenancePaymentCard key={card.id} card={card} />
-          ))}
-        </div>
-      </div>
+              <div className="grid grid-cols-1 gap-[14px] sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
+                {dueMaintenance.map((card) => (
+                  <MaintenancePaymentCard key={card.id} card={card} />
+                ))}
+              </div>
+            </div>
+          )}
+
+          {pendingMaintenance.length === 0 && dueMaintenance.length === 0 && (
+            <div className="rounded-[15px] bg-white px-[16px] py-[16px]">
+              <div className="flex h-[300px] items-center justify-center">
+                <p className="text-[14px] text-[#6F7786]">No maintenance records found</p>
+              </div>
+            </div>
+          )}
+        </>
+      )}
 
       <PaymentMethodModal
         open={showPaymentMethodModal}
