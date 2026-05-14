@@ -125,6 +125,7 @@ export default function Income() {
     const [maintenanceRecords, setMaintenanceRecords] = useState<any[]>([]);
     const [otherIncomeRecords, setOtherIncomeRecords] = useState<any[]>([]);
     const [eventPaymentRecords, setEventPaymentRecords] = useState<any[]>([]);
+    const [otherIncomeSummary, setOtherIncomeSummary] = useState({ totalAmount: 0 });
     const [selectedMonth, setSelectedMonth] = useState<"Month" | "Year">("Month");
     const [showMonthDropdown, setShowMonthDropdown] = useState(false);
     const [maintenanceData, setMaintenanceData] = useState<MaintenanceRecord[]>([]);
@@ -162,6 +163,12 @@ export default function Income() {
                 setOtherIncomeRecords(otherIncomeRes.data || []);
                 setEventPaymentRecords(eventPaymentRes.data || []);
 
+                // Calculate Other Income Summary (Always needed for total income)
+                const manualTotal = otherIncomeRes.data?.reduce((sum: number, item: any) => sum + (item.amount || 0), 0) || 0;
+                const eventTotal = eventPaymentRes.data?.reduce((sum: number, item: any) => sum + (item.amount || 0), 0) || 0;
+                const totalOther = manualTotal + eventTotal;
+                setOtherIncomeSummary({ totalAmount: totalOther });
+
                 if (selectedTab === "Maintenance") {
                     const response = maintenanceRes;
                     if (!response.data || response.data.length === 0) {
@@ -181,21 +188,46 @@ export default function Income() {
                         setSummary(calculateSummary(transformedData));
                     }
                 } else if (selectedTab === "Other Income") {
-                    const response = otherIncomeRes;
-                    if (!response.data || response.data.length === 0) {
-                        setOtherIncomeData([]);
-                    } else {
-                        const transformedIncome = response.data.map((item: any) => ({
-                            id: item._id,
-                            title: item.title,
-                            amountPerMember: item.amount,
-                            totalMember: 12,
-                            date: new Date(item.date).toLocaleDateString("en-GB"),
-                            dueDate: new Date(item.dueDate).toLocaleDateString("en-GB"),
-                            description: item.description,
-                        }));
-                        setOtherIncomeData(transformedIncome);
-                    }
+                    const manualIncome = otherIncomeRes.data?.map((item: any) => ({
+                        id: item._id,
+                        title: item.title,
+                        amountPerMember: item.amount,
+                        totalMember: 1, 
+                        date: new Date(item.date).toLocaleDateString("en-GB"),
+                        dueDate: new Date(item.dueDate).toLocaleDateString("en-GB"),
+                        description: item.description,
+                    })) || [];
+
+                    // Aggregate event payments
+                    const eventAgg = eventPaymentRes.data?.reduce((acc: any, curr: any) => {
+                        const eventId = curr.event?._id || curr.event;
+                        if (!acc[eventId]) {
+                            acc[eventId] = {
+                                id: eventId,
+                                title: curr.event?.title || "Event Participation",
+                                amount: 0,
+                                count: 0,
+                                date: curr.event?.date || curr.createdAt,
+                                description: curr.event?.description || "Participation fees collected for society event."
+                            };
+                        }
+                        acc[eventId].amount += curr.amount;
+                        acc[eventId].count += 1;
+                        return acc;
+                    }, {}) || {};
+
+                    const eventIncome = Object.values(eventAgg).map((ev: any) => ({
+                        id: ev.id,
+                        title: ev.title,
+                        amountPerMember: ev.amount / (ev.count || 1),
+                        totalMember: ev.count,
+                        date: new Date(ev.date).toLocaleDateString("en-GB"),
+                        dueDate: "-",
+                        description: ev.description,
+                        isEvent: true
+                    }));
+
+                    setOtherIncomeData([...manualIncome, ...eventIncome]);
                 }
             } catch (err: any) {
                 console.error("Error fetching data:", err);
@@ -698,7 +730,7 @@ export default function Income() {
                         <div className="flex min-h-24 w-full flex-col justify-center rounded-2xl border border-l-4 border-[#39973D] bg-white px-3 py-4 shadow-sm lg:w-60">
                             <div className="text-xs font-medium text-[#202224]">Total Collected</div>
                             <div className="mt-1 text-2xl font-bold text-[#39973D]">
-                                {loading ? <Loader2 className="size-6 animate-spin" /> : `₹ ${(summary.maintenanceAmount + summary.penaltyAmount).toLocaleString()}`}
+                                {loading ? <Loader2 className="size-6 animate-spin" /> : `₹ ${(summary.maintenanceAmount + summary.penaltyAmount + otherIncomeSummary.totalAmount).toLocaleString()}`}
                             </div>
                         </div>
 
@@ -719,38 +751,54 @@ export default function Income() {
                     </Button>
                 </div>
             )}
+            {(selectedTab === "Other Income" || selectedTab === "Event Participation") && (
+                <div className="mb-4 flex flex-col gap-4 rounded-2xl bg-white p-4 sm:p-5 lg:min-h-36 lg:flex-row lg:items-center lg:justify-between">
+                    <div className="grid w-full grid-cols-1 gap-3 sm:grid-cols-2 lg:w-auto lg:flex lg:items-center lg:gap-2">
+                        {/* Total Collected */}
+                        <div className="flex min-h-24 w-full flex-col justify-center rounded-2xl border border-l-4 border-[#39973D] bg-white px-3 py-4 shadow-sm lg:w-64">
+                            <div className="text-xs font-medium text-[#202224]">Total Other Income</div>
+                            <div className="mt-1 text-2xl font-bold text-[#39973D]">
+                                ₹ {otherIncomeSummary.totalAmount.toLocaleString()}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
 
             <div className="relative z-10 flex w-full items-end overflow-x-auto">
                 <button
                     type="button"
                     onClick={() => setSelectedTab("Maintenance")}
                     className={cn(
-                        "min-h-14 min-w-32 shrink-0 px-5 py-4 text-sm font-semibold transition-all",
+                        "min-h-14 min-w-32 shrink-0 px-8 py-4 text-sm font-bold transition-all",
                         selectedTab === "Maintenance"
-                            ? "rounded-t-xl bg-gradient-to-r from-[#FE512E] to-[#F09619] text-white"
-                            : "rounded-t-xl border border-b-2 border-[#D9DCE5] border-b-[#F09619] bg-white text-[#202224] hover:bg-gray-50"
+                            ? "rounded-t-xl bg-gradient-to-r from-[#FE512E] to-[#F09619] text-white shadow-md"
+                            : "rounded-t-xl border border-b-2 border-[#D9DCE5] border-b-[#FF512E] bg-white text-[#202224] hover:bg-gray-50"
                     )}
                 >
                     Maintenance
                 </button>
                 <button
+                    type="button"
                     onClick={() => setSelectedTab("Other Income")}
                     className={cn(
-                        "flex h-12 w-[160px] items-center justify-center rounded-t-xl text-sm font-bold transition-all duration-200",
+                        "min-h-14 min-w-32 shrink-0 px-8 py-4 text-sm font-bold transition-all",
                         selectedTab === "Other Income"
-                            ? "bg-gradient-to-r from-[#FF512E] to-[#FD9A36] text-white shadow-lg"
-                            : "bg-white text-gray-900 border-b-2 border-[#FF512E] hover:bg-gray-50"
+                            ? "rounded-t-xl bg-gradient-to-r from-[#FE512E] to-[#F09619] text-white shadow-md"
+                            : "rounded-t-xl border border-b-2 border-[#D9DCE5] border-b-[#FF512E] bg-white text-[#202224] hover:bg-gray-50"
                     )}
                 >
                     Other Income
                 </button>
                 <button
+                    type="button"
                     onClick={() => setSelectedTab("Event Participation")}
                     className={cn(
-                        "flex h-12 w-[180px] items-center justify-center rounded-t-xl text-sm font-bold transition-all duration-200",
+                        "min-h-14 min-w-32 shrink-0 px-8 py-4 text-sm font-bold transition-all",
                         selectedTab === "Event Participation"
-                            ? "bg-gradient-to-r from-[#FF512E] to-[#FD9A36] text-white shadow-lg"
-                            : "bg-white text-gray-900 border-b-2 border-[#FF512E] hover:bg-gray-50"
+                            ? "rounded-t-xl bg-gradient-to-r from-[#FE512E] to-[#F09619] text-white shadow-md"
+                            : "rounded-t-xl border border-b-2 border-[#D9DCE5] border-b-[#FF512E] bg-white text-[#202224] hover:bg-gray-50"
                     )}
                 >
                     Event Participation
@@ -817,30 +865,44 @@ export default function Income() {
                                 Create Other Income
                             </Button>
                         </div>
-                        <DataTable
-                            columns={otherIncomeColumns}
-                            data={otherIncomeRecords.map((item) => ({
-                                ...item,
-                                id: item._id,
-                                dueDate: new Date(item.dueDate).toLocaleDateString("en-GB"),
-                            }))}
-                            isLoading={loading}
-                        />
+
+                        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                            {otherIncomeData.map((income) => (
+                                <OtherIncomeCard
+                                    key={income.id}
+                                    data={income}
+                                    onEdit={handleEditIncome}
+                                    onDelete={handleDeleteIncome}
+                                    onView={handleViewIncome}
+                                />
+                            ))}
+                        </div>
+
+                        {otherIncomeData.length === 0 && !loading && (
+                            <div className="flex flex-col items-center justify-center py-20 text-center bg-[#F6F8FB] rounded-2xl border border-dashed border-gray-200">
+                                <p className="text-gray-400 font-medium">No other income records found</p>
+                            </div>
+                        )}
                     </>
                 )}
 
                 {selectedTab === "Event Participation" && (
-                    <DataTable
-                        columns={[
-                            { key: "participatorName", header: "Participator Name", render: (row) => row.resident?.name || "N/A" },
-                            { key: "eventTitle", header: "Event Title", render: (row) => row.event?.title || "N/A" },
-                            { key: "amount", header: "Amount", className: "text-center text-[#39973D] font-bold", render: (row) => `₹ ${row.amount}` },
-                            { key: "date", header: "Payment Date", render: (row) => new Date(row.createdAt).toLocaleDateString("en-GB") },
-                            { key: "payment", header: "Payment Mode", className: "text-center" },
-                        ]}
-                        data={eventPaymentRecords.map(item => ({ ...item, id: item._id }))}
-                        isLoading={loading}
-                    />
+                    <>
+                        <div className="mb-5">
+                            <h2 className="text-xl font-bold text-[#202224]">Event Participation</h2>
+                        </div>
+                        <DataTable
+                            columns={[
+                                { key: "participatorName", header: "Participator Name", render: (row) => row.resident?.name || "N/A" },
+                                { key: "eventTitle", header: "Event Title", render: (row) => row.event?.title || "N/A" },
+                                { key: "amount", header: "Amount", className: "text-center text-[#39973D] font-bold", render: (row) => `₹ ${row.amount}` },
+                                { key: "date", header: "Payment Date", render: (row) => new Date(row.createdAt).toLocaleDateString("en-GB") },
+                                { key: "payment", header: "Payment Mode", className: "text-center" },
+                            ]}
+                            data={eventPaymentRecords.map(item => ({ ...item, id: item._id }))}
+                            isLoading={loading}
+                        />
+                    </>
                 )}
             </div>
 
