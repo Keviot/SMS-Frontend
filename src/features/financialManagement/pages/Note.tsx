@@ -3,7 +3,7 @@ import { MoreVertical, Plus, Loader2 } from "lucide-react";
 import Button from "../../../ui/Button";
 import NoteFormModal, { type NoteFormData } from "../components/NoteFormModal";
 import DeleteConfirmModal from "../components/DeleteConfirmModal";
-import { financialApi } from "../../../services/api";
+import { financialApi, authApi } from "../../../services/api";
 import toast from "react-hot-toast";
 
 type NoteItem = {
@@ -69,10 +69,23 @@ export default function Note() {
 
     const handleNoteSubmit = async (data: NoteFormData) => {
         try {
+            // Get user profile to get society ID
+            const profileResponse = await authApi.getProfile();
+            const user = profileResponse.user;
+
+            // Extract society ID
+            const societyId = user?.society?._id || user?.society || (user?.societies?.[0]?._id);
+
+            if (!societyId) {
+                toast.error("Society ID not found in profile. Please ensure your account is linked to a society.");
+                return;
+            }
+
             const payload = {
                 title: data.title,
                 description: data.description,
                 date: new Date(data.date).toISOString(),
+                society: societyId,
             };
 
             if (selectedNote) {

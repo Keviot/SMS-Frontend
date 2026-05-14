@@ -26,6 +26,8 @@ import NotificationGaneshSvg from './notification-ganesh.svg?react'
 import CalenderSvg from './calendar.svg?react';
 import DocumentSvg from './Document.svg?react';
 import GallerySvg from './gallery.svg?react';
+import MastercardSvg from './master-card.svg?react';
+import VisacardSvg from './visa-card.svg?react';
 
 
 export const AnnouncementIcon = AnnouncementSvg;
@@ -54,6 +56,8 @@ export const NotificationGaneshIcon = NotificationGaneshSvg;
 export const CalenderIcon = CalenderSvg;
 export const DocumentIcon = DocumentSvg;
 export const GalleryIcon = GallerySvg;
+export const MastercardIcon = MastercardSvg;
+export const VisacardIcon = VisacardSvg;
 
 
 
