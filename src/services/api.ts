@@ -1213,3 +1213,18 @@ export const chatApi = {
         return handleResponse(response);
     },
 };
+
+export const videoApi = {
+    generateToken: async (userId: string) => {
+        const response = await fetch(`${API_URL}/video/generate-token`, {
+            method: "POST",
+            credentials: "include",
+            headers: {
+                "Content-Type": "application/json",
+                ...getAuthHeader()
+            },
+            body: JSON.stringify({ userId }),
+        });
+        return handleResponse(response);
+    },
+};

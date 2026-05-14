@@ -30,6 +30,12 @@ import VisitorLogs from './features/securityManagement/pages/VisitorLogs'
 import SecurityProtocols from './features/securityManagement/pages/SecurityProtocols'
 import ResidentSecurityProtocols from './features/securityManagement/pages/ResidentSecurityProtocols'
 import SecurityGuard from './features/securityManagement/pages/SecurityGuard'
+import EventsParticipation from './features/eventsParticipation/pages/EventsParticipation'
+import ShowMaintenanceDetails from './features/paymentPortal/pages/ShowMaintenanceDetails'
+import MaintenanceInvoices from './features/paymentPortal/pages/MaintenanceInvoices'
+import OtherInvoices from './features/paymentPortal/pages/OtherInvoices'
+
+
 import EmergencyManagement from './features/securityManagement/pages/EmergencyManagement'
 import AccessForums from './features/community/pages/AccessForums'
 import Polls from './features/community/pages/Polls'
@@ -132,6 +138,10 @@ function App() {
             <Route path="/security-management/emergency" element={<EmergencyManagement />} />
             <Route path="/security-guard" element={<SecurityGuard />} />
             <Route path="/announcement" element={<Announcement />} />
+            <Route path="/events-participation" element={<EventsParticipation />} />
+            <Route path="/payment-portal" element={<ShowMaintenanceDetails />} />
+            <Route path="/payment-portal/maintenance-invoices" element={<MaintenanceInvoices />} />
+            <Route path="/payment-portal/other-invoices" element={<OtherInvoices />} />
             <Route path="/community/access-forums" element={<AccessForums />} />
             <Route path="/community/polls" element={<Polls />} />
             <Route path="/community/discussion" element={<CommunitiesDiscussion />} />
