@@ -2,582 +2,418 @@
 
 import { useMemo, useState, useEffect } from "react";
 import Button from "../../../ui/Button";
-import { EditIcon, EyeIcon, TrashIcon } from "../../../assets/icons/admin-dashboard-icons";
-import {
-    ComplaintFormModal,
-    ComplaintViewModal,
-    DeleteConfirmModal,
+import { 
+    ComplaintFormModal, 
+    ComplaintViewModal, 
+    RequestFormModal,
+    RequestViewModal,
+    DeleteConfirmModal, 
     type ComplaintFormData,
+    type RequestFormData
 } from "../components";
-import { complaintApi, authApi, societyApi } from "../../../services/api";
+import { complaintApi, requestTrackingApi, authApi, societyApi } from "../../../services/api";
 import toast from "react-hot-toast";
-import { Loader2 } from "lucide-react";
-import Avatar from "../../../components/Avatar";
-
+import { Loader2, MoreVertical } from "lucide-react";
+import { cn } from "../../../lib/cn";
 
 type Priority = "Medium" | "Low" | "High";
-type ComplaintStatus = "Pending" | "Open" | "Closed";
+type Status = "Pending" | "Open" | "Closed" | "Solved";
 
-type Complaint = {
+type Item = {
     id: string;
     complainerName: string;
-    initials: string;
-    complaintName: string;
+    title: string;
     description: string;
-    unitLetter: string;
-    unitNumber: string;
+    date: string;
     priority: Priority;
-    status: ComplaintStatus;
+    status: Status;
+    wing: string;
+    unit: string;
 };
 
-function priorityClass(priority: Priority) {
-    switch (priority) {
-        case "High":
-            return "bg-[#E74C3C] text-white";
-        case "Low":
-            return "bg-[#39973D] text-white";
-        case "Medium":
-        default:
-            return "bg-[#5678E9] text-white";
-    }
-}
-
-function statusClass(status: ComplaintStatus) {
-    switch (status) {
-        case "Closed":
-            return "bg-[#E5F4E8] text-[#39973D]";
-        case "Open":
-            return "bg-[#EEF2FF] text-[#5678E9]";
-        case "Pending":
-        default:
-            return "bg-[#FFF7E6] text-[#F0A000]";
-    }
-}
-
-function ActionButton({
-    label,
-    variant,
-    children,
-    onClick,
-}: {
-    label: string;
-    variant: "edit" | "view" | "delete";
-    children: React.ReactNode;
-    onClick?: () => void;
-}) {
-    const variantClasses = {
-        edit: "bg-[#E8F7EC] text-[#39973D]",
-        view: "bg-[#EEF2FF] text-[#5678E9]",
-        delete: "bg-[#FFF0F0] text-[#E74C3C]",
-    };
-
-    return (
-        <button
-            type="button"
-            aria-label={label}
-            onClick={onClick}
-            className={`inline-flex aspect-square min-w-8 items-center justify-center rounded-[10px] transition hover:scale-105 ${variantClasses[variant]}`}
-        >
-            <span className="flex size-4 items-center justify-center [&>svg]:size-4 [&>svg]:text-current">
-                {children}
-            </span>
-        </button>
-    );
-}
-
-function UnitBadge({
-    letter,
-    number,
-}: {
-    letter: string;
-    number: string;
-}) {
-    return (
-        <div className="flex items-center gap-2">
-            <span className="grid size-6 shrink-0 place-items-center rounded-full bg-[#F1F6FF] text-xs font-bold text-[#5678E9]">
-                {letter}
-            </span>
-            <span className="font-medium text-[#202224]">{number}</span>
-        </div>
-    );
-}
-
 export default function CreateComplaint() {
-    const [complaints, setComplaints] = useState<Complaint[]>([]);
+    const [activeTab, setActiveTab] = useState<"complaint" | "request">("complaint");
+    const [items, setItems] = useState<Item[]>([]);
     const [loading, setLoading] = useState(true);
-    const rows = useMemo(() => complaints, [complaints]);
+    const [currentUser, setCurrentUser] = useState<any>(null);
 
     // Modal states
     const [showCreateModal, setShowCreateModal] = useState(false);
     const [showEditModal, setShowEditModal] = useState(false);
     const [showViewModal, setShowViewModal] = useState(false);
     const [showDeleteModal, setShowDeleteModal] = useState(false);
-    const [selectedComplaint, setSelectedComplaint] = useState<Complaint | null>(null);
+    const [selectedItem, setSelectedItem] = useState<Item | null>(null);
 
-    // Fetch complaints on component mount
     useEffect(() => {
-        fetchComplaints();
-    }, []);
+        fetchData();
+    }, [activeTab]);
 
-    const fetchComplaints = async () => {
+    const fetchData = async () => {
         try {
             setLoading(true);
-            console.log("Fetching complaints...");
-
-            // Get user profile to get society ID
             const profileResponse = await authApi.getProfile();
             const user = profileResponse.user;
+            setCurrentUser(user);
 
-            if (!user) {
-                toast.error("Unable to fetch user profile. Please try again.");
-                setLoading(false);
-                return;
-            }
+            if (!user) return;
 
-            // Get society ID - check multiple possible locations
-            let societyId = user.society;
+            let societyId = user.society?._id || user.society || user.societies?.[0]?._id;
 
-            if (!societyId && user.societies && user.societies.length > 0) {
-                societyId = user.societies[0]._id;
-            }
-
-            if (!societyId && user.selectSociety && user.selectSociety.length > 0) {
-                const societies = await societyApi.getAll();
-                const matchingSociety = societies.data.find(
-                    (s: any) => user.selectSociety.includes(s.societyName)
-                );
-                if (matchingSociety) {
-                    societyId = matchingSociety._id;
-                }
-            }
-
-            console.log("Fetching complaints for society:", societyId);
-
-            // Pass society ID to the API
-            const response = await complaintApi.getAllComplaints(societyId);
-            console.log("getAllComplaints response:", response);
-
-            // Backend returns { complainList: [...] }
-            const complaintsData = response.complainList || [];
-            console.log("Complaints data:", complaintsData);
-
-            if (!complaintsData || complaintsData.length === 0) {
-                console.log("No complaints found");
-                setComplaints([]);
-                setLoading(false);
-                return;
-            }
-
-            // Transform backend data to frontend format
-            const getInitials = (name?: string) => {
-                if (!name) return "?";
-
-                const words = name.trim().split(/\s+/);
-
-                if (words.length === 1) {
-                    return words[0].charAt(0).toUpperCase();
-                }
-
-                return `${words[0].charAt(0)}${words[1].charAt(0)}`.toUpperCase();
-            };
-            const transformedComplaints = complaintsData.map((item: any) => {
-                console.log("Transforming complaint:", item);
-                return {
+            if (activeTab === "complaint") {
+                const res = await complaintApi.getAllComplaints(societyId);
+                const list = res.complainList || [];
+                setItems(list.map((item: any) => ({
                     id: item._id,
-                    complainerName: item.compainerName,  // Backend uses 'compainerName'
-                    initials: getInitials(item.compainerName),
-
-                    complaintName: item.complainName,     // Backend uses 'complainName'
+                    complainerName: item.compainerName,
+                    title: item.complainName,
                     description: item.description,
-                    unitLetter: item.wing,
-                    unitNumber: item.unit,
-                    priority: item.priority as Priority,
-                    status: item.status as ComplaintStatus,
-                };
-            });
-
-            console.log("Transformed complaints:", transformedComplaints);
-            setComplaints(transformedComplaints);
+                    date: new Date(item.createdAt).toLocaleDateString('en-GB'),
+                    priority: item.priority,
+                    status: item.status,
+                    wing: item.wing,
+                    unit: item.unit
+                })));
+            } else {
+                const res = await requestTrackingApi.getAllRequests(societyId);
+                const list = res.requestTrackingList || [];
+                setItems(list.map((item: any) => ({
+                    id: item._id,
+                    complainerName: item.requesterName,
+                    title: item.requestName,
+                    description: item.description,
+                    date: new Date(item.createdAt).toLocaleDateString('en-GB'),
+                    priority: item.priority,
+                    status: item.status,
+                    wing: item.wing,
+                    unit: item.unit
+                })));
+            }
         } catch (error: any) {
-            console.error("Error fetching complaints:", error);
-            toast.error(error.message || "Failed to fetch complaints");
-            setComplaints([]);
+            toast.error(error.message || "Failed to fetch data");
         } finally {
             setLoading(false);
         }
     };
 
-    const handleCreateComplaint = () => {
-        setShowCreateModal(true);
+    const handleCreate = () => setShowCreateModal(true);
+
+    const handleAction = (item: Item, action: "edit" | "view" | "delete") => {
+        setSelectedItem(item);
+        if (action === "edit") setShowEditModal(true);
+        if (action === "view") setShowViewModal(true);
+        if (action === "delete") setShowDeleteModal(true);
     };
 
-    const handleEdit = (complaint: Complaint) => {
-        setSelectedComplaint(complaint);
-        setShowEditModal(true);
-    };
-
-    const handleView = (complaint: Complaint) => {
-        setSelectedComplaint(complaint);
-        setShowViewModal(true);
-    };
-
-    const handleDelete = (complaint: Complaint) => {
-        setSelectedComplaint(complaint);
-        setShowDeleteModal(true);
-    };
-
-    const handleComplaintSubmit = async (data: ComplaintFormData) => {
+    const handleSubmit = async (data: any) => {
         try {
-            // Get user profile to get society ID
-            const profileResponse = await authApi.getProfile();
-            const user = profileResponse.user;
-
-            if (!user) {
-                toast.error("Unable to fetch user profile. Please try again.");
-                return;
+            const societyId = currentUser.society?._id || currentUser.society || currentUser.societies?.[0]?._id;
+            if (activeTab === "complaint") {
+                await complaintApi.createComplaint({ ...data, compainerName: data.complainerName, complainName: data.complaintName, society: societyId });
+            } else {
+                await requestTrackingApi.createRequest({ ...data, society: societyId });
             }
-
-            // Get society ID - check multiple possible locations
-            let societyId = user.society;
-
-            if (!societyId && user.societies && user.societies.length > 0) {
-                societyId = user.societies[0]._id;
-            }
-
-            if (!societyId && user.selectSociety && user.selectSociety.length > 0) {
-                const societies = await societyApi.getAll();
-                const matchingSociety = societies.data.find(
-                    (s: any) => user.selectSociety.includes(s.societyName)
-                );
-                if (matchingSociety) {
-                    societyId = matchingSociety._id;
-                }
-            }
-
-            if (!societyId) {
-                toast.error("Society information not found. Please contact administrator.");
-                console.error("User profile:", user);
-                return;
-            }
-
-            // Add society to the complaint data
-            const payload = {
-                compainerName: data.complainerName,  // Backend expects 'compainerName'
-                complainName: data.complaintName,     // Backend expects 'complainName'
-                description: data.description,
-                wing: data.wing,
-                unit: data.unit,
-                priority: data.priority,
-                status: data.status,
-                society: societyId,
-            };
-
-            await complaintApi.createComplaint(payload);
-            toast.success("Complaint created successfully!");
+            toast.success(`${activeTab === "complaint" ? "Complaint" : "Request"} created successfully!`);
             setShowCreateModal(false);
-            // Refresh complaints list
-            await fetchComplaints();
+            fetchData();
         } catch (error: any) {
-            toast.error(error.message || "Failed to create complaint");
-            console.error("Create complaint error:", error);
+            toast.error(error.message);
         }
     };
 
-    const handleComplaintUpdate = async (data: ComplaintFormData) => {
+    const handleUpdate = async (data: any) => {
         try {
-            if (!selectedComplaint) return;
-
-            // Get user profile to get society ID
-            const profileResponse = await authApi.getProfile();
-            const user = profileResponse.user;
-
-            if (!user) {
-                toast.error("Unable to fetch user profile. Please try again.");
-                return;
+            if (!selectedItem) return;
+            if (activeTab === "complaint") {
+                await complaintApi.editComplaint(selectedItem.id, { ...data, compainerName: data.complainerName, complainName: data.complaintName });
+            } else {
+                await requestTrackingApi.editRequest(selectedItem.id, data);
             }
-
-            // Get society ID
-            let societyId = user.society;
-
-            if (!societyId && user.societies && user.societies.length > 0) {
-                societyId = user.societies[0]._id;
-            }
-
-            if (!societyId && user.selectSociety && user.selectSociety.length > 0) {
-                const societies = await societyApi.getAll();
-                const matchingSociety = societies.data.find(
-                    (s: any) => user.selectSociety.includes(s.societyName)
-                );
-                if (matchingSociety) {
-                    societyId = matchingSociety._id;
-                }
-            }
-
-            if (!societyId) {
-                toast.error("Society information not found. Please contact administrator.");
-                return;
-            }
-
-            // Add society to the complaint data
-            const payload = {
-                compainerName: data.complainerName,  // Backend expects 'compainerName'
-                complainName: data.complaintName,     // Backend expects 'complainName'
-                description: data.description,
-                wing: data.wing,
-                unit: data.unit,
-                priority: data.priority,
-                status: data.status,
-                society: societyId,
-            };
-
-            await complaintApi.editComplaint(selectedComplaint.id, payload);
-            toast.success("Complaint updated successfully!");
+            toast.success(`${activeTab === "complaint" ? "Complaint" : "Request"} updated successfully!`);
             setShowEditModal(false);
-            setSelectedComplaint(null);
-            // Refresh complaints list
-            await fetchComplaints();
+            fetchData();
         } catch (error: any) {
-            toast.error(error.message || "Failed to update complaint");
-            console.error("Update complaint error:", error);
+            toast.error(error.message);
         }
     };
 
     const handleConfirmDelete = async () => {
         try {
-            if (!selectedComplaint) return;
-
-            await complaintApi.deleteComplaint(selectedComplaint.id);
-            toast.success("Complaint deleted successfully!");
+            if (!selectedItem) return;
+            if (activeTab === "complaint") {
+                await complaintApi.deleteComplaint(selectedItem.id);
+            } else {
+                await requestTrackingApi.deleteRequest(selectedItem.id);
+            }
+            toast.success("Deleted successfully!");
             setShowDeleteModal(false);
-            setSelectedComplaint(null);
-            // Refresh complaints list
-            await fetchComplaints();
+            fetchData();
         } catch (error: any) {
-            toast.error(error.message || "Failed to delete complaint");
-            console.error("Delete complaint error:", error);
+            toast.error(error.message);
         }
     };
 
     return (
-        <>
-            <div className="rounded-2xl bg-white p-4 sm:p-5">
-                {/* Header */}
-                <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                    <h1 className="text-xl font-semibold leading-8 text-[#202224]">
-                        Create Complaint
-                    </h1>
+        <div className="space-y-6">
+            {/* Tabs */}
+            <div className="flex rounded-t-xl bg-white p-1 w-fit shadow-sm">
+                <button
+                    onClick={() => setActiveTab("complaint")}
+                    className={cn(
+                        "px-6 py-2.5 text-sm font-bold rounded-lg transition-all duration-200",
+                        activeTab === "complaint" ? "bg-[#FF6B35] text-white shadow-md" : "text-[#A7A7A7] hover:text-[#202224]"
+                    )}
+                >
+                    Complaint Submission
+                </button>
+                <button
+                    onClick={() => setActiveTab("request")}
+                    className={cn(
+                        "px-6 py-2.5 text-sm font-bold rounded-lg transition-all duration-200",
+                        activeTab === "request" ? "bg-[#FF6B35] text-white shadow-md" : "text-[#A7A7A7] hover:text-[#202224]"
+                    )}
+                >
+                    Request Submission
+                </button>
+            </div>
 
+            {/* Main Container */}
+            <div className="rounded-2xl bg-white p-6 shadow-sm border border-[#F4F4F4]">
+                <div className="mb-8 flex items-center justify-between">
+                    <h2 className="text-xl font-bold text-[#202224]">
+                        {currentUser?.role === "admin" 
+                            ? (activeTab === "complaint" ? "Create Complaint" : "Request Tracking")
+                            : (activeTab === "complaint" ? "Complaint" : "Request")}
+                    </h2>
                     <Button
-                        type="button"
-                        onClick={handleCreateComplaint}
-                        className="min-h-12 w-full rounded-xl bg-gradient-to-r from-[#FE512E] to-[#F09619] px-5 text-sm font-semibold text-white shadow-none sm:w-auto"
+                        onClick={handleCreate}
+                        className="bg-[#FF6B35] hover:bg-[#E85D2A] text-white border-none rounded-xl font-bold h-11 px-8 shadow-lg shadow-[#FF6B35]/20"
                     >
-                        Create Complaint
+                        Create {activeTab === "complaint" ? "Complaint" : "Request"}
                     </Button>
                 </div>
 
-                {/* Table */}
-                <div className="overflow-hidden rounded-xl bg-white">
-                    <div className="overflow-x-auto">
-                        <div className="max-h-[calc(100vh-18.75rem)] min-w-[60rem] overflow-y-auto pr-1">
-                            {loading ? (
-                                <div className="flex items-center justify-center py-12">
-                                    <Loader2 className="h-8 w-8 animate-spin text-orange-500" />
-                                    <span className="ml-3 text-gray-600">Loading complaints...</span>
-                                </div>
-                            ) : complaints.length === 0 ? (
-                                <div className="flex flex-col items-center justify-center py-12 text-center">
-                                    <p className="text-gray-500">No complaints found</p>
-                                    <Button
-                                        onClick={handleCreateComplaint}
-                                        className="mt-4 h-12 rounded-xl px-6"
-                                    >
-                                        Create First Complaint
-                                    </Button>
-                                </div>
-                            ) : (
-                                <table className="w-full border-collapse">
-                                    <thead className="sticky top-0 z-10 bg-[#F1F3FF]">
-                                        <tr>
-                                            <th className="rounded-l-xl px-5 py-4 text-left text-sm font-semibold text-[#202224]">
-                                                Complainer Name
-                                            </th>
-                                            <th className="px-5 py-4 text-left text-sm font-semibold text-[#202224]">
-                                                Complaint Name
-                                            </th>
-                                            <th className="px-5 py-4 text-left text-sm font-semibold text-[#202224]">
-                                                Description
-                                            </th>
-                                            <th className="px-5 py-4 text-left text-sm font-semibold text-[#202224]">
-                                                Unit Number
-                                            </th>
-                                            <th className="px-5 py-4 text-center text-sm font-semibold text-[#202224]">
-                                                Priority
-                                            </th>
-                                            <th className="px-5 py-4 text-center text-sm font-semibold text-[#202224]">
-                                                Status
-                                            </th>
-                                            <th className="rounded-r-xl px-5 py-4 text-center text-sm font-semibold text-[#202224]">
-                                                Action
-                                            </th>
-                                        </tr>
-                                    </thead>
-
-                                    <tbody>
-                                        {rows.map((complaint) => (
-                                            <tr
-                                                key={complaint.id}
-                                                className="border-b border-[#EDF0F5] last:border-b-0"
-                                            >
-                                                <td className="px-5 py-4">
-                                                    <div className="flex items-center gap-3">
-                                                    <Avatar
-                                                        name={complaint.complainerName}
-                                                        className="size-11"
-                                                    />
-                                                        <span className="text-sm font-medium text-[#434A57]">
-                                                            {complaint.complainerName}
-                                                        </span>
-                                                    </div>
-                                                </td>
-
-                                                <td className="px-5 py-4 text-sm font-medium text-[#434A57]">
-                                                    {complaint.complaintName}
-                                                </td>
-
-                                                <td className="max-w-md px-5 py-4">
-                                                    <p className="truncate text-sm font-medium text-[#434A57]">
-                                                        {complaint.description}
-                                                    </p>
-                                                </td>
-
-                                                <td className="px-5 py-4">
-                                                    <UnitBadge
-                                                        letter={complaint.unitLetter}
-                                                        number={complaint.unitNumber}
-                                                    />
-                                                </td>
-
-                                                <td className="px-5 py-4">
-                                                    <span
-                                                        className={`mx-auto flex min-w-24 items-center justify-center rounded-full px-3 py-1.5 text-xs font-semibold ${priorityClass(
-                                                            complaint.priority
-                                                        )}`}
-                                                    >
-                                                        {complaint.priority}
-                                                    </span>
-                                                </td>
-
-                                                <td className="px-5 py-4">
-                                                    <span
-                                                        className={`mx-auto flex min-w-24 items-center justify-center rounded-full px-3 py-1.5 text-xs font-semibold ${statusClass(
-                                                            complaint.status
-                                                        )}`}
-                                                    >
-                                                        {complaint.status}
-                                                    </span>
-                                                </td>
-
-                                                <td className="px-5 py-4">
-                                                    <div className="flex items-center justify-center gap-3">
-                                                        <ActionButton
-                                                            label="Edit complaint"
-                                                            variant="edit"
-                                                            onClick={() => handleEdit(complaint)}
-                                                        >
-                                                            <EditIcon />
-                                                        </ActionButton>
-
-                                                        <ActionButton
-                                                            label="View complaint"
-                                                            variant="view"
-                                                            onClick={() => handleView(complaint)}
-                                                        >
-                                                            <EyeIcon />
-                                                        </ActionButton>
-
-                                                        <ActionButton
-                                                            label="Delete complaint"
-                                                            variant="delete"
-                                                            onClick={() => handleDelete(complaint)}
-                                                        >
-                                                            <TrashIcon />
-                                                        </ActionButton>
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
-                            )}
-                        </div>
+                {loading ? (
+                    <div className="flex h-64 items-center justify-center">
+                        <Loader2 className="h-10 w-10 animate-spin text-[#FF6B35]" />
                     </div>
-                </div>
+                ) : items.length === 0 ? (
+                    <div className="flex h-64 flex-col items-center justify-center text-gray-400">
+                        <p>No {activeTab}s found.</p>
+                    </div>
+                ) : currentUser?.role === "admin" ? (
+                    /* Admin Table View */
+                    <div className="overflow-x-auto">
+                        <table className="w-full border-separate border-spacing-y-0">
+                            <thead>
+                                <tr className="bg-[#F1F3FF]">
+                                    <th className="px-6 py-4 text-left text-sm font-bold text-[#202224] rounded-l-xl">Complainer Name</th>
+                                    <th className="px-6 py-4 text-left text-sm font-bold text-[#202224] truncate max-w-[150px]">
+                                        {activeTab === "complaint" ? "Complaint Name" : "Request Name"}
+                                    </th>
+                                    <th className="px-6 py-4 text-left text-sm font-bold text-[#202224]">Description</th>
+                                    <th className="px-6 py-4 text-left text-sm font-bold text-[#202224]">Unit Number</th>
+                                    <th className="px-6 py-4 text-center text-sm font-bold text-[#202224]">Priority</th>
+                                    <th className="px-6 py-4 text-center text-sm font-bold text-[#202224]">Status</th>
+                                    <th className="px-6 py-4 text-center text-sm font-bold text-[#202224] rounded-r-xl">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-gray-100">
+                                {items.map((item) => (
+                                    <tr key={item.id} className="hover:bg-gray-50 transition-colors">
+                                        <td className="px-6 py-4">
+                                            <div className="flex items-center gap-3">
+                                                <div className="h-10 w-10 rounded-full bg-gray-100 flex items-center justify-center overflow-hidden">
+                                                    <img src={`https://ui-avatars.com/api/?name=${item.complainerName}&background=random`} alt="" className="h-full w-full object-cover" />
+                                                </div>
+                                                <span className="text-sm font-semibold text-[#4F5B7D]">{item.complainerName}</span>
+                                            </div>
+                                        </td>
+                                        <td className="px-6 py-4 text-sm font-semibold text-[#4F5B7D]">{item.title}</td>
+                                        <td className="px-6 py-4">
+                                            <p className="text-sm font-semibold text-[#4F5B7D] truncate max-w-[200px]">{item.description}</p>
+                                        </td>
+                                        <td className="px-6 py-4">
+                                            <div className="flex items-center gap-2">
+                                                <span className="h-6 w-6 rounded-full bg-[#F6F8FB] text-[#5678E9] flex items-center justify-center text-[10px] font-bold">{item.wing}</span>
+                                                <span className="text-sm font-semibold text-[#4F5B7D]">{item.unit}</span>
+                                            </div>
+                                        </td>
+                                        <td className="px-6 py-4">
+                                            <span className={cn(
+                                                "mx-auto flex w-24 items-center justify-center rounded-full py-1.5 text-xs font-bold",
+                                                item.priority === "High" ? "bg-[#E74C3C] text-white" :
+                                                item.priority === "Medium" ? "bg-[#5678E9] text-white" : "bg-[#39973D] text-white"
+                                            )}>
+                                                {item.priority}
+                                            </span>
+                                        </td>
+                                        <td className="px-6 py-4">
+                                            <span className={cn(
+                                                "mx-auto flex w-24 items-center justify-center rounded-full py-1.5 text-xs font-bold",
+                                                item.status === "Pending" ? "bg-[#FFF7E6] text-[#F0A000]" :
+                                                item.status === "Open" ? "bg-[#EEF2FF] text-[#5678E9]" : "bg-[#E5F4E8] text-[#39973D]"
+                                            )}>
+                                                {item.status}
+                                            </span>
+                                        </td>
+                                        <td className="px-6 py-4">
+                                            <div className="flex items-center justify-center gap-2">
+                                                <button onClick={() => handleAction(item, "edit")} className="p-2 rounded-lg bg-[#E8F7EC] text-[#39973D] hover:scale-110 transition-transform">
+                                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                                                </button>
+                                                <button onClick={() => handleAction(item, "view")} className="p-2 rounded-lg bg-[#EEF2FF] text-[#5678E9] hover:scale-110 transition-transform">
+                                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                                                </button>
+                                                <button onClick={() => handleAction(item, "delete")} className="p-2 rounded-lg bg-[#FFF0F0] text-[#E74C3C] hover:scale-110 transition-transform">
+                                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                ) : (
+                    /* Resident Card View */
+                    <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                        {items.map((item) => (
+                            <div key={item.id} className="overflow-hidden rounded-2xl border border-[#F4F4F4] bg-white shadow-sm hover:shadow-md transition-shadow">
+                                <div className="flex items-center justify-between bg-[#5678E9] px-4 py-3 text-white">
+                                    <h4 className="text-sm font-bold truncate pr-2">{item.title}</h4>
+                                    <div className="relative group">
+                                        <button className="p-1 rounded-full hover:bg-white/20 transition-colors">
+                                            <MoreVertical size={16} />
+                                        </button>
+                                        <div className="absolute right-0 top-full mt-1 hidden group-hover:block z-10 w-32 rounded-xl bg-white p-1 shadow-xl border border-[#F4F4F4]">
+                                            <button onClick={() => handleAction(item, "view")} className="w-full text-left px-4 py-2 text-xs font-bold text-[#202224] hover:bg-gray-50 rounded-lg">View</button>
+                                            {currentUser?.role === "admin" && (
+                                                <>
+                                                    <button onClick={() => handleAction(item, "edit")} className="w-full text-left px-4 py-2 text-xs font-bold text-[#202224] hover:bg-gray-50 rounded-lg">Edit</button>
+                                                    <button onClick={() => handleAction(item, "delete")} className="w-full text-left px-4 py-2 text-xs font-bold text-red-500 hover:bg-red-50 rounded-lg">Delete</button>
+                                                </>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className="p-4 space-y-3">
+                                    <div className="flex justify-between items-center">
+                                        <span className="text-[11px] font-bold text-[#A7A7A7]">Request Date</span>
+                                        <span className="text-xs font-bold text-[#202224]">{item.date}</span>
+                                    </div>
+                                    <div className="flex justify-between items-center">
+                                        <span className="text-[11px] font-bold text-[#A7A7A7]">Status</span>
+                                        <span className={cn(
+                                            "text-xs font-bold px-3 py-1 rounded-full",
+                                            item.status === "Open" ? "bg-[#EEF2FF] text-[#5678E9]" : "bg-[#E5F4E8] text-[#39973D]"
+                                        )}>
+                                            {item.status}
+                                        </span>
+                                    </div>
+                                    <div className="space-y-1">
+                                        <span className="text-[11px] font-bold text-[#A7A7A7]">Description</span>
+                                        <p className="text-[11px] leading-relaxed text-[#202224] line-clamp-2">
+                                            {item.description}
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                )}
             </div>
 
             {/* Modals */}
-            <ComplaintFormModal
-                open={showCreateModal}
-                onClose={() => setShowCreateModal(false)}
-                onSubmit={handleComplaintSubmit}
-            />
+            {activeTab === "complaint" ? (
+                <ComplaintFormModal
+                    open={showCreateModal}
+                    onClose={() => setShowCreateModal(false)}
+                    onSubmit={handleSubmit}
+                />
+            ) : (
+                <RequestFormModal
+                    open={showCreateModal}
+                    onClose={() => setShowCreateModal(false)}
+                    onSubmit={handleSubmit}
+                />
+            )}
 
-            <ComplaintFormModal
-                open={showEditModal}
-                onClose={() => {
-                    setShowEditModal(false);
-                    setSelectedComplaint(null);
-                }}
-                onSubmit={handleComplaintUpdate}
-                initialData={
-                    selectedComplaint
-                        ? {
-                            complainerName: selectedComplaint.complainerName,
-                            complaintName: selectedComplaint.complaintName,
-                            description: selectedComplaint.description,
-                            wing: selectedComplaint.unitLetter,
-                            unit: selectedComplaint.unitNumber,
-                            priority: selectedComplaint.priority,
-                            status: selectedComplaint.status,
-                        }
-                        : null
-                }
-                isEdit={true}
-            />
+            {activeTab === "complaint" ? (
+                <ComplaintFormModal
+                    open={showEditModal}
+                    onClose={() => setShowEditModal(false)}
+                    onSubmit={handleUpdate}
+                    initialData={selectedItem ? {
+                        complainerName: selectedItem.complainerName,
+                        complaintName: selectedItem.title,
+                        description: selectedItem.description,
+                        wing: selectedItem.wing,
+                        unit: selectedItem.unit,
+                        priority: selectedItem.priority,
+                        status: selectedItem.status as any,
+                    } : null}
+                    isEdit
+                />
+            ) : (
+                <RequestFormModal
+                    open={showEditModal}
+                    onClose={() => setShowEditModal(false)}
+                    onSubmit={handleUpdate}
+                    initialData={selectedItem ? {
+                        requesterName: selectedItem.complainerName,
+                        requestName: selectedItem.title,
+                        description: selectedItem.description,
+                        requestDate: selectedItem.date,
+                        wing: selectedItem.wing,
+                        unit: selectedItem.unit,
+                        priority: selectedItem.priority,
+                        status: selectedItem.status as any,
+                    } : null}
+                    isEdit
+                />
+            )}
 
-            <ComplaintViewModal
-                open={showViewModal}
-                onClose={() => {
-                    setShowViewModal(false);
-                    setSelectedComplaint(null);
-                }}
-                data={
-                    selectedComplaint
-                        ? {
-                            complainerName: selectedComplaint.complainerName,
-                            initials: selectedComplaint.initials,
-                            date: "Aug 5, 2024",
-                            complaintName: selectedComplaint.complaintName,
-                            description: selectedComplaint.description,
-                            wing: selectedComplaint.unitLetter,
-                            unit: selectedComplaint.unitNumber,
-                            priority: selectedComplaint.priority,
-                            status: selectedComplaint.status,
-                        }
-                        : null
-                }
-            />
+            {activeTab === "complaint" ? (
+                <ComplaintViewModal
+                    open={showViewModal}
+                    onClose={() => setShowViewModal(false)}
+                    data={selectedItem ? {
+                        complainerName: selectedItem.complainerName,
+                        initials: selectedItem.complainerName.charAt(0),
+                        date: selectedItem.date,
+                        complaintName: selectedItem.title,
+                        description: selectedItem.description,
+                        wing: selectedItem.wing,
+                        unit: selectedItem.unit,
+                        priority: selectedItem.priority,
+                        status: selectedItem.status as any,
+                    } : null}
+                />
+            ) : (
+                <RequestViewModal
+                    open={showViewModal}
+                    onClose={() => setShowViewModal(false)}
+                    data={selectedItem ? {
+                        requesterName: selectedItem.complainerName,
+                        avatar: "",
+                        date: selectedItem.date,
+                        requestName: selectedItem.title,
+                        description: selectedItem.description,
+                        wing: selectedItem.wing,
+                        unit: selectedItem.unit,
+                        priority: selectedItem.priority,
+                        status: selectedItem.status as any,
+                    } : null}
+                />
+            )}
 
             <DeleteConfirmModal
                 open={showDeleteModal}
-                onClose={() => {
-                    setShowDeleteModal(false);
-                    setSelectedComplaint(null);
-                }}
+                onClose={() => setShowDeleteModal(false)}
                 onConfirm={handleConfirmDelete}
-                title="Delete Complaint?"
-                message="Are you sure you want to delete this Complaint?"
+                title={`Delete ${activeTab}?`}
+                message={`Are you sure you want to delete this ${activeTab}?`}
             />
-        </>
+        </div>
     );
 }

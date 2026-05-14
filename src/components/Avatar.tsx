@@ -5,7 +5,7 @@ interface AvatarProps {
     src?: string;
     name: string;
     className?: string;
-    size?: "sm" | "md" | "lg";
+    size?: "xs" | "sm" | "md" | "lg";
 }
 
 export default function Avatar({ src, name, className, size = "md" }: AvatarProps) {
@@ -26,6 +26,7 @@ export default function Avatar({ src, name, className, size = "md" }: AvatarProp
     };
 
     const sizeClasses = {
+        xs: "h-6 w-6 text-[10px]",
         sm: "h-8 w-8 text-xs",
         md: "h-10 w-10 text-sm",
         lg: "h-12 w-12 text-base",

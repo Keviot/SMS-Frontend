@@ -30,7 +30,7 @@ import {
 const apiKey = import.meta.env.VITE_STREAM_API_KEY || "YOUR_STREAM_API_KEY";
 
 export default function AccessForums() {
-    const { socket } = useSocket();
+    const { socket, setActiveChatId } = useSocket();
     const [contacts, setContacts] = useState<Contact[]>([]);
     const [activeContact, setActiveContact] = useState<Contact | null>(null);
     const [messages, setMessages] = useState<any[]>([]);
@@ -41,6 +41,8 @@ export default function AccessForums() {
     const [videoClient, setVideoClient] = useState<StreamVideoClient | null>(null);
     const [activeCall, setActiveCall] = useState<Call | null>(null);
     const messagesEndRef = useRef<HTMLDivElement>(null);
+    const typingTimeoutRef = useRef<any>(null);
+    const fileInputRef = useRef<HTMLInputElement>(null);
 
     const scrollToBottom = () => {
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -146,6 +148,22 @@ export default function AccessForums() {
         initChat();
     }, [socket]);
 
+    // Use refs for the socket listener to avoid re-binding on every state change
+    const activeContactRef = useRef(activeContact);
+    const currentUserRef = useRef(currentUser);
+
+    useEffect(() => {
+        activeContactRef.current = activeContact;
+        if (activeContact) {
+            setActiveChatId(activeContact.id);
+        }
+        return () => setActiveChatId(null);
+    }, [activeContact, setActiveChatId]);
+
+    useEffect(() => {
+        currentUserRef.current = currentUser;
+    }, [currentUser]);
+
     // Fetch History when contact changes
     useEffect(() => {
         const fetchHistory = async () => {
@@ -162,10 +180,13 @@ export default function AccessForums() {
 
                 const formattedMessages = response.messages.map((m: any) => ({
                     id: m._id,
+                    tempId: m.tempId,
                     sender: m.sender._id === currentUser._id ? "me" : "them",
                     text: m.message,
+                    fileUrl: m.fileUrl,
+                    fileType: m.fileType,
                     time: new Date(m.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-                    type: "text",
+                    type: m.fileUrl ? m.fileType : "text",
                     senderName: `${m.sender.firstname} ${m.sender.lastname}`,
                     senderAvatar: m.sender.profileImage
                 }));
@@ -184,28 +205,50 @@ export default function AccessForums() {
         if (!socket) return;
 
         const handleNewMessage = (msg: any) => {
+            const currentContact = activeContactRef.current;
+            const currentU = currentUserRef.current;
+
             const senderId = msg.sender._id;
             const isCommunity = !msg.receiver;
             const contactId = isCommunity ? "community" : senderId;
 
             // 1. Update Messages if it belongs to the active chat
             const isMsgForActiveChat = isCommunity
-                ? activeContact?.id === "community"
-                : (senderId === activeContact?.id || senderId === currentUser?._id);
+                ? currentContact?.id === "community"
+                : (senderId === currentContact?.id || senderId === currentU?._id);
 
             if (isMsgForActiveChat) {
-                setMessages(prev => [...prev, {
-                    id: msg._id,
-                    sender: msg.sender._id === currentUser?._id ? "me" : "them",
-                    text: msg.message,
-                    time: new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-                    type: "text",
-                    senderName: `${msg.sender.firstname} ${msg.sender.lastname}`,
-                    senderAvatar: msg.sender.profileImage
-                }]);
+                setMessages(prev => {
+                    // Check if message already exists (deduplication for optimistic updates)
+                    const isDuplicate = prev.some(m => 
+                        (m.id === msg._id) || 
+                        (msg.tempId && m.tempId === msg.tempId) ||
+                        (!msg.tempId && m.text === msg.message && m.sender === (msg.sender._id === currentU?._id ? "me" : "them"))
+                    );
+
+                    if (isDuplicate) {
+                        // Update the optimistic message with the real ID from server if needed
+                        return prev.map(m => 
+                            (m.tempId && m.tempId === msg.tempId) ? { ...m, id: msg._id, tempId: undefined } : m
+                        );
+                    }
+
+                    return [...prev, {
+                        id: msg._id,
+                        tempId: msg.tempId,
+                        sender: msg.sender._id === currentU?._id ? "me" : "them",
+                        text: msg.message,
+                        fileUrl: msg.fileUrl,
+                        fileType: msg.fileType,
+                        time: new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                        type: msg.fileUrl ? msg.fileType : "text",
+                        senderName: `${msg.sender.firstname} ${msg.sender.lastname}`,
+                        senderAvatar: msg.sender.profileImage
+                    }];
+                });
             }
 
-            // 2. Update Contacts list (move to top, update last message, increment unread)
+            // 2. Update Contacts list
             setContacts(prevContacts => {
                 const contactIndex = prevContacts.findIndex(c => String(c.id) === String(contactId));
                 if (contactIndex === -1) return prevContacts;
@@ -213,10 +256,11 @@ export default function AccessForums() {
                 const updatedContact = { ...prevContacts[contactIndex] };
                 updatedContact.lastMessage = msg.message;
                 updatedContact.time = new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                updatedContact.typing = false; // Reset typing when message arrives
 
                 // Increment unread if message is not for active chat and not from me
-                const isCurrentActive = String(contactId) === String(activeContact?.id);
-                const isFromMe = String(senderId) === String(currentUser?._id);
+                const isCurrentActive = String(contactId) === String(currentContact?.id);
+                const isFromMe = String(senderId) === String(currentU?._id);
 
                 if (!isCurrentActive && !isFromMe) {
                     updatedContact.unread = (updatedContact.unread || 0) + 1;
@@ -236,10 +280,10 @@ export default function AccessForums() {
                         }
                     });
 
-                    // Optional: Play sound
+                    // Sound
                     try {
                         const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2354/2354-preview.mp3');
-                        audio.play().catch(() => { }); // Ignore if browser blocks autoplay
+                        audio.play().catch(() => { });
                     } catch (e) { }
                 }
 
@@ -250,28 +294,58 @@ export default function AccessForums() {
             });
         };
 
+        const handleTypingStart = (data: any) => {
+            const contactId = data.isCommunity ? "community" : data.senderId;
+            setContacts(prev => prev.map(c => String(c.id) === String(contactId) ? { ...c, typing: true } : c));
+        };
+
+        const handleTypingStop = (data: any) => {
+            const contactId = data.isCommunity ? "community" : data.senderId;
+            setContacts(prev => prev.map(c => String(c.id) === String(contactId) ? { ...c, typing: false } : c));
+        };
+
         socket.on("new-message", handleNewMessage);
+        socket.on("user-typing", handleTypingStart);
+        socket.on("user-stop-typing", handleTypingStop);
+
         return () => {
             socket.off("new-message", handleNewMessage);
+            socket.off("user-typing", handleTypingStart);
+            socket.off("user-stop-typing", handleTypingStop);
         };
-    }, [socket, activeContact, currentUser]);
+    }, [socket]);
 
     const handleSendMessage = (e: React.FormEvent) => {
         e.preventDefault();
         if (!newMessage.trim() || !socket || !currentUser || !activeContact) return;
 
-        const societyId = currentUser.society || currentUser.societies?.[0]?._id;
-
+        const societyId = currentUser.society?._id || currentUser.society || currentUser.societies?.[0]?._id;
+        const tempId = Date.now().toString();
         const messageData = {
             societyId,
             senderId: currentUser._id,
             message: newMessage,
-            receiverId: activeContact.id === "community" ? null : activeContact.id
+            receiverId: activeContact.id === "community" ? null : activeContact.id,
+            tempId
         };
 
-        socket.emit("chat-message", messageData);
+        // 1. Optimistic Messages Update
+        const optimisticMsg = {
+            id: tempId,
+            tempId: tempId,
+            sender: "me",
+            text: newMessage,
+            time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+            type: "text",
+            senderName: `${currentUser.firstname} ${currentUser.lastname}`,
+            senderAvatar: currentUser.profileImage
+        };
+        setMessages(prev => [...prev, optimisticMsg]);
 
-        // Optimistically update contacts list to move current to top and update last message
+        socket.emit("chat-message", messageData);
+        socket.emit("stop-typing", { societyId, senderId: currentUser._id, receiverId: activeContact.id === "community" ? null : activeContact.id });
+
+        // 2. Optimistically update contacts list
         setContacts(prev => {
             const contactIndex = prev.findIndex(c => String(c.id) === String(activeContact.id));
             if (contactIndex === -1) return prev;
@@ -279,6 +353,7 @@ export default function AccessForums() {
             const updatedContact = { ...prev[contactIndex] };
             updatedContact.lastMessage = newMessage;
             updatedContact.time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            updatedContact.typing = false;
 
             const newContacts = [...prev];
             newContacts.splice(contactIndex, 1);
@@ -289,8 +364,73 @@ export default function AccessForums() {
         setNewMessage("");
     };
 
+    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setNewMessage(e.target.value);
+        if (!socket || !currentUser || !activeContact) return;
+
+        const societyId = currentUser.society?._id || currentUser.society || currentUser.societies?.[0]?._id;
+        const data = {
+            societyId,
+            senderId: currentUser._id,
+            receiverId: activeContact.id === "community" ? null : activeContact.id
+        };
+
+        socket.emit("typing", data);
+
+        if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+        typingTimeoutRef.current = setTimeout(() => {
+            socket.emit("stop-typing", data);
+        }, 3000);
+    };
+
     const handleIconClick = (action: string) => {
-        toast(`Action: ${action}`, { icon: '💬' });
+        if (action === 'Attach File' || action === 'Camera') {
+            fileInputRef.current?.click();
+        } else {
+            toast(`Action: ${action}`, { icon: '💬' });
+        }
+    };
+
+    const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file || !socket || !currentUser || !activeContact) return;
+
+        try {
+            const loadingToast = toast.loading("Uploading file...");
+            const res = await chatApi.upload(file);
+            toast.dismiss(loadingToast);
+
+            const societyId = currentUser.society?._id || currentUser.society || currentUser.societies?.[0]?._id;
+            const tempId = Date.now().toString();
+            const messageData = {
+                societyId,
+                senderId: currentUser._id,
+                message: file.name,
+                fileUrl: res.fileUrl,
+                fileType: res.fileType,
+                receiverId: activeContact.id === "community" ? null : activeContact.id,
+                tempId
+            };
+
+            // Optimistic Update
+            setMessages(prev => [...prev, {
+                id: tempId,
+                tempId,
+                sender: "me",
+                text: file.name,
+                fileUrl: res.fileUrl,
+                fileType: res.fileType,
+                time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                type: res.fileType,
+                senderName: `${currentUser.firstname} ${currentUser.lastname}`,
+                senderAvatar: currentUser.profileImage
+            }]);
+
+            socket.emit("chat-message", messageData);
+            toast.success("File sent!");
+        } catch (error: any) {
+            toast.error("Failed to upload file");
+        }
     };
 
     const startCall = async () => {
@@ -405,7 +545,9 @@ export default function AccessForums() {
                                             <h3 className="text-sm font-bold text-[#202224]">
                                                 {activeContact.name} {activeContact.unit}
                                             </h3>
-                                            <p className="text-[10px] text-[#A7A7A7]">Active Now</p>
+                                            <p className={cn("text-[10px]", activeContact.typing ? "text-[#5678E9] font-bold" : "text-[#A7A7A7]")}>
+                                                {activeContact.typing ? "Typing..." : "Active Now"}
+                                            </p>
                                         </div>
                                     </div>
                                     <div className="flex items-center gap-4">
@@ -456,22 +598,29 @@ export default function AccessForums() {
                                                 {msg.type === "text" && <p>{msg.text}</p>}
                                                 {msg.type === "image" && (
                                                     <div className="overflow-hidden rounded-xl border border-[#F1F1F1] bg-white p-1">
-                                                        <img src={msg.image} alt="Sent" className="max-h-60 w-full rounded-lg object-cover" />
+                                                        <a href={msg.fileUrl} target="_blank" rel="noopener noreferrer">
+                                                            <img src={msg.fileUrl} alt="Sent" className="max-h-60 w-full rounded-lg object-cover cursor-pointer" />
+                                                        </a>
                                                     </div>
                                                 )}
-                                                {msg.type === "file" && (
-                                                    <div className={cn(
-                                                        "flex items-center gap-3 rounded-xl p-2",
-                                                        msg.sender === "me" ? "bg-white/10" : "bg-white"
-                                                    )}>
+                                                {(msg.type === "pdf" || msg.type === "file") && (
+                                                    <a 
+                                                        href={msg.fileUrl} 
+                                                        target="_blank" 
+                                                        rel="noopener noreferrer"
+                                                        className={cn(
+                                                            "flex items-center gap-3 rounded-xl p-2 hover:opacity-80 transition-opacity",
+                                                            msg.sender === "me" ? "bg-white/10" : "bg-white"
+                                                        )}
+                                                    >
                                                         <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#FEECEC] text-[#E74C3C]">
                                                             <FileText size={20} />
                                                         </div>
                                                         <div className="flex-1 overflow-hidden pr-4">
-                                                            <p className={cn("truncate font-bold text-sm", msg.sender === "me" ? "text-white" : "text-[#202224]")}>{msg.fileName}</p>
-                                                            <p className={cn("text-[10px]", msg.sender === "me" ? "text-white/70" : "text-[#A7A7A7]")}>{msg.fileSize}</p>
+                                                            <p className={cn("truncate font-bold text-sm", msg.sender === "me" ? "text-white" : "text-[#202224]")}>{msg.text || "Document"}</p>
+                                                            <p className={cn("text-[10px]", msg.sender === "me" ? "text-white/70" : "text-[#A7A7A7]")}>Click to view</p>
                                                         </div>
-                                                    </div>
+                                                    </a>
                                                 )}
                                             </div>
                                             <span className="mt-1 text-[10px] text-[#A7A7A7]">{msg.time}</span>
@@ -489,11 +638,17 @@ export default function AccessForums() {
                                         <input
                                             type="text"
                                             value={newMessage}
-                                            onChange={(e) => setNewMessage(e.target.value)}
+                                            onChange={handleInputChange}
                                             placeholder="Type a message"
                                             className="flex-1 bg-transparent text-sm outline-none placeholder:text-[#A7A7A7]"
                                         />
                                         <div className="flex items-center gap-3">
+                                            <input 
+                                                type="file" 
+                                                ref={fileInputRef} 
+                                                onChange={handleFileUpload} 
+                                                className="hidden" 
+                                            />
                                             <button type="button" onClick={() => handleIconClick('Attach File')} className="text-[#202224] hover:text-[#5678E9] transition-colors">
                                                 <Paperclip size={20} />
                                             </button>

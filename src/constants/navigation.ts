@@ -58,7 +58,7 @@ export const adminNavigation: NavItem[] = [
     icon: MessageSquareWarning,
     path: "/complaint-tracking",
     children: [
-      { label: "Create Complaint", path: "/complaint-tracking/create-complaint" },
+      { label: "Create Complaint", path: "/complaint-tracking" },
       { label: "Request Tracking", path: "/complaint-tracking/request-tracking" },
     ],
   },
@@ -80,6 +80,16 @@ export const adminNavigation: NavItem[] = [
     label: "Announcement",
     icon: AnnouncementIcon,
     path: "/announcement",
+  },
+  {
+    label: "Community",
+    icon: Users,
+    path: "/community/access-forums",
+    children: [
+      { label: "Access Forums", path: "/community/access-forums" },
+      { label: "Polls", path: "/community/polls" },
+      { label: "Communities Discussion", path: "/community/discussion" },
+    ],
   },
 ];
 
