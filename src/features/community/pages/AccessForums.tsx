@@ -52,6 +52,7 @@ export default function AccessForums() {
 
     // Initialize Video Client
     useEffect(() => {
+        let client: StreamVideoClient | null = null;
         const initVideo = async () => {
             try {
                 const profile = await authApi.getProfile();
@@ -59,7 +60,7 @@ export default function AccessForums() {
                 if (!user) return;
 
                 const tokenData = await videoApi.generateToken(user._id);
-                const client = new StreamVideoClient({
+                client = new StreamVideoClient({
                     apiKey,
                     user: {
                         id: user._id,
@@ -71,13 +72,14 @@ export default function AccessForums() {
                 setVideoClient(client);
             } catch (error) {
                 console.error("Video initialization failed:", error);
+                toast.error("Video calling initialization failed. Please check your API credentials.");
             }
         };
 
         initVideo();
 
         return () => {
-            if (videoClient) videoClient.disconnectUser();
+            if (client) client.disconnectUser();
         };
     }, []);
 
@@ -100,7 +102,7 @@ export default function AccessForums() {
 
                 // Fetch Members
                 const response = await chatApi.getMembers(societyId);
-                
+
                 // Add Community Forum as a special contact
                 const communityForum: Contact = {
                     id: "community",
@@ -117,7 +119,7 @@ export default function AccessForums() {
                     const firstName = m.firstname || "";
                     const lastName = m.lastname || "";
                     const fullName = `${firstName} ${lastName}`.trim();
-                    
+
                     return {
                         id: m._id,
                         name: fullName.endsWith('-') ? fullName.slice(0, -1).trim() : fullName,
@@ -157,7 +159,7 @@ export default function AccessForums() {
                 } else {
                     response = await chatApi.getPersonalHistory(activeContact.id);
                 }
-                
+
                 const formattedMessages = response.messages.map((m: any) => ({
                     id: m._id,
                     sender: m.sender._id === currentUser._id ? "me" : "them",
@@ -187,8 +189,8 @@ export default function AccessForums() {
             const contactId = isCommunity ? "community" : senderId;
 
             // 1. Update Messages if it belongs to the active chat
-            const isMsgForActiveChat = isCommunity 
-                ? activeContact?.id === "community" 
+            const isMsgForActiveChat = isCommunity
+                ? activeContact?.id === "community"
                 : (senderId === activeContact?.id || senderId === currentUser?._id);
 
             if (isMsgForActiveChat) {
@@ -211,14 +213,14 @@ export default function AccessForums() {
                 const updatedContact = { ...prevContacts[contactIndex] };
                 updatedContact.lastMessage = msg.message;
                 updatedContact.time = new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-                
+
                 // Increment unread if message is not for active chat and not from me
                 const isCurrentActive = String(contactId) === String(activeContact?.id);
                 const isFromMe = String(senderId) === String(currentUser?._id);
 
                 if (!isCurrentActive && !isFromMe) {
                     updatedContact.unread = (updatedContact.unread || 0) + 1;
-                    
+
                     // Show Notification
                     toast(`${updatedContact.name}: ${msg.message}`, {
                         icon: '💬',
@@ -237,8 +239,8 @@ export default function AccessForums() {
                     // Optional: Play sound
                     try {
                         const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2354/2354-preview.mp3');
-                        audio.play().catch(() => {}); // Ignore if browser blocks autoplay
-                    } catch (e) {}
+                        audio.play().catch(() => { }); // Ignore if browser blocks autoplay
+                    } catch (e) { }
                 }
 
                 const newContacts = [...prevContacts];
@@ -259,7 +261,7 @@ export default function AccessForums() {
         if (!newMessage.trim() || !socket || !currentUser || !activeContact) return;
 
         const societyId = currentUser.society || currentUser.societies?.[0]?._id;
-        
+
         const messageData = {
             societyId,
             senderId: currentUser._id,
@@ -310,13 +312,53 @@ export default function AccessForums() {
             const call = videoClient.call("default", callId);
             await call.join({ create: true });
             setActiveCall(call);
-        } catch (error) {
+        } catch (error: any) {
             console.error("Failed to start call:", error);
-            toast.error("Failed to start video call");
+            if (error.isWSFailure || error.message?.includes("WS connection")) {
+                toast.error("Connection failed: Please check if STREAM_SECRET is correct in backend .env");
+            } else {
+                toast.error("Failed to start video call");
+            }
         }
     };
 
-    if (!videoClient || loading) {
+    const startAudioCall = async () => {
+        if (!videoClient || !activeContact || !currentUser) {
+            toast.error("Call client not ready or no contact selected");
+            return;
+        }
+
+        try {
+            let callId;
+            if (activeContact.id === "community") {
+                const societyId = currentUser.society || currentUser.societies?.[0]?._id;
+                callId = `society_audio_${societyId}`;
+            } else {
+                const ids = [currentUser._id, activeContact.id].sort();
+                callId = `personal_audio_${ids[0]}_${ids[1]}`;
+            }
+
+            const call = videoClient.call("default", callId);
+            // Join with camera disabled for audio call
+            await call.getOrCreate({
+                data: {
+                    members: [
+                        { user_id: currentUser._id },
+                        ...(activeContact.id !== "community" ? [{ user_id: activeContact.id }] : [])
+                    ]
+                }
+            });
+
+            await call.join({ create: true });
+            await call.camera.disable();
+            setActiveCall(call);
+        } catch (error: any) {
+            console.error("Failed to start audio call:", error);
+            toast.error("Failed to start audio call");
+        }
+    };
+
+    if (loading) {
         return (
             <div className="flex h-[calc(100vh-120px)] w-full items-center justify-center rounded-2xl bg-white border border-[#F4F4F4]">
                 <Loader2 className="h-10 w-10 animate-spin text-[#5678E9]" />
@@ -325,7 +367,7 @@ export default function AccessForums() {
     }
 
     return (
-        <StreamVideo client={videoClient}>
+        <StreamVideo client={videoClient || new StreamVideoClient({ apiKey: "placeholder", user: { id: "placeholder" }, token: "" })}>
             {activeCall ? (
                 <StreamCall call={activeCall}>
                     <div className="fixed inset-0 z-[100] flex flex-col bg-black">
@@ -342,7 +384,7 @@ export default function AccessForums() {
                         activeContactId={activeContact?.id || ""}
                         onContactSelect={(contact) => {
                             setActiveContact(contact);
-                            setContacts(prev => prev.map(c => 
+                            setContacts(prev => prev.map(c =>
                                 c.id === contact.id ? { ...c, unread: 0 } : c
                             ));
                         }}
@@ -370,7 +412,7 @@ export default function AccessForums() {
                                         <button onClick={startCall} className="rounded-full p-2 text-[#202224] hover:bg-[#F6F8FB] transition-colors">
                                             <Video size={20} />
                                         </button>
-                                        <button onClick={() => handleIconClick('Voice Call')} className="rounded-full p-2 text-[#202224] hover:bg-[#F6F8FB] transition-colors">
+                                        <button onClick={() => startAudioCall()} className="rounded-full p-2 text-[#202224] hover:bg-[#F6F8FB] transition-colors">
                                             <Phone size={18} />
                                         </button>
                                         <div className="relative">
