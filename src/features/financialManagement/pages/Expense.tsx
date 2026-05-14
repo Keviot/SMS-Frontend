@@ -5,7 +5,7 @@ import ExpenseFormModal, { type ExpenseFormData } from "../components/ExpenseFor
 import DeleteConfirmModal from "../components/DeleteConfirmModal";
 import ExpenseViewModal from "../components/ExpenseViewModal";
 import { EditIcon, EyeIcon, TrashIcon } from "../../../assets/icons/admin-dashboard-icons";
-import { financialApi } from "../../../services/api";
+import { financialApi, authApi } from "../../../services/api";
 import toast from "react-hot-toast";
 
 type BillFormat = "JPG" | "PDF" | "PNG" | "GIF";
@@ -89,12 +89,25 @@ export default function Expense() {
 
     const handleExpenseSubmit = async (data: ExpenseFormData) => {
         try {
+            // Get user profile to get society ID
+            const profileResponse = await authApi.getProfile();
+            const user = profileResponse.user;
+
+            // Extract society ID
+            const societyId = user?.society?._id || user?.society || (user?.societies?.[0]?._id);
+
+            if (!societyId) {
+                toast.error("Society ID not found in profile. Please ensure your account is linked to a society.");
+                return;
+            }
+
             const payload = {
                 title: data.title,
                 description: data.description,
                 date: new Date(data.date).toISOString(),
                 amount: parseFloat(data.amount),
                 uploadBill: data.billName || "", // TODO: Handle file upload properly
+                society: societyId,
             };
 
             if (selectedExpense) {
