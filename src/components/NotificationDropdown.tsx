@@ -45,6 +45,8 @@ export default function NotificationDropdown({ onClose }: NotificationDropdownPr
       navigate("/complaint-tracking");
     } else if (title.includes("maintenance") || type === "payment") {
       navigate("/financial-management");
+    } else if (title.includes("message") || type === "chat") {
+      navigate("/community/access-forums");
     }
   };
 

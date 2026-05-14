@@ -1106,7 +1106,26 @@ export const pollApi = {
         return handleResponse(response);
     },
 
-    answer: async (data: { pollId: string; optionIds: string[] }) => {
+    getActive: async (societyId: string) => {
+        const response = await fetch(`${API_URL}/poll/get?societyId=${societyId}&status=Active`, {
+            method: "GET",
+            credentials: "include",
+            headers: {
+                "Content-Type": "application/json",
+                ...getAuthHeader()
+            },
+        });
+        return handleResponse(response);
+    },
+
+    answer: async (data: { 
+        pollId: string; 
+        optionIds?: string[]; 
+        rating?: number; 
+        numericValue?: number; 
+        text?: string; 
+        ranking?: string[] 
+    }) => {
         const response = await fetch(`${API_URL}/poll/answer`, {
             method: "POST",
             credentials: "include",
@@ -1115,6 +1134,43 @@ export const pollApi = {
                 ...getAuthHeader()
             },
             body: JSON.stringify(data),
+        });
+        return handleResponse(response);
+    },
+
+    getResults: async (pollId: string) => {
+        const response = await fetch(`${API_URL}/poll/results/${pollId}`, {
+            method: "GET",
+            credentials: "include",
+            headers: {
+                "Content-Type": "application/json",
+                ...getAuthHeader()
+            },
+        });
+        return handleResponse(response);
+    },
+
+    updateStatus: async (pollId: string, status: string) => {
+        const response = await fetch(`${API_URL}/poll/status/${pollId}`, {
+            method: "PATCH",
+            credentials: "include",
+            headers: {
+                "Content-Type": "application/json",
+                ...getAuthHeader()
+            },
+            body: JSON.stringify({ status }),
+        });
+        return handleResponse(response);
+    },
+
+    delete: async (pollId: string) => {
+        const response = await fetch(`${API_URL}/poll/${pollId}`, {
+            method: "DELETE",
+            credentials: "include",
+            headers: {
+                "Content-Type": "application/json",
+                ...getAuthHeader()
+            },
         });
         return handleResponse(response);
     },

@@ -57,7 +57,7 @@ export default function AccessForums() {
 
                 // Fetch Members
                 const response = await chatApi.getMembers(societyId);
-                
+
                 // Add Community Forum as a special contact
                 const communityForum: Contact = {
                     id: "community",
@@ -74,7 +74,7 @@ export default function AccessForums() {
                     const firstName = m.firstname || "";
                     const lastName = m.lastname || "";
                     const fullName = `${firstName} ${lastName}`.trim();
-                    
+
                     return {
                         id: m._id,
                         name: fullName.endsWith('-') ? fullName.slice(0, -1).trim() : fullName,
@@ -114,7 +114,7 @@ export default function AccessForums() {
                 } else {
                     response = await chatApi.getPersonalHistory(activeContact.id);
                 }
-                
+
                 const formattedMessages = response.messages.map((m: any) => ({
                     id: m._id,
                     sender: m.sender._id === currentUser._id ? "me" : "them",
@@ -144,8 +144,8 @@ export default function AccessForums() {
             const contactId = isCommunity ? "community" : senderId;
 
             // 1. Update Messages if it belongs to the active chat
-            const isMsgForActiveChat = isCommunity 
-                ? activeContact?.id === "community" 
+            const isMsgForActiveChat = isCommunity
+                ? activeContact?.id === "community"
                 : (senderId === activeContact?.id || senderId === currentUser?._id);
 
             if (isMsgForActiveChat) {
@@ -168,14 +168,14 @@ export default function AccessForums() {
                 const updatedContact = { ...prevContacts[contactIndex] };
                 updatedContact.lastMessage = msg.message;
                 updatedContact.time = new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-                
+
                 // Increment unread if message is not for active chat and not from me
                 const isCurrentActive = String(contactId) === String(activeContact?.id);
                 const isFromMe = String(senderId) === String(currentUser?._id);
 
                 if (!isCurrentActive && !isFromMe) {
                     updatedContact.unread = (updatedContact.unread || 0) + 1;
-                    
+
                     // Show Notification
                     toast(`${updatedContact.name}: ${msg.message}`, {
                         icon: '💬',
@@ -194,8 +194,8 @@ export default function AccessForums() {
                     // Optional: Play sound
                     try {
                         const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2354/2354-preview.mp3');
-                        audio.play().catch(() => {}); // Ignore if browser blocks autoplay
-                    } catch (e) {}
+                        audio.play().catch(() => { }); // Ignore if browser blocks autoplay
+                    } catch (e) { }
                 }
 
                 const newContacts = [...prevContacts];
@@ -216,7 +216,7 @@ export default function AccessForums() {
         if (!newMessage.trim() || !socket || !currentUser || !activeContact) return;
 
         const societyId = currentUser.society || currentUser.societies?.[0]?._id;
-        
+
         const messageData = {
             societyId,
             senderId: currentUser._id,
@@ -263,7 +263,7 @@ export default function AccessForums() {
                 activeContactId={activeContact?.id || ""}
                 onContactSelect={(contact) => {
                     setActiveContact(contact);
-                    setContacts(prev => prev.map(c => 
+                    setContacts(prev => prev.map(c =>
                         c.id === contact.id ? { ...c, unread: 0 } : c
                     ));
                 }}

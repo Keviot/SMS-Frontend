@@ -300,4 +300,14 @@ export default function CommunitiesDiscussion() {
             </div>
         </div>
     );
+
+    if (!videoClient) {
+        return renderContent();
+    }
+
+    return (
+        <StreamVideo client={videoClient}>
+            {renderContent()}
+        </StreamVideo>
+    );
 }

@@ -1,7 +1,7 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState, useRef } from 'react';
 import { io, Socket } from 'socket.io-client';
 import toast from 'react-hot-toast';
-import { BASE_URL, notificationApi } from '../services/api';
+import { BASE_URL, notificationApi, authApi } from '../services/api';
 
 interface Notification {
   id: string;
@@ -20,6 +20,8 @@ interface SocketContextType {
   markAsRead: (id: string) => void;
   clearNotifications: () => void;
   refreshNotifications: () => void;
+  activeChatId: string | null;
+  setActiveChatId: (id: string | null) => void;
 }
 
 const SocketContext = createContext<SocketContextType>({
@@ -29,6 +31,8 @@ const SocketContext = createContext<SocketContextType>({
   markAsRead: () => {},
   clearNotifications: () => {},
   refreshNotifications: () => {},
+  activeChatId: null,
+  setActiveChatId: () => {},
 });
 
 export const useSocket = () => useContext(SocketContext);
@@ -37,6 +41,20 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const [socket, setSocket] = useState<Socket | null>(null);
   const [isConnected, setIsConnected] = useState(false);
   const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [activeChatId, setActiveChatId] = useState<string | null>(null);
+  const [currentUser, setCurrentUser] = useState<any>(null);
+
+  // Use refs to access latest values in socket listeners without re-binding
+  const currentUserRef = useRef(currentUser);
+  const activeChatIdRef = useRef(activeChatId);
+
+  useEffect(() => {
+    currentUserRef.current = currentUser;
+  }, [currentUser]);
+
+  useEffect(() => {
+    activeChatIdRef.current = activeChatId;
+  }, [activeChatId]);
 
   const fetchInitialNotifications = async () => {
     try {
@@ -55,6 +73,19 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       console.error("Failed to fetch notifications:", error);
     }
   };
+
+  useEffect(() => {
+    const init = async () => {
+      try {
+        const profile = await authApi.getProfile();
+        setCurrentUser(profile.user);
+        await fetchInitialNotifications();
+      } catch (error) {
+        console.error("Failed to initialize SocketContext:", error);
+      }
+    };
+    init();
+  }, []);
 
   useEffect(() => {
     fetchInitialNotifications();
@@ -100,6 +131,50 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       }
     });
 
+    socketInstance.on('new-message', (msg: any) => {
+      console.log('Received new-message:', msg);
+      const currentU = currentUserRef.current;
+      
+      const isFromMe = currentU ? String(msg.sender._id) === String(currentU._id) : false;
+      const isCommunity = !msg.receiver;
+      const contactId = isCommunity ? "community" : String(msg.sender._id);
+      
+      // Don't notify if message is from me or for the currently active chat
+      if (isFromMe || String(contactId) === String(activeChatIdRef.current)) return;
+
+      const newNotification: Notification = {
+        id: msg._id || Date.now().toString(),
+        title: `New Message from ${msg.sender.firstname}`,
+        message: msg.message,
+        type: 'chat',
+        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        ago: 'Just now',
+        status: 'unread',
+      };
+
+      setNotifications(prev => [newNotification, ...prev]);
+
+      // Show toast notification
+      toast(`${msg.sender.firstname}: ${msg.message}`, {
+        icon: '💬',
+        position: 'top-right',
+        style: {
+          borderRadius: '12px',
+          background: '#fff',
+          color: '#202224',
+          boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)',
+          borderLeft: '4px solid #5678E9',
+          padding: '16px',
+        }
+      });
+
+      // Play sound
+      try {
+        const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2354/2354-preview.mp3');
+        audio.play().catch(() => {});
+      } catch (e) {}
+    });
+
     setSocket(socketInstance);
 
     return () => {
@@ -126,7 +201,16 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   };
 
   return (
-    <SocketContext.Provider value={{ socket, isConnected, notifications, markAsRead, clearNotifications, refreshNotifications: fetchInitialNotifications }}>
+    <SocketContext.Provider value={{ 
+      socket, 
+      isConnected, 
+      notifications, 
+      markAsRead, 
+      clearNotifications, 
+      refreshNotifications: fetchInitialNotifications,
+      activeChatId,
+      setActiveChatId
+    }}>
       {children}
     </SocketContext.Provider>
   );
