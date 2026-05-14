@@ -2,13 +2,26 @@ import { X, Download } from "lucide-react";
 import Button from "../../../ui/Button";
 
 interface Invoice {
-  id: string;
-  invoiceId: string;
-  ownerName: string;
-  billDate: string;
-  paymentDate: string;
-  maintenanceAmount: number;
-  pendingAmount: number;
+  _id: string;
+  invoiceId?: string;
+  resident?: {
+    _id: string;
+    name?: string;
+    firstname?: string;
+    lastname?: string;
+    phoneNumber?: string;
+    email?: string;
+    wing?: string;
+    unit?: string;
+  };
+  date: string;
+  paymentDate?: string;
+  maintenanceSetup?: {
+    maintenanceAmount: number;
+  };
+  amount?: number;
+  penalty?: number;
+  status: string;
 }
 
 interface InvoiceDetailsModalProps {
@@ -28,6 +41,38 @@ export default function InvoiceDetailsModal({
 
   const isEventInvoice = title === "Event Invoices List";
 
+  const getOwnerName = () => {
+    if (invoice.resident?.name) return invoice.resident.name;
+    if (invoice.resident?.firstname && invoice.resident?.lastname) {
+      return `${invoice.resident.firstname} ${invoice.resident.lastname}`;
+    }
+    return "N/A";
+  };
+
+  const getMaintenanceAmount = () => {
+    return invoice.maintenanceSetup?.maintenanceAmount || invoice.amount || 0;
+  };
+
+  const getPenalty = () => {
+    return invoice.penalty || 0;
+  };
+
+  const getGrandTotal = () => {
+    return getMaintenanceAmount() + getPenalty();
+  };
+
+  const formatDate = (dateString: string) => {
+    if (!dateString) return "N/A";
+    const date = new Date(dateString);
+    return date.toLocaleDateString("en-GB");
+  };
+
+  const getAddress = () => {
+    const wing = invoice.resident?.wing || "";
+    const unit = invoice.resident?.unit || "";
+    return wing && unit ? `Wing ${wing}, Unit ${unit}` : "N/A";
+  };
+
   return (
     <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/50 px-4 py-[60px]">
       <div className="relative w-full max-w-[410px] rounded-[15px] bg-white p-[20px] shadow-[0_8px_24px_rgba(0,0,0,0.18)]">
@@ -45,10 +90,10 @@ export default function InvoiceDetailsModal({
 
         <div className="rounded-[10px] bg-[#F6F8FB] px-[14px] py-[12px]">
           <div className="grid grid-cols-2 gap-x-[24px] gap-y-[16px]">
-            <InfoItem label="Invoice Id" value="125465" />
-            <InfoItem label="Owner Name" value="Terry Rhiel Madsen" />
-            <InfoItem label="Bill Date" value="10/02/2024" />
-            <InfoItem label="Payment Date" value="10/02/2024" />
+            <InfoItem label="Invoice Id" value={invoice.invoiceId || invoice._id.slice(-6).toUpperCase()} />
+            <InfoItem label="Owner Name" value={getOwnerName()} />
+            <InfoItem label="Bill Date" value={formatDate(invoice.date)} />
+            <InfoItem label="Payment Date" value={invoice.paymentDate ? formatDate(invoice.paymentDate) : "N/A"} />
             {isEventInvoice && (
               <>
                 <InfoItem label="Event Date" value="6549873521" />
@@ -80,17 +125,17 @@ export default function InvoiceDetailsModal({
           ) : (
             <>
               <div className="mt-[16px]">
-                <InfoItem label="Phone Number" value="6549873521" />
+                <InfoItem label="Phone Number" value={invoice.resident?.phoneNumber || "N/A"} />
               </div>
 
               <div className="mt-[16px]">
-                <InfoItem label="Email" value="MaryDHurst@jourrapide.com" />
+                <InfoItem label="Email" value={invoice.resident?.email || "N/A"} />
               </div>
 
               <div className="mt-[16px]">
                 <InfoItem
                   label="Address"
-                  value="2118 Thornridge Cir. Syracuse, Connecticut 35624"
+                  value={getAddress()}
                 />
               </div>
             </>
@@ -103,7 +148,7 @@ export default function InvoiceDetailsModal({
               Maintenance Amount
             </span>
             <span className="text-[13px] font-medium leading-[18px] text-[#39973D]">
-              ₹ 1500.00
+              ₹ {getMaintenanceAmount().toLocaleString()}
             </span>
           </div>
 
@@ -113,7 +158,7 @@ export default function InvoiceDetailsModal({
                 Penalty
               </span>
               <span className="text-[13px] font-medium leading-[18px] text-[#FF3B30]">
-                ₹ 350.00
+                ₹ {getPenalty().toLocaleString()}
               </span>
             </div>
           )}
@@ -123,7 +168,7 @@ export default function InvoiceDetailsModal({
               Grand Total
             </span>
             <span className="text-[13px] font-semibold leading-[18px] text-[#202224]">
-              ₹ 1850.00
+              ₹ {getGrandTotal().toLocaleString()}
             </span>
           </div>
         </div>
@@ -133,8 +178,7 @@ export default function InvoiceDetailsModal({
             Note
           </p>
           <p className="mt-[6px] text-[13px] font-medium leading-[20px] text-[#202224]">
-            A visual representation of your spending categories visual
-            representation.
+            Status: <span className="font-semibold capitalize">{invoice.status}</span>
           </p>
         </div>
 
