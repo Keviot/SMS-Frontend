@@ -10,6 +10,7 @@ interface OtherIncomeCardProps {
     date: string;
     dueDate: string;
     description: string;
+    isEvent?: boolean;
   };
   onEdit: (id: string) => void;
   onDelete: (id: string) => void;
@@ -94,14 +95,18 @@ export default function OtherIncomeCard({
       <div className="px-4 py-3">
         <div className="space-y-2 text-xs">
           <div className="flex items-center justify-between gap-3">
-            <span className="font-medium text-[#6F7786]">Amount Per Member</span>
+            <span className="font-medium text-[#6F7786]">
+              {data.isEvent ? "Total Amount" : "Amount Per Member"}
+            </span>
             <span className="font-semibold text-[#5678E9]">
-              ₹{data.amountPerMember}
+              ₹{data.isEvent ? (data.amountPerMember * data.totalMember) : data.amountPerMember}
             </span>
           </div>
 
           <div className="flex items-center justify-between gap-3">
-            <span className="font-medium text-[#6F7786]">Total Member</span>
+            <span className="font-medium text-[#6F7786]">
+              {data.isEvent ? "Total Participants" : "Total Member"}
+            </span>
             <span className="font-semibold text-[#202224]">
               {data.totalMember}
             </span>

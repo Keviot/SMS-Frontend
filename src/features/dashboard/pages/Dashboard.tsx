@@ -61,7 +61,8 @@ export default function Dashboard() {
           announcementsData,
           otherIncomeData,
           expenseData,
-          residentsData
+          residentsData,
+          eventPaymentData
         ] = await Promise.all([
           fetchWithFallback(complaintApi.getAllComplaints(societyId), { complainList: [] }),
           fetchWithFallback(importantNumberApi.getAll(), { data: [] }),
@@ -69,7 +70,8 @@ export default function Dashboard() {
           fetchWithFallback(announcementApi.getAll(societyId), { announcement: [] }),
           fetchWithFallback(financialApi.getOtherIncome(), { data: [] }),
           fetchWithFallback(financialApi.getExpenses(), { data: [] }),
-          fetchWithFallback(residentApi.getAll(), { data: [] })
+          fetchWithFallback(residentApi.getAll(), { data: [] }),
+          import("../../../services/api").then(m => m.eventPaymentApi.get()).catch(() => ({ data: [] }))
         ]);
 
         // Safe date formatting helper
@@ -121,6 +123,7 @@ export default function Dashboard() {
         const allMaintenance = ensureArray(maintenanceData);
         const allOtherIncome = ensureArray(otherIncomeData);
         const allExpenses = ensureArray(expenseData);
+        const allEventPayments = ensureArray(eventPaymentData);
 
         const collectedMaintenance = allMaintenance
           .filter((m: any) => m && ["paid", "done"].includes(m.status?.toLowerCase()))
@@ -131,7 +134,9 @@ export default function Dashboard() {
           }, 0);
 
         const totalOtherIncome = allOtherIncome.reduce((sum: number, i: any) => sum + (Number(i.amount) || 0), 0);
-        const totalIncome = collectedMaintenance + totalOtherIncome;
+        const totalEventIncome = allEventPayments.reduce((sum: number, p: any) => sum + (Number(p.amount) || 0), 0);
+        
+        const totalIncome = collectedMaintenance + totalOtherIncome + totalEventIncome;
         const totalExpense = allExpenses.reduce((sum: number, e: any) => sum + (Number(e.amount) || 0), 0);
         const totalBalance = totalIncome - totalExpense;
 
@@ -165,6 +170,12 @@ export default function Dashboard() {
           const date = new Date(i.date);
           if (!isNaN(date.getTime()) && date.getFullYear() === new Date().getFullYear()) {
             monthlyIncome[date.getMonth()] += Number(i.amount) || 0;
+          }
+        });
+        allEventPayments.forEach((p: any) => {
+          const date = new Date(p.createdAt);
+          if (!isNaN(date.getTime()) && date.getFullYear() === new Date().getFullYear()) {
+            monthlyIncome[date.getMonth()] += Number(p.amount) || 0;
           }
         });
 
