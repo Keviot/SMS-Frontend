@@ -266,7 +266,7 @@ const ResponsiveVideoLayout = ({
     );
 };
 
-function VideoCallUI({ onLeave }: { onLeave: () => void }) {
+function VideoCallUI({ onLeave, onMinimize }: { onLeave: () => void, onMinimize: () => void }) {
     const call = useCall();
     const {
         useMicrophoneState,
@@ -347,6 +347,13 @@ function VideoCallUI({ onLeave }: { onLeave: () => void }) {
                 </div>
                 
                 <div className="flex items-center gap-6">
+                    <button 
+                        onClick={onMinimize}
+                        className="p-2.5 rounded-full bg-white/5 hover:bg-white/10 text-white/70 hover:text-white transition-all border border-white/5"
+                        title="Minimize to chat"
+                    >
+                        <ChevronLeft size={20} />
+                    </button>
                     {isRinging && (
                         <div className="flex items-center gap-4 px-4 py-2 bg-white/10 backdrop-blur-md rounded-2xl border border-white/10 animate-in fade-in slide-in-from-top-2">
                             <div className="relative">
@@ -482,6 +489,7 @@ export default function AccessForums() {
     const [currentUser, setCurrentUser] = useState<any>(null);
     const [videoClient, setVideoClient] = useState<StreamVideoClient | null>(null);
     const [activeCall, setActiveCall] = useState<Call | null>(null);
+    const [isCallMinimized, setIsCallMinimized] = useState(false);
     const [isScreenShared, setIsScreenShared] = useState(false);
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const typingTimeoutRef = useRef<any>(null);
@@ -893,10 +901,16 @@ export default function AccessForums() {
             }
 
             const call = videoClient.call("default", callId);
-            await call.join({ create: true });
+            // Set active call immediately so the UI transitions to "Joining/Ringing" state
             setActiveCall(call);
+            
+            await call.join({ create: true });
+            
+            // For personal calls, we can notify the user via socket if needed, 
+            // but Stream handles the ringing state if configured.
         } catch (error: any) {
             console.error("Failed to start call:", error);
+            setActiveCall(null);
             if (error.isWSFailure || error.message?.includes("WS connection")) {
                 toast.error("Connection failed: Please check if STREAM_SECRET is correct in backend .env");
             } else {
@@ -922,7 +936,8 @@ export default function AccessForums() {
             }
 
             const call = videoClient.call("default", callId);
-            // Join with camera disabled for audio call
+            setActiveCall(call);
+
             await call.getOrCreate({
                 data: {
                     members: [
@@ -934,9 +949,9 @@ export default function AccessForums() {
 
             await call.join({ create: true });
             await call.camera.disable();
-            setActiveCall(call);
         } catch (error: any) {
             console.error("Failed to start audio call:", error);
+            setActiveCall(null);
             toast.error("Failed to start audio call");
         }
     };
@@ -951,68 +966,109 @@ export default function AccessForums() {
 
     return (
         <StreamVideo client={videoClient || new StreamVideoClient({ apiKey: "placeholder", user: { id: "placeholder" }, token: "" })}>
-            {activeCall ? (
-                <StreamCall call={activeCall}>
-                    <VideoCallUI onLeave={() => setActiveCall(null)} />
-                </StreamCall>
-            ) : (
-                <div className="flex h-[calc(100vh-120px)] w-full overflow-hidden rounded-2xl bg-white shadow-sm border border-[#F4F4F4]">
-                    <ChatSidebar
-                        contacts={contacts}
-                        activeContactId={activeContact?.id || ""}
-                        onContactSelect={(contact) => {
-                            setActiveContact(contact);
-                            setContacts(prev => prev.map(c =>
-                                c.id === contact.id ? { ...c, unread: 0 } : c
-                            ));
-                        }}
-                    />
+            <div className="flex h-[calc(100vh-120px)] w-full overflow-hidden rounded-2xl bg-white shadow-sm border border-[#F4F4F4] relative">
+                {/* Full Screen Video Call Overlay */}
+                {activeCall && !isCallMinimized && (
+                    <div className="absolute inset-0 z-[200] animate-in fade-in zoom-in-95 duration-300">
+                        <StreamCall call={activeCall}>
+                            <VideoCallUI 
+                                onMinimize={() => setIsCallMinimized(true)}
+                                onLeave={() => {
+                                    activeCall.leave();
+                                    setActiveCall(null);
+                                }} 
+                            />
+                        </StreamCall>
+                    </div>
+                )}
 
-                    {/* Chat Area */}
-                    <div className="hidden flex-1 flex-col md:flex">
-                        {activeContact ? (
-                            <>
-                                {/* Header */}
-                                <div className="flex items-center justify-between border-b border-[#F4F4F4] px-6 py-4">
-                                    <div className="flex items-center gap-3">
-                                        <Avatar
-                                            src={activeContact.avatar}
-                                            name={activeContact.name}
-                                        />
-                                        <div>
-                                            <h3 className="text-sm font-bold text-[#202224]">
-                                                {activeContact.name} {activeContact.unit}
-                                            </h3>
-                                            <p className={cn("text-[10px]", activeContact.typing ? "text-[#5678E9] font-bold" : "text-[#A7A7A7]")}>
-                                                {activeContact.typing ? "Typing..." : "Active Now"}
-                                            </p>
-                                        </div>
-                                    </div>
-                                    <div className="flex items-center gap-4">
-                                        <button onClick={startCall} className="rounded-full p-2 text-[#202224] hover:bg-[#F6F8FB] transition-colors">
-                                            <Video size={20} />
-                                        </button>
-                                        <button onClick={() => startAudioCall()} className="rounded-full p-2 text-[#202224] hover:bg-[#F6F8FB] transition-colors">
-                                            <Phone size={18} />
-                                        </button>
-                                        <div className="relative">
-                                            <button
-                                                onClick={() => setIsMenuOpen(!isMenuOpen)}
-                                                className="rounded-full p-2 text-[#202224] hover:bg-[#F6F8FB] transition-colors"
-                                            >
-                                                <MoreVertical size={20} />
-                                            </button>
-                                            {isMenuOpen && (
-                                                <div className="absolute right-0 top-10 z-10 w-32 rounded-xl bg-white p-1 shadow-lg border border-[#F4F4F4] animate-in fade-in zoom-in duration-200">
-                                                    <button onClick={() => { setIsMenuOpen(false); toast.success("Copied"); }} className="w-full px-4 py-2 text-left text-sm font-medium text-[#202224] hover:bg-[#F6F8FB] rounded-lg transition-colors">Copy</button>
-                                                    <button onClick={() => { setIsMenuOpen(false); toast.success("Forwarded"); }} className="w-full px-4 py-2 text-left text-sm font-medium text-[#202224] hover:bg-[#F6F8FB] rounded-lg transition-colors">Forward</button>
-                                                </div>
-                                            )}
-                                        </div>
+                <ChatSidebar
+                    contacts={contacts}
+                    activeContactId={activeContact?.id || ""}
+                    onContactSelect={(contact) => {
+                        setActiveContact(contact);
+                        setContacts(prev => prev.map(c =>
+                            c.id === contact.id ? { ...c, unread: 0 } : c
+                        ));
+                    }}
+                />
+
+                {/* Chat Area */}
+                <div className="hidden flex-1 flex-col md:flex relative">
+                    {activeContact ? (
+                        <>
+                            {/* Header */}
+                            <div className="flex items-center justify-between border-b border-[#F4F4F4] px-6 py-4 bg-white z-10">
+                                <div className="flex items-center gap-3">
+                                    <Avatar
+                                        src={activeContact.avatar}
+                                        name={activeContact.name}
+                                    />
+                                    <div>
+                                        <h3 className="text-sm font-bold text-[#202224]">
+                                            {activeContact.name} {activeContact.unit}
+                                        </h3>
+                                        <p className={cn("text-[10px]", activeContact.typing ? "text-[#5678E9] font-bold" : "text-[#A7A7A7]")}>
+                                            {activeContact.typing ? "Typing..." : "Active Now"}
+                                        </p>
                                     </div>
                                 </div>
 
-                                {/* Messages List */}
+                                {/* Ringing Pill / Call Status in Header (Matches user image) */}
+                                {activeCall && (
+                                    <div 
+                                        onClick={() => setIsCallMinimized(false)}
+                                        className="flex items-center gap-4 px-4 py-2 bg-[#1a1b1e] rounded-2xl border border-white/5 shadow-2xl cursor-pointer hover:scale-105 transition-all animate-in slide-in-from-top-2"
+                                    >
+                                        <div className="relative">
+                                            <AlertCircle size={16} className="text-[#8AB4F8]" />
+                                            <div className="absolute inset-0 bg-[#8AB4F8]/20 rounded-full animate-ping" />
+                                        </div>
+                                        <span className="text-xs font-semibold text-white/90">Ringing 1 member</span>
+                                        <button 
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                activeCall.leave();
+                                                setActiveCall(null);
+                                            }}
+                                            className="h-8 w-8 rounded-full bg-[#EA4335] flex items-center justify-center hover:bg-[#D93025] transition-all hover:scale-110 shadow-lg"
+                                        >
+                                            <Phone size={14} className="text-white rotate-[135deg]" />
+                                        </button>
+                                    </div>
+                                )}
+
+                                <div className="flex items-center gap-4">
+                                    <button 
+                                        onClick={() => {
+                                            startCall();
+                                            setIsCallMinimized(true);
+                                        }} 
+                                        className="rounded-full p-2 text-[#202224] hover:bg-[#F6F8FB] transition-colors"
+                                    >
+                                        <Video size={20} />
+                                    </button>
+                                    <button 
+                                        onClick={() => {
+                                            startAudioCall();
+                                            setIsCallMinimized(true);
+                                        }} 
+                                        className="rounded-full p-2 text-[#202224] hover:bg-[#F6F8FB] transition-colors"
+                                    >
+                                        <Phone size={18} />
+                                    </button>
+                                    <div className="relative">
+                                        <button
+                                            onClick={() => setIsMenuOpen(!isMenuOpen)}
+                                            className="rounded-full p-2 text-[#202224] hover:bg-[#F6F8FB] transition-colors"
+                                        >
+                                            <MoreVertical size={20} />
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Messages List */}
                                 <div className="flex-1 overflow-y-auto p-6 space-y-6 custom-scrollbar bg-[#F9FBFF]/30">
                                     {messages.map((msg) => (
                                         <div
@@ -1120,7 +1176,6 @@ export default function AccessForums() {
                         </button>
                     </div>
                 </div>
-            )}
         </StreamVideo>
     );
 }
