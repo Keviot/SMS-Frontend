@@ -42,6 +42,175 @@ import {
 const apiKey = import.meta.env.VITE_STREAM_API_KEY || "YOUR_STREAM_API_KEY";
 
 // Dedicated Video Call UI Component (Google Meet Style)
+// Helper component for Responsive Layout (Moved outside to prevent infinite re-renders)
+const ResponsiveVideoLayout = ({
+    participants,
+    localParticipant,
+    isMicMuted
+}: {
+    participants: any[],
+    localParticipant: any,
+    isMicMuted: boolean
+}) => {
+    const remoteParticipants = participants.filter(p => p.sessionId !== localParticipant?.sessionId);
+
+    // 1-on-1 Layout (PiP style like the image)
+    if (participants.length <= 2) {
+        const otherParticipant = remoteParticipants[0];
+
+        return (
+            <div className="relative h-full w-full bg-[#1a1b1e] rounded-[32px] overflow-hidden shadow-2xl border border-white/5 transition-all duration-500">
+                {/* Remote Participant (Main Screen) */}
+                {otherParticipant ? (
+                    <div className="h-full w-full">
+                        <ParticipantView 
+                            participant={otherParticipant} 
+                            className="h-full w-full [&_video]:object-cover [&_video]:w-full [&_video]:h-full"
+                        />
+                        <div className="absolute bottom-8 left-8 bg-black/40 backdrop-blur-xl px-4 py-2 rounded-2xl text-white font-medium flex items-center gap-3 border border-white/10 shadow-xl">
+                            {otherParticipant.isSpeaking && (
+                                <div className="flex gap-0.5 items-end h-4 mb-0.5">
+                                    <div className="w-1 bg-[#00A3FF] animate-pulse" style={{ height: '60%', animationDuration: '0.5s' }} />
+                                    <div className="w-1 bg-[#00A3FF] animate-pulse" style={{ height: '100%', animationDuration: '0.7s' }} />
+                                    <div className="w-1 bg-[#00A3FF] animate-pulse" style={{ height: '80%', animationDuration: '0.4s' }} />
+                                </div>
+                            )}
+                            <span className="text-sm font-semibold tracking-wide">{otherParticipant.name}</span>
+                        </div>
+                    </div>
+                ) : (
+                    <div className="h-full w-full flex flex-col items-center justify-center text-white/20 gap-8">
+                        <div className="w-40 h-40 rounded-full bg-white/5 flex items-center justify-center border border-white/5 animate-pulse">
+                            <Users size={80} className="opacity-10" />
+                        </div>
+                        <div className="flex flex-col items-center gap-3">
+                            <p className="text-2xl font-bold text-white/40 tracking-tight">Waiting for others to join</p>
+                            <p className="text-sm text-white/20 font-medium bg-white/5 px-4 py-1.5 rounded-full border border-white/5">The community meeting will begin shortly</p>
+                        </div>
+                    </div>
+                )}
+
+                {/* Local Participant (PiP Overlay) */}
+                {localParticipant && (
+                    <div className="absolute bottom-8 right-8 w-72 aspect-video rounded-3xl overflow-hidden border-[3px] border-[#00A3FF] shadow-[0_20px_60px_rgba(0,0,0,0.6)] z-20 group transition-all duration-500 hover:scale-[1.05] cursor-pointer">
+                        <ParticipantView 
+                            participant={localParticipant} 
+                            className="h-full w-full [&_video]:object-cover [&_video]:w-full [&_video]:h-full"
+                        />
+
+                        {/* Mic status indicator on PiP (Matches image style) */}
+                        <div className="absolute bottom-4 right-4 bg-white rounded-full p-2.5 shadow-2xl flex items-center justify-center group-hover:scale-110 transition-transform">
+                            {isMicMuted ? (
+                                <MicOff size={18} className="text-[#EA4335]" />
+                            ) : (
+                                <Mic size={18} className="text-[#00A3FF]" />
+                            )}
+                        </div>
+
+                        <div className="absolute top-4 left-4 bg-black/40 backdrop-blur-md px-3 py-1 rounded-xl text-white text-[11px] font-bold opacity-0 group-hover:opacity-100 transition-opacity tracking-widest uppercase">
+                            You
+                        </div>
+                    </div>
+                )}
+            </div>
+        );
+    }
+
+    // Group Layout (Spotlight Mode: Active Speaker in Main Screen)
+    const isSomeoneSpeaking = participants.some(p => p.isSpeaking && !p.isLocal);
+
+    if (isSomeoneSpeaking && participants.length > 2) {
+        const speaker = participants.find(p => p.isSpeaking && !p.isLocal) || remoteParticipants[0];
+        const others = participants.filter(p => p.sessionId !== speaker.sessionId);
+
+        return (
+            <div className="flex flex-col lg:flex-row h-full w-full gap-6 p-2">
+                {/* Spotlight: Active Speaker */}
+                <div className="flex-[3] relative rounded-[40px] overflow-hidden bg-[#2d2e31] border-4 border-[#00A3FF] shadow-[0_0_40px_rgba(0,163,255,0.2)] transition-all duration-700">
+                    <ParticipantView 
+                        participant={speaker} 
+                        className="h-full w-full [&_video]:object-cover [&_video]:w-full [&_video]:h-full"
+                    />
+                    <div className="absolute bottom-8 left-8 bg-[#00A3FF] px-5 py-2.5 rounded-2xl text-white font-bold flex items-center gap-3 shadow-2xl animate-in slide-in-from-left-4">
+                        <div className="flex gap-1 items-end h-4 mb-0.5">
+                            <div className="w-1.5 bg-white animate-pulse" style={{ height: '60%', animationDuration: '0.4s' }} />
+                            <div className="w-1.5 bg-white animate-pulse" style={{ height: '100%', animationDuration: '0.6s' }} />
+                            <div className="w-1.5 bg-white animate-pulse" style={{ height: '80%', animationDuration: '0.3s' }} />
+                        </div>
+                        <span className="text-sm tracking-wide">{speaker.name} is speaking...</span>
+                    </div>
+                </div>
+
+                {/* Sidebar: Other Participants */}
+                <div className="flex-1 flex lg:flex-col gap-4 overflow-x-auto lg:overflow-y-auto custom-scrollbar pr-2 min-h-[160px] pb-2">
+                    {others.map(p => (
+                        <div key={p.sessionId} className="relative rounded-3xl overflow-hidden bg-[#2d2e31] border-2 border-white/5 aspect-video shrink-0 shadow-xl transition-all hover:scale-95 group">
+                        <ParticipantView 
+                            participant={p} 
+                            className="h-full w-full [&_video]:object-cover [&_video]:w-full [&_video]:h-full"
+                        />
+                            <div className="absolute bottom-3 left-3 bg-black/60 backdrop-blur-md px-3 py-1 rounded-xl text-white text-[10px] font-bold border border-white/10">
+                                {p.name} {p.sessionId === localParticipant?.sessionId && "(You)"}
+                            </div>
+                            {p.isMuted && (
+                                <div className="absolute top-3 right-3 bg-black/40 p-1.5 rounded-full border border-white/5">
+                                    <MicOff size={12} className="text-white/60" />
+                                </div>
+                            )}
+                        </div>
+                    ))}
+                </div>
+            </div>
+        );
+    }
+
+    // Default: Adaptive Grid (Google Meet style)
+    return (
+        <div className={cn(
+            "h-full w-full grid gap-6 p-2 transition-all duration-700",
+            participants.length === 3 ? "grid-cols-1 md:grid-cols-2" :
+                participants.length === 4 ? "grid-cols-2" :
+                    participants.length <= 6 ? "grid-cols-2 lg:grid-cols-3" :
+                        "grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
+        )}>
+            {participants.map((p) => {
+                const isLocal = p.sessionId === localParticipant?.sessionId;
+                return (
+                    <div
+                        key={p.sessionId}
+                        className={cn(
+                            "relative rounded-[32px] overflow-hidden bg-[#2d2e31] border-2 transition-all duration-700 shadow-2xl",
+                            p.isSpeaking ? "border-[#00A3FF] ring-8 ring-[#00A3FF]/10 scale-[1.02] z-10" : "border-white/5"
+                        )}
+                    >
+                        <ParticipantView 
+                            participant={p} 
+                            className="h-full w-full [&_video]:object-cover [&_video]:w-full [&_video]:h-full"
+                        />
+
+                        <div className="absolute bottom-5 left-5 bg-black/50 backdrop-blur-xl px-4 py-2 rounded-2xl text-white text-xs font-bold flex items-center gap-3 border border-white/10 shadow-2xl">
+                            {p.isSpeaking && (
+                                <div className="flex gap-0.5 items-end h-3.5 mb-0.5">
+                                    <div className="w-1 bg-[#00A3FF] animate-bounce" style={{ height: '60%', animationDuration: '0.5s' }} />
+                                    <div className="w-1 bg-[#00A3FF] animate-bounce" style={{ height: '100%', animationDuration: '0.7s' }} />
+                                    <div className="w-1 bg-[#00A3FF] animate-bounce" style={{ height: '80%', animationDuration: '0.4s' }} />
+                                </div>
+                            )}
+                            <span className="tracking-wide">{p.name} {isLocal && "(You)"}</span>
+                        </div>
+
+                        {p.isMuted && !p.isSpeaking && (
+                            <div className="absolute top-5 right-5 bg-black/40 backdrop-blur-md p-2.5 rounded-full text-white/60 border border-white/5 shadow-xl">
+                                <MicOff size={16} />
+                            </div>
+                        )}
+                    </div>
+                );
+            })}
+        </div>
+    );
+};
+
 function VideoCallUI({ onLeave }: { onLeave: () => void }) {
     const call = useCall();
     const {
@@ -52,13 +221,14 @@ function VideoCallUI({ onLeave }: { onLeave: () => void }) {
         useParticipants
     } = useCallStateHooks();
 
-    const { microphone, isMute: isMicMuted } = useMicrophoneState();
-    const { camera, isMute: isCamMuted } = useCameraState();
+    const { isMute: isMicMuted } = useMicrophoneState();
+    const { isMute: isCamMuted } = useCameraState();
     const localParticipant = useLocalParticipant();
     const callingState = useCallCallingState();
     const participants = useParticipants();
 
     const [isHandRaised, setIsHandRaised] = useState(false);
+    const [startTime] = useState(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
 
     if (callingState !== CallingState.JOINED) {
         return (
@@ -93,13 +263,8 @@ function VideoCallUI({ onLeave }: { onLeave: () => void }) {
             setIsHandRaised(newHandRaised);
 
             if (newHandRaised) {
-
                 await call?.sendReaction({ type: "raised-hand" });
                 toast.success("You raised your hand", { position: "bottom-left" });
-
-            } else {
-                // To "unraise", we can send a different reaction or just let it timeout
-                // Stream's reaction system usually handles this via UI indicators
             }
         } catch (err) {
             console.error(err);
@@ -108,109 +273,116 @@ function VideoCallUI({ onLeave }: { onLeave: () => void }) {
 
     return (
         <div className="fixed inset-0 z-[100] flex flex-col bg-[#202124]">
-            {/* Top Bar (Optional, for meeting title/info) */}
-            <div className="flex items-center justify-between px-6 py-4 text-white">
-                <div className="flex items-center gap-3">
-                    <div className="h-2 w-2 rounded-full bg-red-500 animate-pulse" />
-                    <span className="text-sm font-medium">Meeting in progress</span>
+            {/* Top Bar */}
+            <div className="flex items-center justify-between px-8 py-6 text-white bg-gradient-to-b from-black/40 to-transparent">
+                <div className="flex flex-col gap-0.5">
+                    <div className="flex items-center gap-3">
+                        <div className="h-2.5 w-2.5 rounded-full bg-[#EA4335] animate-pulse shadow-[0_0_10px_rgba(234,67,53,0.5)]" />
+                        <span className="text-base font-semibold tracking-tight">Meeting in progress</span>
+                    </div>
+                    <span className="text-[11px] text-white/50 font-medium ml-5">Meeting started at {startTime}</span>
                 </div>
-                <div className="flex items-center gap-4 text-xs opacity-70">
-                    <span>{participants.length} participants</span>
+                <div className="flex items-center gap-6">
+                    <div className="flex items-center gap-2 px-3 py-1.5 bg-white/5 rounded-full border border-white/10">
+                        <Users size={14} className="text-[#8AB4F8]" />
+                        <span className="text-xs font-medium text-white/80">{participants.length} participants</span>
+                    </div>
                 </div>
             </div>
 
             {/* Main Video Area */}
-            <div className="flex-1 relative p-4 overflow-hidden">
-                <SpeakerLayout />
+            <div className="flex-1 relative overflow-hidden">
+                <ResponsiveVideoLayout
+                    participants={participants}
+                    localParticipant={localParticipant}
+                    isMicMuted={isMicMuted}
+                />
             </div>
 
             {/* Bottom Control Bar (Google Meet Style) */}
-            <div className="h-24 bg-[#202124] flex items-center justify-between px-8">
-                {/* Left side: Time/Code (Mock) */}
-                <div className="hidden lg:flex items-center text-white text-sm font-medium">
-                    {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} | Meeting
+            <div className="h-24 bg-[#202124] flex items-center justify-between px-12 border-t border-white/5">
+                {/* Left side: Time/Code */}
+                <div className="hidden lg:flex items-center text-white/80 text-sm font-medium tracking-wide">
+                    {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} | Community Meeting
                 </div>
 
                 {/* Center: Controls */}
-                <div className="flex items-center gap-4">
+                <div className="flex items-center gap-5">
                     {/* Mute */}
                     <button
                         onClick={toggleMute}
                         className={cn(
-                            "group flex h-12 w-12 items-center justify-center rounded-full transition-all",
-                            isMicMuted ? "bg-[#EA4335] hover:bg-[#D93025]" : "bg-[#3C4043] hover:bg-[#4c4f52]"
+                            "group flex h-14 w-14 items-center justify-center rounded-full transition-all duration-300 shadow-xl",
+                            isMicMuted ? "bg-[#EA4335] hover:bg-[#D93025] scale-110" : "bg-[#3C4043] hover:bg-[#4c4f52]"
                         )}
                         title={isMicMuted ? "Unmute" : "Mute"}
                     >
-                        {isMicMuted ? <MicOff size={20} className="text-white" /> : <Mic size={20} className="text-white" />}
+                        {isMicMuted ? <MicOff size={22} className="text-white" /> : <Mic size={22} className="text-white" />}
                     </button>
 
                     {/* Camera */}
                     <button
                         onClick={toggleCamera}
                         className={cn(
-                            "group flex h-12 w-12 items-center justify-center rounded-full transition-all",
-                            isCamMuted ? "bg-[#EA4335] hover:bg-[#D93025]" : "bg-[#3C4043] hover:bg-[#4c4f52]"
+                            "group flex h-14 w-14 items-center justify-center rounded-full transition-all duration-300 shadow-xl",
+                            isCamMuted ? "bg-[#EA4335] hover:bg-[#D93025] scale-110" : "bg-[#3C4043] hover:bg-[#4c4f52]"
                         )}
                         title={isCamMuted ? "Turn on camera" : "Turn off camera"}
                     >
-                        {isCamMuted ? <VideoOff size={20} className="text-white" /> : <Video size={20} className="text-white" />}
+                        {isCamMuted ? <VideoOff size={22} className="text-white" /> : <Video size={22} className="text-white" />}
                     </button>
 
                     {/* Hand Raise */}
                     <button
                         onClick={toggleHandRaise}
                         className={cn(
-                            "flex h-12 w-12 items-center justify-center rounded-full transition-all bg-[#3C4043] hover:bg-[#4c4f52]",
-                            isHandRaised && "bg-white hover:bg-white"
+                            "flex h-14 w-14 items-center justify-center rounded-full transition-all duration-300 bg-[#3C4043] hover:bg-[#4c4f52] shadow-xl",
+                            isHandRaised && "bg-white hover:bg-white text-black"
                         )}
                         title="Raise hand"
                     >
-                        {
-                            isHandRaised ? <Hand size={20} className="text-yellow-400" /> : <Hand size={20} className="text-white" />
-                        }
+                        <Hand size={22} className={cn(isHandRaised ? "text-yellow-500" : "text-white")} />
                     </button>
 
                     {/* Screen Share */}
                     <button
                         onClick={toggleScreenShare}
-                        className="flex h-12 w-12 items-center justify-center rounded-full transition-all bg-[#3C4043] hover:bg-[#4c4f52]"
+                        className="flex h-14 w-14 items-center justify-center rounded-full transition-all duration-300 bg-[#3C4043] hover:bg-[#4c4f52] shadow-xl"
                         title="Present now"
                     >
-                        <MonitorUp size={20} className="text-white" />
+                        <MonitorUp size={22} className="text-white" />
                     </button>
-
-                    {/* More Options */}
-                    {/* <button
-                        className="flex h-12 w-12 items-center justify-center rounded-full transition-all bg-[#3C4043] hover:bg-[#4c4f52]"
-                        title="More options"
-                    >
-                        <MoreVertical size={20} className="text-white" />
-                    </button> */}
 
                     {/* End Call */}
                     <button
                         onClick={onLeave}
-                        className="flex h-12 w-16 items-center justify-center rounded-[24px] bg-[#EA4335] hover:bg-[#D93025] transition-all ml-4"
+                        className="flex h-14 w-20 items-center justify-center rounded-[28px] bg-[#EA4335] hover:bg-[#D93025] transition-all duration-300 ml-4 shadow-[0_10px_25px_rgba(234,67,53,0.4)]"
                         title="Leave call"
                     >
-                        <Phone size={24} className="text-white rotate-[135deg]" />
+                        <Phone size={26} className="text-white rotate-[135deg]" />
                     </button>
                 </div>
 
                 {/* Right side: Meeting Info */}
-                <div className="hidden lg:flex items-center gap-6 text-white opacity-80">
-                    <div className="flex flex-col items-center gap-1 cursor-pointer hover:opacity-100">
-                        <AlertCircle size={20} />
-                        <span className="text-[10px]">Info</span>
+                <div className="hidden lg:flex items-center gap-8 text-white/70">
+                    <div className="flex flex-col items-center gap-1.5 cursor-pointer hover:text-white transition-colors group">
+                        <div className="p-2 rounded-lg group-hover:bg-white/5">
+                            <AlertCircle size={22} />
+                        </div>
+                        <span className="text-[10px] font-bold">Info</span>
                     </div>
-                    <div className="flex flex-col items-center gap-1 cursor-pointer hover:opacity-100">
-                        <Users size={20} />
-                        <span className="text-[10px]">People</span>
+                    <div className="flex flex-col items-center gap-1.5 cursor-pointer hover:text-white transition-colors group">
+                        <div className="p-2 rounded-lg group-hover:bg-white/5 relative">
+                            <Users size={22} />
+                            <div className="absolute top-1 right-1 w-2 h-2 bg-[#00A3FF] rounded-full border-2 border-[#202124]" />
+                        </div>
+                        <span className="text-[10px] font-bold">People</span>
                     </div>
-                    <div className="flex flex-col items-center gap-1 cursor-pointer hover:opacity-100">
-                        <MessageSquare size={20} />
-                        <span className="text-[10px]">Chat</span>
+                    <div className="flex flex-col items-center gap-1.5 cursor-pointer hover:text-white transition-colors group">
+                        <div className="p-2 rounded-lg group-hover:bg-white/5">
+                            <MessageSquare size={22} />
+                        </div>
+                        <span className="text-[10px] font-bold">Chat</span>
                     </div>
                 </div>
             </div>
