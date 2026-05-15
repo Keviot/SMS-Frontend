@@ -1,6 +1,8 @@
 import { useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
 import Button from "../../../ui/Button";
 import Card from "../../../ui/Card";
+import { authApi } from "../../../services/api";
 
 type PendingMaintenance = {
   id: string;
@@ -17,9 +19,31 @@ export default function PendingMaintenanceCard({
   data,
 }: PendingMaintenanceCardProps) {
   const navigate = useNavigate();
+  const [userRole, setUserRole] = useState<string>("");
+
+  useEffect(() => {
+    const fetchUserRole = async () => {
+      try {
+        const profileData = await authApi.getProfile();
+        if (profileData.user) {
+          setUserRole(profileData.user.role?.toLowerCase() || "");
+        }
+      } catch (error) {
+        console.error("Error fetching user role:", error);
+      }
+    };
+
+    fetchUserRole();
+  }, []);
 
   const handleViewAll = () => {
-    navigate("/financial-management/income");
+    // Admin goes to financial management income page
+    // Resident goes to payment portal maintenance invoices page
+    if (userRole === "resident") {
+      navigate("/payment-portal");
+    } else {
+      navigate("/financial-management/income");
+    }
   };
 
   return (
