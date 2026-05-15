@@ -8,7 +8,7 @@ import Card from "../../../ui/Card";
 import { Loader2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
-import { authApi, complaintApi, importantNumberApi, financialApi, announcementApi, residentApi } from "../../../services/api";
+import { authApi, complaintApi, importantNumberApi, financialApi, announcementApi, residentApi, dashboardApi } from "../../../services/api";
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -59,19 +59,13 @@ export default function Dashboard() {
           numbersData,
           maintenanceData,
           announcementsData,
-          otherIncomeData,
-          expenseData,
-          residentsData,
-          eventPaymentData
+          statsData
         ] = await Promise.all([
           fetchWithFallback(complaintApi.getAllComplaints(societyId), { complainList: [] }),
           fetchWithFallback(importantNumberApi.getAll(), { data: [] }),
           fetchWithFallback(financialApi.getMaintenanceRecords(), { data: [] }),
           fetchWithFallback(announcementApi.getAll(societyId), { announcement: [] }),
-          fetchWithFallback(financialApi.getOtherIncome(), { data: [] }),
-          fetchWithFallback(financialApi.getExpenses(), { data: [] }),
-          fetchWithFallback(residentApi.getAll(), { data: [] }),
-          import("../../../services/api").then(m => m.eventPaymentApi.get()).catch(() => ({ data: [] }))
+          fetchWithFallback(dashboardApi.getStats(societyId), { totalBalance: 0, totalIncome: 0, totalExpense: 0, totalUnit: 0, monthlyIncome: new Array(12).fill(0) })
         ]);
 
         // Safe date formatting helper
@@ -119,30 +113,10 @@ export default function Dashboard() {
           date: formatDate(a.date)
         }));
 
-        // Financial Calculations
+        // Financial Data
         const allMaintenance = ensureArray(maintenanceData);
-        const allOtherIncome = ensureArray(otherIncomeData);
-        const allExpenses = ensureArray(expenseData);
-        const allEventPayments = ensureArray(eventPaymentData);
 
-        const collectedMaintenance = allMaintenance
-          .filter((m: any) => m && ["paid", "done"].includes(m.status?.toLowerCase()))
-          .reduce((sum: number, m: any) => {
-            const amount = m.amount || m.maintenanceSetup?.maintenanceAmount || 0;
-            const penalty = m.penalty || 0;
-            return sum + (Number(amount) || 0) + (Number(penalty) || 0);
-          }, 0);
-
-        const totalOtherIncome = allOtherIncome.reduce((sum: number, i: any) => sum + (Number(i.amount) || 0), 0);
-        const totalEventIncome = allEventPayments.reduce((sum: number, p: any) => sum + (Number(p.amount) || 0), 0);
-        
-        const totalIncome = collectedMaintenance + totalOtherIncome + totalEventIncome;
-        const totalExpense = allExpenses.reduce((sum: number, e: any) => sum + (Number(e.amount) || 0), 0);
-        const totalBalance = totalIncome - totalExpense;
-
-        // Calculate Total Units from residents
-        const allResidents = ensureArray(residentsData);
-        const totalUnit = allResidents.length;
+        const { totalBalance, totalIncome, totalExpense, totalUnit } = statsData;
 
         // Map Pending Maintenances
         const mappedMaintenance = allMaintenance
@@ -154,37 +128,12 @@ export default function Dashboard() {
             amount: (m.amount || m.maintenanceSetup?.maintenanceAmount || 0).toString()
           }));
 
-        // Monthly Chart Data (Income)
-        const monthlyIncome = new Array(12).fill(0);
-        allMaintenance
-          .filter((m: any) => m && ["paid", "done"].includes(m.status?.toLowerCase()))
-          .forEach((m: any) => {
-            const date = new Date(m.date || m.createdAt);
-            if (!isNaN(date.getTime()) && date.getFullYear() === new Date().getFullYear()) {
-              const amount = m.amount || m.maintenanceSetup?.maintenanceAmount || 0;
-              const penalty = m.penalty || 0;
-              monthlyIncome[date.getMonth()] += ((Number(amount) || 0) + (Number(penalty) || 0));
-            }
-          });
-        allOtherIncome.forEach((i: any) => {
-          const date = new Date(i.date);
-          if (!isNaN(date.getTime()) && date.getFullYear() === new Date().getFullYear()) {
-            monthlyIncome[date.getMonth()] += Number(i.amount) || 0;
-          }
-        });
-        allEventPayments.forEach((p: any) => {
-          const date = new Date(p.createdAt);
-          if (!isNaN(date.getTime()) && date.getFullYear() === new Date().getFullYear()) {
-            monthlyIncome[date.getMonth()] += Number(p.amount) || 0;
-          }
-        });
-
         setData({
           complaints: mappedComplaints,
           importantNumbers: mappedNumbers,
           pendingMaintenances: mappedMaintenance,
           upcomingActivities: mappedActivities,
-          monthlyBalance: monthlyIncome,
+          monthlyBalance: statsData.monthlyIncome || new Array(12).fill(0),
           stats: {
             totalBalance,
             totalIncome,
