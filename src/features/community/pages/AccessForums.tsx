@@ -46,16 +46,25 @@ const apiKey = import.meta.env.VITE_STREAM_API_KEY || "YOUR_STREAM_API_KEY";
 const ResponsiveVideoLayout = ({
     participants,
     localParticipant,
-    isMicMuted
+    isMicMuted,
+    pinnedParticipantId,
+    onParticipantClick
 }: {
     participants: any[],
     localParticipant: any,
-    isMicMuted: boolean
+    isMicMuted: boolean,
+    pinnedParticipantId: string | null,
+    onParticipantClick: (id: string) => void
 }) => {
     const remoteParticipants = participants.filter(p => p.sessionId !== localParticipant?.sessionId);
+    
+    // Determine the main participant for Spotlight mode
+    const pinnedParticipant = participants.find(p => p.sessionId === pinnedParticipantId);
+    const handRaisedParticipant = participants.find(p => p.reaction?.type === 'raised-hand' && p.sessionId !== localParticipant?.sessionId);
+    const speaker = participants.find(p => p.isSpeaking && !p.isLocal);
 
     // 1-on-1 Layout (PiP style like the image)
-    if (participants.length <= 2) {
+    if (participants.length <= 2 && !pinnedParticipantId) {
         const otherParticipant = remoteParticipants[0];
 
         return (
@@ -63,8 +72,8 @@ const ResponsiveVideoLayout = ({
                 {/* Remote Participant (Main Screen) */}
                 {otherParticipant ? (
                     <div className="h-full w-full">
-                        <ParticipantView 
-                            participant={otherParticipant} 
+                        <ParticipantView
+                            participant={otherParticipant}
                             className="h-full w-full [&_video]:object-cover [&_video]:w-full [&_video]:h-full"
                         />
                         <div className="absolute bottom-8 left-8 bg-black/40 backdrop-blur-xl px-4 py-2 rounded-2xl text-white font-medium flex items-center gap-3 border border-white/10 shadow-xl">
@@ -76,6 +85,11 @@ const ResponsiveVideoLayout = ({
                                 </div>
                             )}
                             <span className="text-sm font-semibold tracking-wide">{otherParticipant.name}</span>
+                            {otherParticipant.reaction?.type === 'raised-hand' && (
+                                <div className="ml-2 bg-yellow-500 p-1 rounded-full animate-bounce">
+                                    <Hand size={14} className="text-black" />
+                                </div>
+                            )}
                         </div>
                     </div>
                 ) : (
@@ -92,9 +106,12 @@ const ResponsiveVideoLayout = ({
 
                 {/* Local Participant (PiP Overlay) */}
                 {localParticipant && (
-                    <div className="absolute bottom-8 right-8 w-72 aspect-video rounded-3xl overflow-hidden border-[3px] border-[#00A3FF] shadow-[0_20px_60px_rgba(0,0,0,0.6)] z-20 group transition-all duration-500 hover:scale-[1.05] cursor-pointer">
-                        <ParticipantView 
-                            participant={localParticipant} 
+                    <div 
+                        onClick={() => onParticipantClick(localParticipant.sessionId)}
+                        className="absolute bottom-8 right-8 w-72 aspect-video rounded-3xl overflow-hidden border-[3px] border-[#00A3FF] shadow-[0_20px_60px_rgba(0,0,0,0.6)] z-20 group transition-all duration-500 hover:scale-[1.05] cursor-pointer"
+                    >
+                        <ParticipantView
+                            participant={localParticipant}
                             className="h-full w-full [&_video]:object-cover [&_video]:w-full [&_video]:h-full"
                         />
 
@@ -116,42 +133,72 @@ const ResponsiveVideoLayout = ({
         );
     }
 
-    // Group Layout (Spotlight Mode: Active Speaker in Main Screen)
-    const isSomeoneSpeaking = participants.some(p => p.isSpeaking && !p.isLocal);
+    // Spotlight/Pinned Layout
+    const mainParticipant = pinnedParticipant || handRaisedParticipant || speaker;
 
-    if (isSomeoneSpeaking && participants.length > 2) {
-        const speaker = participants.find(p => p.isSpeaking && !p.isLocal) || remoteParticipants[0];
-        const others = participants.filter(p => p.sessionId !== speaker.sessionId);
+    if (mainParticipant && (participants.length > 2 || pinnedParticipantId)) {
+        const others = participants.filter(p => p.sessionId !== mainParticipant.sessionId);
+        const isHandRaised = mainParticipant.reaction?.type === 'raised-hand';
 
         return (
             <div className="flex flex-col lg:flex-row h-full w-full gap-6 p-2">
-                {/* Spotlight: Active Speaker */}
+                {/* Spotlight: Main Screen */}
                 <div className="flex-[3] relative rounded-[40px] overflow-hidden bg-[#2d2e31] border-4 border-[#00A3FF] shadow-[0_0_40px_rgba(0,163,255,0.2)] transition-all duration-700">
-                    <ParticipantView 
-                        participant={speaker} 
+                    <ParticipantView
+                        participant={mainParticipant}
                         className="h-full w-full [&_video]:object-cover [&_video]:w-full [&_video]:h-full"
                     />
-                    <div className="absolute bottom-8 left-8 bg-[#00A3FF] px-5 py-2.5 rounded-2xl text-white font-bold flex items-center gap-3 shadow-2xl animate-in slide-in-from-left-4">
-                        <div className="flex gap-1 items-end h-4 mb-0.5">
-                            <div className="w-1.5 bg-white animate-pulse" style={{ height: '60%', animationDuration: '0.4s' }} />
-                            <div className="w-1.5 bg-white animate-pulse" style={{ height: '100%', animationDuration: '0.6s' }} />
-                            <div className="w-1.5 bg-white animate-pulse" style={{ height: '80%', animationDuration: '0.3s' }} />
-                        </div>
-                        <span className="text-sm tracking-wide">{speaker.name} is speaking...</span>
+                    <div className={cn(
+                        "absolute bottom-8 left-8 px-5 py-2.5 rounded-2xl text-white font-bold flex items-center gap-3 shadow-2xl animate-in slide-in-from-left-4",
+                        isHandRaised ? "bg-yellow-500 text-black" : "bg-[#00A3FF]"
+                    )}>
+                        {isHandRaised ? (
+                            <Hand size={18} className="animate-bounce" />
+                        ) : (
+                            <div className="flex gap-1 items-end h-4 mb-0.5">
+                                <div className="w-1.5 bg-white animate-pulse" style={{ height: '60%', animationDuration: '0.4s' }} />
+                                <div className="w-1.5 bg-white animate-pulse" style={{ height: '100%', animationDuration: '0.6s' }} />
+                                <div className="w-1.5 bg-white animate-pulse" style={{ height: '80%', animationDuration: '0.3s' }} />
+                            </div>
+                        )}
+                        <span className="text-sm tracking-wide">
+                            {mainParticipant.name} {isHandRaised ? "has raised hand" : pinnedParticipantId === mainParticipant.sessionId ? "is pinned" : "is speaking..."}
+                        </span>
                     </div>
+                    {pinnedParticipantId === mainParticipant.sessionId && (
+                        <button 
+                            onClick={() => onParticipantClick("")}
+                            className="absolute top-8 right-8 bg-black/40 backdrop-blur-md p-3 rounded-full text-white hover:bg-black/60 transition-colors border border-white/10"
+                            title="Unpin"
+                        >
+                            <Maximize size={20} />
+                        </button>
+                    )}
                 </div>
 
                 {/* Sidebar: Other Participants */}
                 <div className="flex-1 flex lg:flex-col gap-4 overflow-x-auto lg:overflow-y-auto custom-scrollbar pr-2 min-h-[160px] pb-2">
                     {others.map(p => (
-                        <div key={p.sessionId} className="relative rounded-3xl overflow-hidden bg-[#2d2e31] border-2 border-white/5 aspect-video shrink-0 shadow-xl transition-all hover:scale-95 group">
-                        <ParticipantView 
-                            participant={p} 
-                            className="h-full w-full [&_video]:object-cover [&_video]:w-full [&_video]:h-full"
-                        />
+                        <div 
+                            key={p.sessionId} 
+                            onClick={() => onParticipantClick(p.sessionId)}
+                            className={cn(
+                                "relative rounded-3xl overflow-hidden bg-[#2d2e31] border-2 aspect-video shrink-0 shadow-xl transition-all hover:scale-105 cursor-pointer group",
+                                p.sessionId === pinnedParticipantId ? "border-[#00A3FF]" : "border-white/5"
+                            )}
+                        >
+                            <ParticipantView
+                                participant={p}
+                                className="h-full w-full [&_video]:object-cover [&_video]:w-full [&_video]:h-full"
+                            />
                             <div className="absolute bottom-3 left-3 bg-black/60 backdrop-blur-md px-3 py-1 rounded-xl text-white text-[10px] font-bold border border-white/10">
                                 {p.name} {p.sessionId === localParticipant?.sessionId && "(You)"}
                             </div>
+                            {p.reaction?.type === 'raised-hand' && (
+                                <div className="absolute top-3 left-3 bg-yellow-500 p-1.5 rounded-full shadow-lg border border-white/20 animate-bounce">
+                                    <Hand size={12} className="text-black" />
+                                </div>
+                            )}
                             {p.isMuted && (
                                 <div className="absolute top-3 right-3 bg-black/40 p-1.5 rounded-full border border-white/5">
                                     <MicOff size={12} className="text-white/60" />
@@ -178,13 +225,15 @@ const ResponsiveVideoLayout = ({
                 return (
                     <div
                         key={p.sessionId}
+                        onClick={() => onParticipantClick(p.sessionId)}
                         className={cn(
-                            "relative rounded-[32px] overflow-hidden bg-[#2d2e31] border-2 transition-all duration-700 shadow-2xl",
-                            p.isSpeaking ? "border-[#00A3FF] ring-8 ring-[#00A3FF]/10 scale-[1.02] z-10" : "border-white/5"
+                            "relative rounded-[32px] overflow-hidden bg-[#2d2e31] border-2 transition-all duration-700 shadow-2xl cursor-pointer hover:scale-[1.02]",
+                            p.isSpeaking ? "border-[#00A3FF] ring-8 ring-[#00A3FF]/10 z-10" : "border-white/5",
+                            p.sessionId === pinnedParticipantId && "border-[#00A3FF]"
                         )}
                     >
-                        <ParticipantView 
-                            participant={p} 
+                        <ParticipantView
+                            participant={p}
                             className="h-full w-full [&_video]:object-cover [&_video]:w-full [&_video]:h-full"
                         />
 
@@ -198,6 +247,12 @@ const ResponsiveVideoLayout = ({
                             )}
                             <span className="tracking-wide">{p.name} {isLocal && "(You)"}</span>
                         </div>
+                        
+                        {p.reaction?.type === 'raised-hand' && (
+                            <div className="absolute top-5 left-5 bg-yellow-500 p-2 rounded-2xl shadow-2xl border border-white/20 animate-bounce">
+                                <Hand size={18} className="text-black" />
+                            </div>
+                        )}
 
                         {p.isMuted && !p.isSpeaking && (
                             <div className="absolute top-5 right-5 bg-black/40 backdrop-blur-md p-2.5 rounded-full text-white/60 border border-white/5 shadow-xl">
@@ -228,9 +283,12 @@ function VideoCallUI({ onLeave }: { onLeave: () => void }) {
     const participants = useParticipants();
 
     const [isHandRaised, setIsHandRaised] = useState(false);
+    const [pinnedParticipantId, setPinnedParticipantId] = useState<string | null>(null);
     const [startTime] = useState(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
 
-    if (callingState !== CallingState.JOINED) {
+    const isRinging = callingState === CallingState.RINGING || (callingState === CallingState.JOINING && participants.length <= 1);
+
+    if (callingState !== CallingState.JOINED && !isRinging) {
         return (
             <div className="flex h-full items-center justify-center bg-[#202124] text-white">
                 <div className="flex flex-col items-center gap-4">
@@ -277,12 +335,33 @@ function VideoCallUI({ onLeave }: { onLeave: () => void }) {
             <div className="flex items-center justify-between px-8 py-6 text-white bg-gradient-to-b from-black/40 to-transparent">
                 <div className="flex flex-col gap-0.5">
                     <div className="flex items-center gap-3">
-                        <div className="h-2.5 w-2.5 rounded-full bg-[#EA4335] animate-pulse shadow-[0_0_10px_rgba(234,67,53,0.5)]" />
-                        <span className="text-base font-semibold tracking-tight">Meeting in progress</span>
+                        <div className={cn(
+                            "h-2.5 w-2.5 rounded-full animate-pulse shadow-[0_0_10px_rgba(234,67,53,0.5)]",
+                            isRinging ? "bg-yellow-500 shadow-yellow-500/50" : "bg-[#EA4335]"
+                        )} />
+                        <span className="text-base font-semibold tracking-tight">
+                            {isRinging ? "Calling members..." : "Meeting in progress"}
+                        </span>
                     </div>
-                    <span className="text-[11px] text-white/50 font-medium ml-5">Meeting started at {startTime}</span>
+                    {!isRinging && <span className="text-[11px] text-white/50 font-medium ml-5">Meeting started at {startTime}</span>}
                 </div>
+                
                 <div className="flex items-center gap-6">
+                    {isRinging && (
+                        <div className="flex items-center gap-4 px-4 py-2 bg-white/10 backdrop-blur-md rounded-2xl border border-white/10 animate-in fade-in slide-in-from-top-2">
+                            <div className="relative">
+                                <AlertCircle size={16} className="text-[#8AB4F8]" />
+                                <div className="absolute inset-0 bg-[#8AB4F8]/20 rounded-full animate-ping" />
+                            </div>
+                            <span className="text-xs font-semibold text-white/90">Ringing {participants.length - 1 || 1} member</span>
+                            <button 
+                                onClick={onLeave}
+                                className="h-8 w-8 rounded-full bg-[#EA4335] flex items-center justify-center hover:bg-[#D93025] transition-all hover:scale-110 shadow-lg"
+                            >
+                                <Phone size={14} className="text-white rotate-[135deg]" />
+                            </button>
+                        </div>
+                    )}
                     <div className="flex items-center gap-2 px-3 py-1.5 bg-white/5 rounded-full border border-white/10">
                         <Users size={14} className="text-[#8AB4F8]" />
                         <span className="text-xs font-medium text-white/80">{participants.length} participants</span>
@@ -296,6 +375,8 @@ function VideoCallUI({ onLeave }: { onLeave: () => void }) {
                     participants={participants}
                     localParticipant={localParticipant}
                     isMicMuted={isMicMuted}
+                    pinnedParticipantId={pinnedParticipantId}
+                    onParticipantClick={(id) => setPinnedParticipantId(id === pinnedParticipantId ? null : id)}
                 />
             </div>
 
