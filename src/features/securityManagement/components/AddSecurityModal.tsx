@@ -19,8 +19,8 @@ export default function AddSecurityModal({ open, onClose, onSuccess, initialData
     fullName: "",
     phoneNumber: "",
     email: "",
-    gender: "Male",
-    shift: "Day",
+    gender: "male",
+    shift: "day",
     shiftDate: "",
     shiftTime: "",
   });
@@ -42,8 +42,8 @@ export default function AddSecurityModal({ open, onClose, onSuccess, initialData
         fullName: initialData.name || initialData.fullName || "",
         phoneNumber: initialData.phoneNumber || "",
         email: initialData.email || "",
-        gender: initialData.gender?.toLowerCase() || "Male",
-        shift: initialData.shift || "Day",
+        gender: initialData.gender?.toLowerCase() || "male",
+        shift: initialData.shift?.toLowerCase() || "day",
         shiftDate: initialData.shiftDate ? new Date(initialData.shiftDate).toISOString().split('T')[0] : "",
         shiftTime: initialData.shiftTime || "",
       });
@@ -57,8 +57,8 @@ export default function AddSecurityModal({ open, onClose, onSuccess, initialData
         fullName: "",
         phoneNumber: "",
         email: "",
-        gender: "Male",
-        shift: "Day",
+        gender: "male",
+        shift: "day",
         shiftDate: "",
         shiftTime: "",
       });
@@ -226,8 +226,8 @@ export default function AddSecurityModal({ open, onClose, onSuccess, initialData
                     required
                   >
                     <option value="" disabled>Select Gender</option>
-                    <option value="Male">Male</option>
-                    <option value="Female">Female</option>
+                    <option value="male">Male</option>
+                    <option value="female">Female</option>
                   </select>
                   <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none">
                     <svg width="10" height="6" viewBox="0 0 10 6" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -248,8 +248,8 @@ export default function AddSecurityModal({ open, onClose, onSuccess, initialData
                     required
                   >
                     <option value="" disabled>Select Shift</option>
-                    <option value="Day">Day</option>
-                    <option value="Night">Night</option>
+                    <option value="day">Day</option>
+                    <option value="night">Night</option>
                   </select>
                   <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none">
                     <svg width="10" height="6" viewBox="0 0 10 6" fill="none" xmlns="http://www.w3.org/2000/svg">

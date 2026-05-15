@@ -44,7 +44,7 @@ export const adminNavigation: NavItem[] = [
     path: "/financial-management/income",
     children: [
       { label: "Income", path: "/financial-management/income" },
-      { label: "Expanse", path: "/financial-management/expense" },
+      { label: "Expense", path: "/financial-management/expense" },
       { label: "Note", path: "/financial-management/note" },
     ],
   },

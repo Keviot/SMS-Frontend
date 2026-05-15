@@ -287,6 +287,20 @@ export const financialApi = {
         });
         return handleResponse(response);
     },
+ 
+    // Update maintenance status (e.g. for Cash payments by admin)
+    updateMaintenanceStatus: async (id: string, data: { status: string; payment: string }) => {
+        const response = await fetch(`${API_URL}/maintenance/${id}`, {
+            method: "PATCH",
+            credentials: "include",
+            headers: {
+                "Content-Type": "application/json",
+                ...getAuthHeader()
+            },
+            body: JSON.stringify(data),
+        });
+        return handleResponse(response);
+    },
 
     // Other Income APIs
 
@@ -1230,20 +1244,20 @@ export const chatApi = {
     },
 };
 
-export const videoApi = {
-    generateToken: async (userId: string) => {
-        const response = await fetch(`${API_URL}/video/generate-token`, {
-            method: "POST",
-            credentials: "include",
-            headers: {
-                "Content-Type": "application/json",
-                ...getAuthHeader()
-            },
-            body: JSON.stringify({ userId }),
-        });
-        return handleResponse(response);
-    },
-};
+// export const videoApi = {
+//     generateToken: async (userId: string) => {
+//         const response = await fetch(`${API_URL}/video/generate-token`, {
+//             method: "POST",
+//             credentials: "include",
+//             headers: {
+//                 "Content-Type": "application/json",
+//                 ...getAuthHeader()
+//             },
+//             body: JSON.stringify({ userId }),
+//         });
+//         return handleResponse(response);
+//     },
+// };
 
 export const discussionApi = {
     getAll: async (societyId: string) => {
@@ -1358,4 +1372,19 @@ export const eventPaymentApi = {
         });
         return handleResponse(response);
     },
+};
+
+export const videoApi = {
+    generateToken: async (userId: string) => {
+        const response = await fetch(`${API_URL}/video/generate-token`, {
+            method: "POST",
+            credentials: "include",
+            headers: {
+                "Content-Type": "application/json",
+                ...getAuthHeader()
+            },
+            body: JSON.stringify({ userId }),
+        });
+        return handleResponse(response);
+    }
 };
