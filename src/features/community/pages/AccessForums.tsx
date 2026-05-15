@@ -35,6 +35,7 @@ import {
     Call,
     useCallStateHooks,
     useCall,
+    useCalls,
     CallingState,
     ParticipantView
 } from "@stream-io/video-react-sdk";
@@ -478,6 +479,66 @@ function VideoCallUI({ onLeave, onMinimize }: { onLeave: () => void, onMinimize:
     );
 }
 
+// Helper component for Incoming Call Notification
+const IncomingCallNotification = ({ call, onAccept, onReject }: { call: Call, onAccept: () => void, onReject: () => void }) => {
+    const { useCallCallingState } = useCallStateHooks();
+    const callingState = useCallCallingState();
+    const [caller, setCaller] = useState<any>(null);
+
+    useEffect(() => {
+        setCaller(call.state.createdBy);
+        
+        // Play ringing sound (using a public URL for simplicity)
+        const audio = new Audio("https://assets.mixkit.co/active_storage/sfx/2358/2358-preview.mp3");
+        audio.loop = true;
+        audio.play().catch(e => console.log("Audio play blocked", e));
+        
+        return () => {
+            audio.pause();
+            audio.currentTime = 0;
+        };
+    }, [call]);
+
+    if (callingState !== CallingState.RINGING) return null;
+
+    return (
+        <div className="fixed inset-0 z-[1000] flex items-start justify-center pt-20 px-4 pointer-events-none">
+            <div className="w-full max-w-sm bg-[#1a1b1e]/90 backdrop-blur-2xl rounded-[32px] p-6 border border-white/10 shadow-[0_20px_50px_rgba(0,0,0,0.5)] flex flex-col items-center gap-6 animate-in slide-in-from-top-10 duration-500 pointer-events-auto">
+                <div className="relative">
+                    <div className="w-24 h-24 rounded-full overflow-hidden border-4 border-[#5678E9]/20 p-1">
+                        <Avatar src={caller?.image} name={caller?.name || "User"} className="w-full h-full rounded-full" />
+                    </div>
+                    <div className="absolute -bottom-2 -right-2 bg-[#5678E9] p-2 rounded-full shadow-lg animate-bounce">
+                        <Video size={16} className="text-white" />
+                    </div>
+                </div>
+                
+                <div className="text-center">
+                    <h3 className="text-xl font-bold text-white mb-1">{caller?.name || "Incoming Call"}</h3>
+                    <p className="text-white/60 text-sm font-medium animate-pulse">Incoming video call...</p>
+                </div>
+
+                <div className="flex items-center gap-4 w-full">
+                    <button 
+                        onClick={onReject}
+                        className="flex-1 h-14 rounded-2xl bg-[#EA4335] flex items-center justify-center gap-2 text-white font-bold hover:bg-[#D93025] transition-all hover:scale-105 active:scale-95 shadow-lg"
+                    >
+                        <Phone size={20} className="rotate-[135deg]" />
+                        Reject
+                    </button>
+                    <button 
+                        onClick={onAccept}
+                        className="flex-1 h-14 rounded-2xl bg-[#34A853] flex items-center justify-center gap-2 text-white font-bold hover:bg-[#2D9249] transition-all hover:scale-105 active:scale-95 shadow-lg"
+                    >
+                        <Video size={20} />
+                        Accept
+                    </button>
+                </div>
+            </div>
+        </div>
+    );
+};
+
 export default function AccessForums() {
     const { socket, setActiveChatId } = useSocket();
     const [contacts, setContacts] = useState<Contact[]>([]);
@@ -491,6 +552,29 @@ export default function AccessForums() {
     const [activeCall, setActiveCall] = useState<Call | null>(null);
     const [isCallMinimized, setIsCallMinimized] = useState(false);
     const [isScreenShared, setIsScreenShared] = useState(false);
+
+    // Incoming Call Listener (Main Component Scope)
+    const calls = useCalls();
+    const incomingCall = calls.find(c => currentUser && c.state.callingState === CallingState.RINGING && c.state.createdBy?.id !== currentUser?._id);
+
+    const handleAcceptCall = async (call: Call) => {
+        try {
+            await call.accept();
+            setActiveCall(call);
+            setIsCallMinimized(false);
+        } catch (error) {
+            console.error("Failed to accept call:", error);
+            toast.error("Failed to accept call");
+        }
+    };
+
+    const handleRejectCall = async (call: Call) => {
+        try {
+            await call.reject();
+        } catch (error) {
+            console.error("Failed to reject call:", error);
+        }
+    };
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const typingTimeoutRef = useRef<any>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
@@ -901,13 +985,21 @@ export default function AccessForums() {
             }
 
             const call = videoClient.call("default", callId);
-            // Set active call immediately so the UI transitions to "Joining/Ringing" state
             setActiveCall(call);
+
+            // Create the call on the server with members first
+            await call.getOrCreate({
+                data: {
+                    members: [
+                        { user_id: currentUser._id, role: 'admin' },
+                        { user_id: activeContact.id }
+                    ]
+                }
+            });
             
-            await call.join({ create: true });
-            
-            // For personal calls, we can notify the user via socket if needed, 
-            // but Stream handles the ringing state if configured.
+            // Then trigger the ringing notification
+            await call.ring();
+            await call.join();
         } catch (error: any) {
             console.error("Failed to start call:", error);
             setActiveCall(null);
@@ -966,6 +1058,15 @@ export default function AccessForums() {
 
     return (
         <StreamVideo client={videoClient || new StreamVideoClient({ apiKey: "placeholder", user: { id: "placeholder" }, token: "" })}>
+            {/* Incoming Call Notification */}
+            {incomingCall && !activeCall && (
+                <IncomingCallNotification 
+                    call={incomingCall} 
+                    onAccept={() => handleAcceptCall(incomingCall)}
+                    onReject={() => handleRejectCall(incomingCall)}
+                />
+            )}
+
             <div className="flex h-[calc(100vh-120px)] w-full overflow-hidden rounded-2xl bg-white shadow-sm border border-[#F4F4F4] relative">
                 {/* Full Screen Video Call Overlay */}
                 {activeCall && !isCallMinimized && (
