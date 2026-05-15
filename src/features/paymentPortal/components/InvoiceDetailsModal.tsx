@@ -22,6 +22,8 @@ interface Invoice {
   amount?: number;
   penalty?: number;
   status: string;
+  eventTitle?: string;
+  eventDescription?: string;
 }
 
 interface InvoiceDetailsModalProps {
@@ -94,35 +96,15 @@ export default function InvoiceDetailsModal({
             <InfoItem label="Owner Name" value={getOwnerName()} />
             <InfoItem label="Bill Date" value={formatDate(invoice.date)} />
             <InfoItem label="Payment Date" value={invoice.paymentDate ? formatDate(invoice.paymentDate) : "N/A"} />
-            {isEventInvoice && (
+            {!isEventInvoice && (
               <>
-                <InfoItem label="Event Date" value="6549873521" />
-                <InfoItem label="Phone Number" value="6549873521" />
+                <InfoItem label="Phone Number" value={invoice.resident?.phoneNumber || "N/A"} />
+                <InfoItem label="Email" value={invoice.resident?.email || "N/A"} />
               </>
             )}
           </div>
 
           {isEventInvoice ? (
-            <>
-              <div className="mt-[16px]">
-                <InfoItem label="Email" value="MaryDHurst@jourrapide.com" />
-              </div>
-
-              <div className="mt-[16px]">
-                <InfoItem label="Event Name" value="Ganesh Chaturthi" />
-              </div>
-
-              <div className="mt-[16px]">
-                <p className="text-[12px] font-medium leading-[16px] text-[#A7A7A7]">
-                  Description
-                </p>
-                <p className="mt-[6px] text-[13px] font-medium leading-[20px] text-[#202224]">
-                  The celebration of Ganesh Chaturthi involves the installation
-                  of clay idols of Lord Ganesa in&nbsp; OurResident.
-                </p>
-              </div>
-            </>
-          ) : (
             <>
               <div className="mt-[16px]">
                 <InfoItem label="Phone Number" value={invoice.resident?.phoneNumber || "N/A"} />
@@ -132,6 +114,21 @@ export default function InvoiceDetailsModal({
                 <InfoItem label="Email" value={invoice.resident?.email || "N/A"} />
               </div>
 
+              <div className="mt-[16px]">
+                <InfoItem label="Event Name" value={invoice.eventTitle || "N/A"} />
+              </div>
+
+              <div className="mt-[16px]">
+                <p className="text-[12px] font-medium leading-[16px] text-[#A7A7A7]">
+                  Description
+                </p>
+                <p className="mt-[6px] text-[13px] font-medium leading-[20px] text-[#202224]">
+                  {invoice.eventDescription || "No description available"}
+                </p>
+              </div>
+            </>
+          ) : (
+            <>
               <div className="mt-[16px]">
                 <InfoItem
                   label="Address"
