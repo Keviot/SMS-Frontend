@@ -4,7 +4,6 @@ import ComplaintTable from "../components/ComplaintTable";
 import UpcomingActivityCard from "../components/UpcomingActivityCard";
 import PendingMaintenanceCard from "../components/PendingMaintenanceCard";
 import ImportantNumbersCard from "../components/ImportantNumbersCard";
-import Card from "../../../ui/Card";
 import { Loader2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
@@ -128,6 +127,7 @@ export default function Dashboard() {
             amount: (m.amount || m.maintenanceSetup?.maintenanceAmount || 0).toString()
           }));
 
+    
         setData({
           complaints: mappedComplaints,
           importantNumbers: mappedNumbers,
@@ -233,51 +233,7 @@ export default function Dashboard() {
           role={role}
           onDataChange={fetchDashboardData}
         />
-        {role !== "resident" && <PendingMaintenanceCard data={data.pendingMaintenances} />}
-        {role === "resident" && (
-          <Card className="flex h-[27rem] flex-col p-5">
-            <div className="flex items-center justify-between gap-3">
-              <h2 className="text-base font-semibold leading-5 text-[#202224]">
-                Upcoming Events
-              </h2>
-              <button
-                onClick={() => navigate("/events-participation")}
-                className="text-xs font-medium text-[#5678E9] hover:underline"
-              >
-                View all
-              </button>
-            </div>
-            <div className="mt-3 flex flex-1 flex-col gap-3 overflow-y-auto">
-              {data.upcomingActivities.length === 0 ? (
-                <div className="flex flex-1 items-center justify-center text-center">
-                  <p className="text-sm text-gray-500">No upcoming events</p>
-                </div>
-              ) : (
-                data.upcomingActivities.slice(0, 5).map((activity) => (
-                  <div
-                    key={activity.id}
-                    className="flex items-center gap-2.5 rounded-[10px] border border-[#F1F1F1] p-2.5"
-                  >
-                    <div className="grid size-9 shrink-0 place-items-center rounded-full bg-[#5678E9] text-sm font-semibold text-white">
-                      {activity.letter}
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate text-xs font-semibold leading-5 text-[#202224]">
-                        {activity.title}
-                      </p>
-                      <p className="truncate text-[11px] font-medium leading-4 text-[#A7A7A7]">
-                        {activity.time}
-                      </p>
-                    </div>
-                    <p className="shrink-0 text-right text-[11px] font-medium leading-4 text-[#A7A7A7]">
-                      {activity.date}
-                    </p>
-                  </div>
-                ))
-              )}
-            </div>
-          </Card>
-        )}
+        <PendingMaintenanceCard data={data.pendingMaintenances} />
       </section>
 
       {/* Row 3: Complaint List | Upcoming Activity */}

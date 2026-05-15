@@ -27,7 +27,7 @@ interface MaintenanceRecord {
     phoneNumber: string;
     amount: number;
     penalty: number | null;
-    paymentStatus: "pending" | "done";
+    paymentStatus: "pending" | "due" | "paid";
     paymentMode: "online" | "cash";
     avatar?: string;
 }
@@ -61,7 +61,7 @@ const normalizeMaintenanceRecord = (item: any): MaintenanceRecord => {
         residentStatus = "tenant";
     }
 
-    const paymentStatus = item.status?.toLowerCase() === "paid" ? "done" : "pending";
+    const paymentStatus = item.status?.toLowerCase() || "pending";
 
     let paymentMode = item.payment?.toLowerCase?.() || "online";
     if (!["online", "cash", "cheque", "upi"].includes(paymentMode)) {
@@ -100,15 +100,15 @@ const normalizeMaintenanceRecord = (item: any): MaintenanceRecord => {
         phoneNumber: item.phoneNumber || "N/A",
         amount,
         penalty,
-        paymentStatus: paymentStatus as "pending" | "done",
+        paymentStatus: paymentStatus as "pending" | "due" | "paid",
         paymentMode: paymentMode as "online" | "cash",
         avatar,
     };
 };
 
 const calculateSummary = (records: MaintenanceRecord[]): MaintenanceSummary => {
-    const collected = records.filter((record) => record.paymentStatus === "done");
-    const pending = records.filter((record) => record.paymentStatus === "pending");
+    const collected = records.filter((record) => record.paymentStatus === "paid");
+    const pending = records.filter((record) => record.paymentStatus === "pending" || record.paymentStatus === "due");
 
     return {
         maintenanceAmount: collected.reduce((sum, record) => sum + record.amount, 0),
@@ -192,7 +192,7 @@ export default function Income() {
                         id: item._id,
                         title: item.title,
                         amountPerMember: item.amount,
-                        totalMember: 1, 
+                        totalMember: 1,
                         date: new Date(item.date).toLocaleDateString("en-GB"),
                         dueDate: new Date(item.dueDate).toLocaleDateString("en-GB"),
                         description: item.description,
@@ -1003,7 +1003,7 @@ function getMockData(): MaintenanceRecord[] {
             phoneNumber: "92524 12385",
             amount: 1000,
             penalty: 250,
-            paymentStatus: "done",
+            paymentStatus: "paid",
             paymentMode: "cash",
             avatar: "https://i.pravatar.cc/150?u=2",
         },
@@ -1029,7 +1029,7 @@ function getMockData(): MaintenanceRecord[] {
             phoneNumber: "92524 12389",
             amount: 1000,
             penalty: null,
-            paymentStatus: "done",
+            paymentStatus: "paid",
             paymentMode: "cash",
             avatar: "https://i.pravatar.cc/150?u=4",
         },
@@ -1055,7 +1055,7 @@ function getMockData(): MaintenanceRecord[] {
             phoneNumber: "92524 34822",
             amount: 1000,
             penalty: null,
-            paymentStatus: "done",
+            paymentStatus: "paid",
             paymentMode: "cash",
             avatar: "https://i.pravatar.cc/150?u=6",
         },
@@ -1081,7 +1081,7 @@ function getMockData(): MaintenanceRecord[] {
             phoneNumber: "92589 34522",
             amount: 1000,
             penalty: null,
-            paymentStatus: "done",
+            paymentStatus: "paid",
             paymentMode: "cash",
             avatar: "https://i.pravatar.cc/150?u=8",
         },
