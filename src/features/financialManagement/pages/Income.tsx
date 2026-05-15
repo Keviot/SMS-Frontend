@@ -28,7 +28,7 @@ interface MaintenanceRecord {
     phoneNumber: string;
     amount: number;
     penalty: number | null;
-    paymentStatus: "pending" | "done";
+    paymentStatus: "pending" | "due" | "paid";
     paymentMode: "online" | "cash";
     avatar?: string;
 }
@@ -64,7 +64,7 @@ const normalizeMaintenanceRecord = (item: any): MaintenanceRecord => {
         residentStatus = "tenant";
     }
 
-    const paymentStatus = item.status?.toLowerCase() === "paid" ? "done" : "pending";
+    const paymentStatus = item.status?.toLowerCase() || "pending";
 
     let paymentMode = item.payment?.toLowerCase?.() || "online";
     if (paymentMode === "upi") {
@@ -106,15 +106,15 @@ const normalizeMaintenanceRecord = (item: any): MaintenanceRecord => {
         phoneNumber: item.phoneNumber || "--",
         amount,
         penalty,
-        paymentStatus: paymentStatus as "pending" | "done",
+        paymentStatus: paymentStatus as "pending" | "due" | "paid",
         paymentMode: paymentMode as "online" | "cash",
         avatar,
     };
 };
 
 const calculateSummary = (records: MaintenanceRecord[]): MaintenanceSummary => {
-    const collected = records.filter((record) => record.paymentStatus === "done");
-    const pending = records.filter((record) => record.paymentStatus === "pending");
+    const collected = records.filter((record) => record.paymentStatus === "paid");
+    const pending = records.filter((record) => record.paymentStatus === "pending" || record.paymentStatus === "due");
 
     return {
         maintenanceAmount: collected.reduce((sum, record) => sum + record.amount, 0),
@@ -202,38 +202,66 @@ export default function Income() {
                     dueDate: new Date(item.dueDate).toLocaleDateString("en-GB"),
                     description: item.description,
                 })) || [];
-
-                // Aggregate event payments
-                const eventAgg = eventPaymentRes.data?.reduce((acc: any, curr: any) => {
-                    const eventId = curr.event?._id || curr.event;
-                    if (!acc[eventId]) {
-                        acc[eventId] = {
-                            id: eventId,
-                            title: curr.event?.title || "Event Participation",
-                            amount: 0,
-                            count: 0,
-                            date: curr.event?.date || curr.createdAt,
-                            description: curr.event?.description || "Participation fees collected for society event."
-                        };
+                if (selectedTab === "Maintenance") {
+                    const response = maintenanceRes;
+                    if (!response.data || response.data.length === 0) {
+                        setMaintenanceData([]);
+                        setSummary({ maintenanceAmount: 0, penaltyAmount: 0, totalDue: 0, totalPending: 0 });
+                    } else {
+                        const transformedData = response.data.map(normalizeMaintenanceRecord);
+                        transformedData.sort((a, b) => {
+                            const wingA = a.unitNumber.split(" ")[0];
+                            const wingB = b.unitNumber.split(" ")[0];
+                            if (wingA !== wingB) return wingA.localeCompare(wingB);
+                            const unitA = parseInt(a.unitNumber.split(" ")[1]);
+                            const unitB = parseInt(b.unitNumber.split(" ")[1]);
+                            return unitA - unitB;
+                        });
+                        setMaintenanceData(transformedData);
+                        setSummary(calculateSummary(transformedData));
                     }
-                    acc[eventId].amount += curr.amount;
-                    acc[eventId].count += 1;
-                    return acc;
-                }, {}) || {};
+                } else if (selectedTab === "Other Income") {
+                    const manualIncome = otherIncomeRes.data?.map((item: any) => ({
+                        id: item._id,
+                        title: item.title,
+                        amountPerMember: item.amount,
+                        totalMember: 1,
+                        date: new Date(item.date).toLocaleDateString("en-GB"),
+                        dueDate: new Date(item.dueDate).toLocaleDateString("en-GB"),
+                        description: item.description,
+                    })) || [];
 
-                const eventIncome = Object.values(eventAgg).map((ev: any) => ({
-                    id: ev.id,
-                    title: ev.title,
-                    amountPerMember: ev.amount / (ev.count || 1),
-                    totalMember: ev.count,
-                    date: new Date(ev.date).toLocaleDateString("en-GB"),
-                    dueDate: "-",
-                    description: ev.description,
-                    isEvent: true
-                }));
+                    // Aggregate event payments
+                    const eventAgg = eventPaymentRes.data?.reduce((acc: any, curr: any) => {
+                        const eventId = curr.event?._id || curr.event;
+                        if (!acc[eventId]) {
+                            acc[eventId] = {
+                                id: eventId,
+                                title: curr.event?.title || "Event Participation",
+                                amount: 0,
+                                count: 0,
+                                date: curr.event?.date || curr.createdAt,
+                                description: curr.event?.description || "Participation fees collected for society event."
+                            };
+                        }
+                        acc[eventId].amount += curr.amount;
+                        acc[eventId].count += 1;
+                        return acc;
+                    }, {}) || {};
 
-                setOtherIncomeData([...manualIncome, ...eventIncome]);
-            }
+                    const eventIncome = Object.values(eventAgg).map((ev: any) => ({
+                        id: ev.id,
+                        title: ev.title,
+                        amountPerMember: ev.amount / (ev.count || 1),
+                        totalMember: ev.count,
+                        date: new Date(ev.date).toLocaleDateString("en-GB"),
+                        dueDate: "-",
+                        description: ev.description,
+                        isEvent: true
+                    }));
+
+                    setOtherIncomeData([...manualIncome, ...eventIncome]);
+                }
             } catch (err: any) {
                 console.error("Error fetching data:", err);
             } finally {

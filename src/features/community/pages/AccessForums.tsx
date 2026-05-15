@@ -10,7 +10,15 @@ import {
     Send,
     FileText,
     ChevronLeft,
-    Loader2
+    Loader2,
+    AlertCircle,
+    Users,
+    MonitorUp,
+    Hand,
+    MicOff,
+    VideoOff,
+    Maximize,
+    MessageSquare
 } from "lucide-react";
 import toast from "react-hot-toast";
 import { cn } from "../../../lib/cn";
@@ -25,9 +33,190 @@ import {
     SpeakerLayout,
     CallControls,
     Call,
+    useCallStateHooks,
+    useCall,
+    CallingState,
+    ParticipantView
 } from "@stream-io/video-react-sdk";
 
 const apiKey = import.meta.env.VITE_STREAM_API_KEY || "YOUR_STREAM_API_KEY";
+
+// Dedicated Video Call UI Component (Google Meet Style)
+function VideoCallUI({ onLeave }: { onLeave: () => void }) {
+    const call = useCall();
+    const {
+        useMicrophoneState,
+        useCameraState,
+        useLocalParticipant,
+        useCallCallingState,
+        useParticipants
+    } = useCallStateHooks();
+
+    const { microphone, isMute: isMicMuted } = useMicrophoneState();
+    const { camera, isMute: isCamMuted } = useCameraState();
+    const localParticipant = useLocalParticipant();
+    const callingState = useCallCallingState();
+    const participants = useParticipants();
+
+    const [isHandRaised, setIsHandRaised] = useState(false);
+
+    if (callingState !== CallingState.JOINED) {
+        return (
+            <div className="flex h-full items-center justify-center bg-[#202124] text-white">
+                <div className="flex flex-col items-center gap-4">
+                    <Loader2 className="h-10 w-10 animate-spin text-[#8AB4F8]" />
+                    <p className="text-lg font-medium">Joining meeting...</p>
+                </div>
+            </div>
+        );
+    }
+
+    const toggleMute = async () => {
+        await call?.microphone.toggle();
+    };
+
+    const toggleCamera = async () => {
+        await call?.camera.toggle();
+    };
+
+    const toggleScreenShare = async () => {
+        try {
+            await call?.screenShare.toggle();
+        } catch (err) {
+            toast.error("Screen sharing failed");
+        }
+    };
+
+    const toggleHandRaise = async () => {
+        try {
+            const newHandRaised = !isHandRaised;
+            setIsHandRaised(newHandRaised);
+
+            if (newHandRaised) {
+
+                await call?.sendReaction({ type: "raised-hand" });
+                toast.success("You raised your hand", { position: "bottom-left" });
+
+            } else {
+                // To "unraise", we can send a different reaction or just let it timeout
+                // Stream's reaction system usually handles this via UI indicators
+            }
+        } catch (err) {
+            console.error(err);
+        }
+    };
+
+    return (
+        <div className="fixed inset-0 z-[100] flex flex-col bg-[#202124]">
+            {/* Top Bar (Optional, for meeting title/info) */}
+            <div className="flex items-center justify-between px-6 py-4 text-white">
+                <div className="flex items-center gap-3">
+                    <div className="h-2 w-2 rounded-full bg-red-500 animate-pulse" />
+                    <span className="text-sm font-medium">Meeting in progress</span>
+                </div>
+                <div className="flex items-center gap-4 text-xs opacity-70">
+                    <span>{participants.length} participants</span>
+                </div>
+            </div>
+
+            {/* Main Video Area */}
+            <div className="flex-1 relative p-4 overflow-hidden">
+                <SpeakerLayout />
+            </div>
+
+            {/* Bottom Control Bar (Google Meet Style) */}
+            <div className="h-24 bg-[#202124] flex items-center justify-between px-8">
+                {/* Left side: Time/Code (Mock) */}
+                <div className="hidden lg:flex items-center text-white text-sm font-medium">
+                    {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} | Meeting
+                </div>
+
+                {/* Center: Controls */}
+                <div className="flex items-center gap-4">
+                    {/* Mute */}
+                    <button
+                        onClick={toggleMute}
+                        className={cn(
+                            "group flex h-12 w-12 items-center justify-center rounded-full transition-all",
+                            isMicMuted ? "bg-[#EA4335] hover:bg-[#D93025]" : "bg-[#3C4043] hover:bg-[#4c4f52]"
+                        )}
+                        title={isMicMuted ? "Unmute" : "Mute"}
+                    >
+                        {isMicMuted ? <MicOff size={20} className="text-white" /> : <Mic size={20} className="text-white" />}
+                    </button>
+
+                    {/* Camera */}
+                    <button
+                        onClick={toggleCamera}
+                        className={cn(
+                            "group flex h-12 w-12 items-center justify-center rounded-full transition-all",
+                            isCamMuted ? "bg-[#EA4335] hover:bg-[#D93025]" : "bg-[#3C4043] hover:bg-[#4c4f52]"
+                        )}
+                        title={isCamMuted ? "Turn on camera" : "Turn off camera"}
+                    >
+                        {isCamMuted ? <VideoOff size={20} className="text-white" /> : <Video size={20} className="text-white" />}
+                    </button>
+
+                    {/* Hand Raise */}
+                    <button
+                        onClick={toggleHandRaise}
+                        className={cn(
+                            "flex h-12 w-12 items-center justify-center rounded-full transition-all bg-[#3C4043] hover:bg-[#4c4f52]",
+                            isHandRaised && "bg-white hover:bg-white"
+                        )}
+                        title="Raise hand"
+                    >
+                        {
+                            isHandRaised ? <Hand size={20} className="text-yellow-400" /> : <Hand size={20} className="text-white" />
+                        }
+                    </button>
+
+                    {/* Screen Share */}
+                    <button
+                        onClick={toggleScreenShare}
+                        className="flex h-12 w-12 items-center justify-center rounded-full transition-all bg-[#3C4043] hover:bg-[#4c4f52]"
+                        title="Present now"
+                    >
+                        <MonitorUp size={20} className="text-white" />
+                    </button>
+
+                    {/* More Options */}
+                    {/* <button
+                        className="flex h-12 w-12 items-center justify-center rounded-full transition-all bg-[#3C4043] hover:bg-[#4c4f52]"
+                        title="More options"
+                    >
+                        <MoreVertical size={20} className="text-white" />
+                    </button> */}
+
+                    {/* End Call */}
+                    <button
+                        onClick={onLeave}
+                        className="flex h-12 w-16 items-center justify-center rounded-[24px] bg-[#EA4335] hover:bg-[#D93025] transition-all ml-4"
+                        title="Leave call"
+                    >
+                        <Phone size={24} className="text-white rotate-[135deg]" />
+                    </button>
+                </div>
+
+                {/* Right side: Meeting Info */}
+                <div className="hidden lg:flex items-center gap-6 text-white opacity-80">
+                    <div className="flex flex-col items-center gap-1 cursor-pointer hover:opacity-100">
+                        <AlertCircle size={20} />
+                        <span className="text-[10px]">Info</span>
+                    </div>
+                    <div className="flex flex-col items-center gap-1 cursor-pointer hover:opacity-100">
+                        <Users size={20} />
+                        <span className="text-[10px]">People</span>
+                    </div>
+                    <div className="flex flex-col items-center gap-1 cursor-pointer hover:opacity-100">
+                        <MessageSquare size={20} />
+                        <span className="text-[10px]">Chat</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+}
 
 export default function AccessForums() {
     const { socket, setActiveChatId } = useSocket();
@@ -40,6 +229,7 @@ export default function AccessForums() {
     const [currentUser, setCurrentUser] = useState<any>(null);
     const [videoClient, setVideoClient] = useState<StreamVideoClient | null>(null);
     const [activeCall, setActiveCall] = useState<Call | null>(null);
+    const [isScreenShared, setIsScreenShared] = useState(false);
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const typingTimeoutRef = useRef<any>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
@@ -220,15 +410,15 @@ export default function AccessForums() {
             if (isMsgForActiveChat) {
                 setMessages(prev => {
                     // Check if message already exists (deduplication for optimistic updates)
-                    const isDuplicate = prev.some(m => 
-                        (m.id === msg._id) || 
+                    const isDuplicate = prev.some(m =>
+                        (m.id === msg._id) ||
                         (msg.tempId && m.tempId === msg.tempId) ||
                         (!msg.tempId && m.text === msg.message && m.sender === (msg.sender._id === currentU?._id ? "me" : "them"))
                     );
 
                     if (isDuplicate) {
                         // Update the optimistic message with the real ID from server if needed
-                        return prev.map(m => 
+                        return prev.map(m =>
                             (m.tempId && m.tempId === msg.tempId) ? { ...m, id: msg._id, tempId: undefined } : m
                         );
                     }
@@ -510,12 +700,7 @@ export default function AccessForums() {
         <StreamVideo client={videoClient || new StreamVideoClient({ apiKey: "placeholder", user: { id: "placeholder" }, token: "" })}>
             {activeCall ? (
                 <StreamCall call={activeCall}>
-                    <div className="fixed inset-0 z-[100] flex flex-col bg-black">
-                        <SpeakerLayout />
-                        <div className="absolute bottom-10 left-0 right-0">
-                            <CallControls onLeave={() => setActiveCall(null)} />
-                        </div>
-                    </div>
+                    <VideoCallUI onLeave={() => setActiveCall(null)} />
                 </StreamCall>
             ) : (
                 <div className="flex h-[calc(100vh-120px)] w-full overflow-hidden rounded-2xl bg-white shadow-sm border border-[#F4F4F4]">
@@ -604,9 +789,9 @@ export default function AccessForums() {
                                                     </div>
                                                 )}
                                                 {(msg.type === "pdf" || msg.type === "file") && (
-                                                    <a 
-                                                        href={msg.fileUrl} 
-                                                        target="_blank" 
+                                                    <a
+                                                        href={msg.fileUrl}
+                                                        target="_blank"
                                                         rel="noopener noreferrer"
                                                         className={cn(
                                                             "flex items-center gap-3 rounded-xl p-2 hover:opacity-80 transition-opacity",
@@ -643,11 +828,11 @@ export default function AccessForums() {
                                             className="flex-1 bg-transparent text-sm outline-none placeholder:text-[#A7A7A7]"
                                         />
                                         <div className="flex items-center gap-3">
-                                            <input 
-                                                type="file" 
-                                                ref={fileInputRef} 
-                                                onChange={handleFileUpload} 
-                                                className="hidden" 
+                                            <input
+                                                type="file"
+                                                ref={fileInputRef}
+                                                onChange={handleFileUpload}
+                                                className="hidden"
                                             />
                                             <button type="button" onClick={() => handleIconClick('Attach File')} className="text-[#202224] hover:text-[#5678E9] transition-colors">
                                                 <Paperclip size={20} />

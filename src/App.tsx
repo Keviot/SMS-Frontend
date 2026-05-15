@@ -34,6 +34,7 @@ import EventsParticipation from './features/eventsParticipation/pages/EventsPart
 import ShowMaintenanceDetails from './features/paymentPortal/pages/ShowMaintenanceDetails'
 import MaintenanceInvoices from './features/paymentPortal/pages/MaintenanceInvoices'
 import OtherInvoices from './features/paymentPortal/pages/OtherInvoices'
+import EventInvoices from './features/paymentPortal/pages/EventInvoices'
 
 
 import EmergencyManagement from './features/securityManagement/pages/EmergencyManagement'
@@ -142,6 +143,7 @@ function App() {
             <Route path="/payment-portal" element={<ShowMaintenanceDetails />} />
             <Route path="/payment-portal/maintenance-invoices" element={<MaintenanceInvoices />} />
             <Route path="/payment-portal/other-invoices" element={<OtherInvoices />} />
+            <Route path="/payment-portal/event-invoices" element={<EventInvoices />} />
             <Route path="/community/access-forums" element={<AccessForums />} />
             <Route path="/community/polls" element={<Polls />} />
             <Route path="/community/discussion" element={<CommunitiesDiscussion />} />

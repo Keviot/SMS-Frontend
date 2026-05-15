@@ -1330,6 +1330,23 @@ export const discussionApi = {
     }
 };
 
+export const dashboardApi = {
+    getStats: async (societyId?: string) => {
+        const url = societyId
+            ? `${API_URL}/dashboard/stats?societyId=${societyId}`
+            : `${API_URL}/dashboard/stats`;
+        const response = await fetch(url, {
+            method: "GET",
+            credentials: "include",
+            headers: {
+                "Content-Type": "application/json",
+                ...getAuthHeader()
+            },
+        });
+        return handleResponse(response);
+    }
+};
+
 export const eventPaymentApi = {
     create: async (data: any) => {
         const response = await fetch(`${API_URL}/event-payment/create`, {

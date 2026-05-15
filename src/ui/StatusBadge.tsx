@@ -9,6 +9,8 @@ type StatusBadgeVariant =
   | "pending"
   | "solve"
   | "done"
+  | "paid"
+  | "due"
   | "cash"
   | "online"
   | "owner"
@@ -30,6 +32,8 @@ const classes: Record<StatusBadgeVariant, string> = {
   pending: "bg-[#FFC3131A] text-[#FFC313]",
   solve: "bg-[var(--green)] text-white",
   done: "bg-[#39973D1A] text-[#39973D]",
+  paid: "bg-[#39973D1A] text-[#39973D]",
+  due: "bg-[#E74C3C1A] text-[#E74C3C]",
   cash: "bg-[#2022240D] text-[#202224]",
   online: "bg-[#5678E91A] text-[#5678E9]",
   owner: "bg-[var(--accent-blue)] text-[var(--blue)]",
