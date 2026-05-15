@@ -28,11 +28,11 @@ const SocketContext = createContext<SocketContextType>({
   socket: null,
   isConnected: false,
   notifications: [],
-  markAsRead: () => {},
-  clearNotifications: () => {},
-  refreshNotifications: () => {},
+  markAsRead: () => { },
+  clearNotifications: () => { },
+  refreshNotifications: () => { },
   activeChatId: null,
-  setActiveChatId: () => {},
+  setActiveChatId: () => { },
 });
 
 export const useSocket = () => useContext(SocketContext);
@@ -106,7 +106,7 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
     socketInstance.on('notification', (data: { title: string; message: string; type: string }) => {
       console.log('Received notification:', data);
-      
+
       const newNotification: Notification = {
         id: Date.now().toString(),
         title: data.title,
@@ -126,7 +126,7 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         toast.error(`${data.title}: ${data.message}`);
       } else {
         toast(`${data.title}: ${data.message}`, {
-            icon: '🔔',
+          icon: '🔔',
         });
       }
     });
@@ -134,11 +134,11 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     socketInstance.on('new-message', (msg: any) => {
       console.log('Received new-message:', msg);
       const currentU = currentUserRef.current;
-      
+
       const isFromMe = currentU ? String(msg.sender._id) === String(currentU._id) : false;
       const isCommunity = !msg.receiver;
       const contactId = isCommunity ? "community" : String(msg.sender._id);
-      
+
       // Don't notify if message is from me or for the currently active chat
       if (isFromMe || String(contactId) === String(activeChatIdRef.current)) return;
 
@@ -171,8 +171,8 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       // Play sound
       try {
         const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2354/2354-preview.mp3');
-        audio.play().catch(() => {});
-      } catch (e) {}
+        audio.play().catch(() => { });
+      } catch (e) { }
     });
 
     setSocket(socketInstance);
@@ -201,12 +201,12 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   };
 
   return (
-    <SocketContext.Provider value={{ 
-      socket, 
-      isConnected, 
-      notifications, 
-      markAsRead, 
-      clearNotifications, 
+    <SocketContext.Provider value={{
+      socket,
+      isConnected,
+      notifications,
+      markAsRead,
+      clearNotifications,
       refreshNotifications: fetchInitialNotifications,
       activeChatId,
       setActiveChatId

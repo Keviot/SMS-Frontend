@@ -82,7 +82,7 @@ export default function SecurityGuard() {
       header: "Security Guard Name",
       render: (row: any) => (
         <div className="flex items-center gap-3">
-          <div className="h-10 w-10 flex-shrink-0">
+          <div className="h-10 w-10 flex shrink-0">
             <Avatar
               src={row.profileImage}
               name={row.name || `${row.firstname} ${row.lastname}`}
@@ -100,7 +100,7 @@ export default function SecurityGuard() {
         <span className={`inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-bold ${row.shift?.toLowerCase() === 'day' ? 'bg-[#FFF9E7] text-[#FFB302]' : 'bg-[#313131] text-white'
           }`}>
           {row.shift?.toLowerCase() === 'day' ? <Sun size={16} /> : <Moon size={16} />}
-          {row.shift}
+          <span className="capitalize">{row.shift}</span>
         </span>
       )
     },

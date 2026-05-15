@@ -91,9 +91,9 @@ export default function Announcement() {
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
         <div className="p-6 border-b border-gray-50 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <h1 className="text-xl font-bold text-gray-900">Announcement</h1>
-          
+
           {role !== "resident" && (
-            <Button 
+            <Button
               onClick={() => setIsModalOpen(true)}
               className="bg-[#FE512E] text-white px-6 py-2.5 rounded-xl font-bold shadow-lg flex items-center gap-2 hover:opacity-90 transition-all active:scale-[0.98] whitespace-nowrap"
             >
@@ -116,9 +116,9 @@ export default function Announcement() {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               {announcements.map((item) => (
-                <AnnouncementCard 
-                  key={item._id} 
-                  item={item} 
+                <AnnouncementCard
+                  key={item._id}
+                  item={item}
                   role={role}
                   onEdit={() => handleEdit(item)}
                   onDelete={() => setDeleteId(item._id)}
@@ -130,20 +130,20 @@ export default function Announcement() {
         </div>
       </div>
 
-      <CreateAnnouncementModal 
-        open={isModalOpen} 
-        onClose={handleCloseModal} 
+      <CreateAnnouncementModal
+        open={isModalOpen}
+        onClose={handleCloseModal}
         announcement={selectedAnnouncement}
         onSuccess={fetchAnnouncements}
       />
 
-      <AnnouncementDetailModal 
+      <AnnouncementDetailModal
         open={Boolean(viewAnnouncement)}
         onClose={() => setViewAnnouncement(null)}
         announcement={viewAnnouncement}
       />
 
-      <ConfirmPopup 
+      <ConfirmPopup
         open={Boolean(deleteId)}
         onCancel={() => setDeleteId(null)}
         onConfirm={handleDelete}
@@ -180,19 +180,19 @@ function AnnouncementCard({ item, role, onEdit, onDelete, onView }: { item: Anno
           {Array.isArray(item.announcementType) ? item.announcementType[0] : item.announcementType}
         </h3>
         <div className="relative">
-          <button 
+          <button
             onClick={() => setShowMenu(!showMenu)}
             className="p-1 hover:bg-white/10 rounded-md transition-colors"
           >
             <MoreVertical size={16} />
           </button>
-          
+
           {showMenu && (
             <>
               <div className="fixed inset-0 z-10" onClick={() => setShowMenu(false)} />
               <div className="absolute right-0 mt-2 w-32 bg-white rounded-xl shadow-xl border border-gray-50 py-1 z-20 animate-in fade-in zoom-in-95 duration-100">
                 {role !== "resident" && (
-                  <button 
+                  <button
                     onClick={() => {
                       onEdit();
                       setShowMenu(false);
@@ -202,7 +202,7 @@ function AnnouncementCard({ item, role, onEdit, onDelete, onView }: { item: Anno
                     Edit
                   </button>
                 )}
-                <button 
+                <button
                   onClick={() => {
                     onView();
                     setShowMenu(false);
@@ -215,7 +215,7 @@ function AnnouncementCard({ item, role, onEdit, onDelete, onView }: { item: Anno
                   View
                 </button>
                 {role !== "resident" && (
-                  <button 
+                  <button
                     onClick={() => {
                       onDelete();
                       setShowMenu(false);
