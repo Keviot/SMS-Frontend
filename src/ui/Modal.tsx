@@ -8,6 +8,7 @@ type ModalProps = {
   children: ReactNode;
   onClose: () => void;
   className?: string;
+  maxWidth?: string;
   overflowVisible?: boolean;
 };
 
@@ -17,6 +18,7 @@ export default function Modal({
   children,
   onClose,
   className,
+  maxWidth = "max-w-2xl",
   overflowVisible = false,
 }: ModalProps) {
   if (!open) return null;
@@ -25,13 +27,14 @@ export default function Modal({
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 px-4">
       <div
         className={cn(
-          "relative max-h-[90vh] w-full max-w-lg rounded-2xl bg-white p-6 shadow-2xl",
+          "relative max-h-[90vh] w-full rounded-2xl bg-white p-6 shadow-2xl",
+          maxWidth,
           overflowVisible ? "overflow-visible" : "overflow-y-auto",
           className
         )}
       >
         <div className="mb-6 flex items-center justify-between gap-4">
-          <h2 className="text-lg font-extrabold text-[#202224]">{title}</h2>
+          <h2 className="text-xl font-extrabold text-[#202224]">{title}</h2>
 
           <button
             type="button"

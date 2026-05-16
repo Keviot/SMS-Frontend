@@ -102,7 +102,7 @@ export default function CreateAnnouncementModal({ open, onClose, announcement, o
   };
 
   return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 sm:p-6">
+    <div className="fixed inset-0 z-60 flex items-center justify-center p-4 sm:p-6">
       {/* Backdrop */}
       <div
         className="absolute inset-0 bg-black/60 backdrop-blur-sm"
@@ -110,7 +110,7 @@ export default function CreateAnnouncementModal({ open, onClose, announcement, o
       />
 
       {/* Modal Content */}
-      <div className="relative w-full max-w-md bg-white rounded-[15px] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
+      <div className="relative w-full max-w-xl bg-white rounded-[15px] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
         <div className="p-6 border-b border-gray-100 flex justify-between items-center">
           <h2 className="text-xl font-bold text-gray-900">{isEdit ? "Edit Announcement" : "Create Announcement"}</h2>
           <button onClick={onClose} className="p-1 hover:bg-gray-100 rounded-full transition-colors">
@@ -209,20 +209,20 @@ export default function CreateAnnouncementModal({ open, onClose, announcement, o
           </div>
 
           <div className="flex gap-4 pt-4">
-            <button
+            <Button
               type="button"
               onClick={onClose}
               className="flex-1 h-12 rounded-lg border border-gray-200 text-gray-700 font-bold hover:bg-gray-50 transition-all"
             >
               Cancel
-            </button>
-            <button
+            </Button>
+            <Button
               type="submit"
               disabled={loading}
-              className="flex-1 h-12 rounded-lg bg-gradient-to-r from-[#FE512E] to-[#F09633] text-white font-bold shadow-lg hover:opacity-90 transition-all active:scale-[0.98] disabled:opacity-50"
+              className="flex-1 h-12 rounded-lg bg-linear-to-r from-[#FE512E] to-[#F09633] text-white font-bold shadow-lg hover:opacity-90 transition-all active:scale-[0.98] disabled:opacity-50"
             >
               {loading ? "Processing..." : (isEdit ? "Save" : "Create")}
-            </button>
+            </Button>
           </div>
         </form>
       </div>

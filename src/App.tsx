@@ -17,7 +17,7 @@ import ResidentForm from './features/residentManagement/pages/ResidentForm'
 import FacilityManagement from './features/facilityManagement/pages/FacilityManagement'
 import SecurityManagement from './features/securityManagement/pages/SecurityProtocols'
 import Announcement from './features/announcement/pages/Announcement'
-import PersonalDetail from './features/profile/pages/PersonalDetail'
+import ProfileSelector from './features/profile/pages/ProfileSelector'
 import Income from './features/financialManagement/pages/Income'
 import CreatePassword from './features/auth/pages/CreatePassword'
 import Expense from './features/financialManagement/pages/Expense'
@@ -147,7 +147,7 @@ function App() {
             <Route path="/community/access-forums" element={<AccessForums />} />
             <Route path="/community/polls" element={<Polls />} />
             <Route path="/community/discussion" element={<CommunitiesDiscussion />} />
-            <Route path="/profile" element={<PersonalDetail />} />
+            <Route path="/profile" element={<ProfileSelector />} />
           </Route>
         </Routes>
       </Router>

@@ -327,11 +327,22 @@ button:hover svg path[fill]:not([fill="none"]) {
   color: #434A57;
 }
 
-
 .bg-gray-light-grey {
   background-color: #F6F8FB;
 }
 
-.bg-blue-hover {
+.bg-Shiny-Blue {
   background-color: #5678E9;
+}
+
+.bg-blue-white {
+  background-color: #F1F4FF;
+}
+
+.border-seashell {
+  border-color: #F1F1F1;
+}
+
+.text-small {
+  font-size: 10px;
 }
