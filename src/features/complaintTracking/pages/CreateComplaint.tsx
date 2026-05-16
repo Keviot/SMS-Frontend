@@ -306,7 +306,9 @@ export default function CreateComplaint() {
                                             <td className="px-5 py-4">
                                                 <div className="flex items-center gap-3">
                                                     <div className="h-10 w-10 rounded-full bg-gray-100 flex items-center justify-center overflow-hidden">
-                                                        <img src={`https://ui-avatars.com/api/?name=${item.complainerName}&background=random`} alt="" className="h-full w-full object-cover" />
+                                                        <div className="h-full w-full bg-gray-300 flex items-center justify-center text-gray-600 text-sm font-medium">
+                                                            {item.complainerName?.charAt(0)?.toUpperCase() || 'U'}
+                                                        </div>
                                                     </div>
                                                     <span className="text-sm font-medium text-[#434A57]">{item.complainerName}</span>
                                                 </div>

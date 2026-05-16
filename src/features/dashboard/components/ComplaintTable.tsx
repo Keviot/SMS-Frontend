@@ -46,11 +46,9 @@ const statusClasses: Record<ComplaintStatus, string> = {
   Solve: "bg-[#39973D1A] text-[#39973D]",
 };
 
-const defaultDescription =
-  "Offering, giving, receiving, or soliciting of value to influence the actions of an.";
+const defaultDescription = "";
 
-const editDescription =
-  "The celebration of Ganesh Chaturthi involves the installation of clay idols of Ganesa in Resident.";
+const editDescription = "";
 
 function Badge({
   children,
