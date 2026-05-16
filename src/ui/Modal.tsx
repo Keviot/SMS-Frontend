@@ -24,7 +24,7 @@ export default function Modal({
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 px-4">
+    <div className="fixed inset-0 z-100 flex items-center justify-center bg-black/50 px-4">
       <div
         className={cn(
           "relative max-h-[90vh] w-full rounded-2xl bg-white p-6 shadow-2xl",

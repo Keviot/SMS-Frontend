@@ -80,7 +80,7 @@ function App() {
                   step={2}
                   tagline={
                     <h2 className="text-xl font-bold text-gray-800 px-8 leading-tight">
-                      Your Space, Your Place.<br /><span className="text-[#EE641D]">Society Management Made Simple.</span>
+                      Your Space, Your Place.<br /><span className="text-primary">Society Management Made Simple.</span>
                     </h2>
                   }
                 >
@@ -95,7 +95,7 @@ function App() {
                   tagline={
                     <h2 className="text-xl font-bold text-gray-800 px-8 leading-tight">
                       Your Security, Our Priority.<br />
-                      <span className="text-[#EE641D]">Reset your password securely.</span>
+                      <span className="text-primary">Reset your password securely.</span>
                     </h2>
                   }
                 >
@@ -110,7 +110,7 @@ function App() {
                   tagline={
                     <h2 className="text-xl font-bold text-gray-800 px-8 leading-tight">
                       Your Security, Our Priority.<br />
-                      <span className="text-[#EE641D]">Verify your identity.</span>
+                      <span className="text-primary">Verify your identity.</span>
                     </h2>
                   }
                 >
@@ -125,7 +125,7 @@ function App() {
                   tagline={
                     <h2 className="text-xl font-bold text-gray-800 px-8 leading-tight">
                       Your Security, Our Priority.<br />
-                      <span className="text-[#EE641D]">Reset your password securely.</span>
+                      <span className="text-primary">Reset your password securely.</span>
                     </h2>
                   }
                 >

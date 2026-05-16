@@ -16,65 +16,9 @@ import Button from "../../../ui/Button";
 import Avatar from "../../../components/Avatar";
 import { StreamVideoClient, StreamVideo } from "@stream-io/video-react-sdk";
 import { authApi, videoApi, discussionApi } from "../../../services/api";
-import ChatSidebar, { type Contact } from "../components/ChatSidebar";
 
 const apiKey = import.meta.env.VITE_STREAM_API_KEY || "YOUR_STREAM_API_KEY";
 
-const contacts: Contact[] = [
-    {
-        id: "1",
-        name: "Michael John",
-        lastMessage: "Hi, John! how are you doing?",
-        time: "10:27",
-        avatar: "https://ui-avatars.com/api/?name=Michael+John&background=E5E7EB&color=202224",
-        status: "offline",
-        unread: 0,
-        typing: false,
-        delivered: true,
-    },
-    {
-        id: "2",
-        name: "Jenny Wilson",
-        lastMessage: "Hello, Jenny",
-        time: "7:00",
-        avatar: "https://ui-avatars.com/api/?name=Jenny+Wilson&background=E5E7EB&color=202224",
-        status: "offline",
-        unread: 7,
-        typing: false,
-    },
-    {
-        id: "3",
-        name: "Community",
-        lastMessage: "Typing...",
-        time: "9:20",
-        avatar: "https://ui-avatars.com/api/?name=Community&background=F3F4F6&color=A7A7A7",
-        status: "online",
-        unread: 0,
-        typing: true,
-    },
-    {
-        id: "4",
-        name: "Esther Howard",
-        lastMessage: "Hello, Esther",
-        time: "10:27",
-        avatar: "https://ui-avatars.com/api/?name=Esther+Howard&background=E5E7EB&color=202224",
-        status: "offline",
-        unread: 0,
-        typing: false,
-        delivered: true,
-    },
-    {
-        id: "5",
-        name: "Cody Fisher",
-        lastMessage: "Thank you for your order!",
-        time: "7:00",
-        avatar: "https://ui-avatars.com/api/?name=Cody+Fisher&background=E5E7EB&color=202224",
-        status: "offline",
-        unread: 0,
-        typing: false,
-        delivered: true,
-    },
-];
 
 export default function CommunitiesDiscussion() {
     const [view, setView] = useState<"list" | "detail">("list");
@@ -231,7 +175,7 @@ export default function CommunitiesDiscussion() {
     };
 
     const renderAskModal = () => (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm transition-all">
+        <div className="fixed inset-0 z-100 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm transition-all">
             <div className="w-full max-w-lg overflow-hidden rounded-3xl bg-white shadow-2xl transition-all scale-100">
                 <div className="flex items-center justify-between border-b border-[#F4F4F4] px-8 py-6">
                     <h2 className="text-xl font-bold text-[#202224]">Ask a Question</h2>
@@ -247,7 +191,7 @@ export default function CommunitiesDiscussion() {
                             value={newQuestion.title}
                             onChange={(e) => setNewQuestion(p => ({ ...p, title: e.target.value }))}
                             placeholder="Summarize your problem in a one-line title"
-                            className="w-full rounded-xl border border-[#D9D9D9] px-4 py-3 text-sm outline-none focus:border-[#5678E9] transition-all"
+                            className="w-full rounded-xl border border-[#D9D9D9] px-4 py-3 text-sm outline-none focus:border-secondary transition-all"
                         />
                     </div>
                     <div className="space-y-2">
@@ -256,7 +200,7 @@ export default function CommunitiesDiscussion() {
                             value={newQuestion.description}
                             onChange={(e) => setNewQuestion(p => ({ ...p, description: e.target.value }))}
                             placeholder="Include all the information someone would need to answer your question"
-                            className="w-full min-h-[150px] rounded-xl border border-[#D9D9D9] px-4 py-3 text-sm outline-none focus:border-[#5678E9] transition-all resize-none"
+                            className="w-full min-h-38 rounded-xl border border-[#D9D9D9] px-4 py-3 text-sm outline-none focus:border-secondary transition-all resize-none"
                         />
                     </div>
                     <div className="flex justify-end gap-4 pt-2">
@@ -270,7 +214,7 @@ export default function CommunitiesDiscussion() {
                         <Button
                             onClick={submitQuestion}
                             disabled={submitting}
-                            className="bg-[#FF6B35] hover:bg-[#E85D2A] text-white border-none rounded-xl font-bold h-12 px-10 shadow-lg shadow-[#FF6B35]/20"
+                            className="bg-primary-light hover:bg-primary-hover text-white border-none rounded-xl font-bold h-12 px-10 shadow-lg shadow-primary-light/20"
                         >
                             {submitting ? <Loader2 className="animate-spin" size={20} /> : "Post Question"}
                         </Button>
@@ -282,13 +226,6 @@ export default function CommunitiesDiscussion() {
 
     const renderContent = () => (
         <div className="flex h-[calc(100vh-120px)] w-full overflow-hidden rounded-2xl bg-white shadow-sm border border-[#F4F4F4]">
-            <ChatSidebar
-                contacts={contacts}
-                activeContactId={contacts[2].id}
-                onContactSelect={() => {}}
-                title="Chat"
-            />
-
             <div className="flex-1 flex flex-col overflow-hidden bg-white">
                 {/* Header */}
                 <div className="flex items-center justify-between border-b border-[#F4F4F4] px-6 py-4 bg-white sticky top-0 z-10">
@@ -302,7 +239,7 @@ export default function CommunitiesDiscussion() {
                             </button>
                         )}
                         <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#F6F8FB]">
-                            <MessageSquare className="text-[#5678E9]" size={20} />
+                            <MessageSquare className="text-secondary" size={20} />
                         </div>
                         <div>
                             <h3 className="text-sm font-bold text-[#202224]">Community Discussion</h3>
@@ -313,7 +250,7 @@ export default function CommunitiesDiscussion() {
                         {view === "list" && (
                             <Button
                                 onClick={() => setShowAskModal(true)}
-                                className="bg-[#FF6B35] hover:bg-[#E85D2A] text-white border-none rounded-xl font-bold h-10 px-6 transition-all active:scale-95"
+                                className="bg-primary-light hover:bg-primary-hover text-white border-none rounded-xl font-bold h-10 px-6 transition-all active:scale-95"
                             >
                                 Ask Question
                             </Button>
@@ -328,7 +265,7 @@ export default function CommunitiesDiscussion() {
                 <div className="flex-1 overflow-y-auto p-6 custom-scrollbar bg-[#F9FBFF]/30">
                     {loading && view === "list" ? (
                         <div className="flex h-64 items-center justify-center">
-                            <Loader2 className="h-10 w-10 animate-spin text-[#FF6B35]" />
+                            <Loader2 className="h-10 w-10 animate-spin text-primary-light" />
                         </div>
                     ) : view === "list" ? (
                         <div className="space-y-4 max-w-5xl mx-auto">
@@ -342,19 +279,19 @@ export default function CommunitiesDiscussion() {
                                     <div
                                         key={d._id}
                                         onClick={() => loadDiscussionDetail(d)}
-                                        className="group cursor-pointer rounded-2xl bg-white p-5 border border-[#F4F4F4] hover:border-[#5678E9]/30 hover:shadow-xl transition-all flex gap-8 items-start duration-300"
+                                        className="group cursor-pointer rounded-2xl bg-white p-5 border border-[#F4F4F4] hover:border-secondary/30 hover:shadow-xl transition-all flex gap-8 items-start duration-300"
                                     >
                                         {/* Metrics Column */}
-                                        <div className="flex flex-col items-center gap-4 min-w-[70px] pt-1">
+                                        <div className="flex flex-col items-center gap-4 min-w-18 pt-1">
                                             <div className="text-center group-hover:transform group-hover:scale-110 transition-transform">
                                                 <p className="text-[10px] font-bold text-[#A7A7A7] uppercase tracking-wider mb-1">votes</p>
-                                                <p className={cn("text-sm font-bold", (d.votes?.length || 0) > 0 ? "text-[#FF6B35]" : "text-[#202224]")}>
+                                                <p className={cn("text-sm font-bold", (d.votes?.length || 0) > 0 ? "text-primary-light" : "text-[#202224]")}>
                                                     {d.votes?.length || 0}
                                                 </p>
                                             </div>
                                             <div className="text-center group-hover:transform group-hover:scale-110 transition-transform delay-75">
                                                 <p className="text-[10px] font-bold text-[#A7A7A7] uppercase tracking-wider mb-1">answers</p>
-                                                <p className={cn("text-sm font-bold", d.answersCount > 0 ? "text-[#5678E9]" : "text-[#A7A7A7]")}>
+                                                <p className={cn("text-sm font-bold", d.answersCount > 0 ? "text-secondary" : "text-[#A7A7A7]")}>
                                                     {d.answersCount || 0}
                                                 </p>
                                             </div>
@@ -367,7 +304,7 @@ export default function CommunitiesDiscussion() {
                                         {/* Content Column */}
                                         <div className="flex-1 space-y-3">
                                             <div className="flex items-start justify-between">
-                                                <h4 className="text-base font-bold text-[#202224] group-hover:text-[#5678E9] transition-colors line-clamp-1 leading-tight">
+                                                <h4 className="text-base font-bold text-[#202224] group-hover:text-secondary transition-colors line-clamp-1 leading-tight">
                                                     {d.question}
                                                 </h4>
                                                 <div className="flex items-center gap-2 bg-[#F6F8FB] px-3 py-1 rounded-full shrink-0">
@@ -375,7 +312,7 @@ export default function CommunitiesDiscussion() {
                                                     <span className="text-[10px] font-bold text-[#A7A7A7]">{new Date(d.createdAt).toLocaleDateString()}</span>
                                                 </div>
                                             </div>
-                                            <p className="text-xs leading-relaxed text-[#A7A7A7] line-clamp-2 min-h-[32px]">
+                                            <p className="text-xs leading-relaxed text-[#A7A7A7] line-clamp-2 min-h-8">
                                                 {d.description}
                                             </p>
                                             <div className="flex items-center justify-between pt-2">
@@ -385,7 +322,7 @@ export default function CommunitiesDiscussion() {
                                                 </div>
                                                 <button
                                                     onClick={(e) => { e.stopPropagation(); loadDiscussionDetail(d); }}
-                                                    className="flex items-center gap-2 text-[11px] font-bold text-[#5678E9] hover:bg-[#5678E9]/10 px-4 py-2 rounded-xl transition-colors"
+                                                    className="flex items-center gap-2 text-[11px] font-bold text-secondary hover:bg-secondary/10 px-4 py-2 rounded-xl transition-colors"
                                                 >
                                                     <MessageSquare size={14} />
                                                     Reply to Topic
@@ -407,8 +344,8 @@ export default function CommunitiesDiscussion() {
                                         className={cn(
                                             "group flex flex-col items-center justify-center p-3 rounded-2xl border transition-all duration-300",
                                             selectedDiscussion.votes?.includes(currentUser?._id)
-                                                ? "bg-[#FF6B35] border-[#FF6B35] text-white shadow-lg shadow-[#FF6B35]/30"
-                                                : "bg-white border-[#D9D9D9] text-[#A7A7A7] hover:border-[#FF6B35] hover:text-[#FF6B35]"
+                                                ? "bg-primary-light border-primary-light text-white shadow-lg shadow-[#FF6B35]/30"
+                                                : "bg-white border-[#D9D9D9] text-[#A7A7A7] hover:border-primary-light hover:text-primary-light"
                                         )}
                                     >
                                         <ArrowUp size={20} className="transition-transform group-active:-translate-y-1" />
@@ -425,7 +362,7 @@ export default function CommunitiesDiscussion() {
                                         <div className="flex items-center gap-2 text-[10px] font-bold text-[#A7A7A7] uppercase tracking-widest">
                                             <span>Discussion Topic</span>
                                             <span>•</span>
-                                            <span className="text-[#5678E9]">General</span>
+                                            <span className="text-secondary">General</span>
                                         </div>
                                         <h2 className="text-2xl font-bold text-[#202224] leading-tight">
                                             {selectedDiscussion.question}
@@ -439,8 +376,8 @@ export default function CommunitiesDiscussion() {
                                             <p className="text-[10px] text-[#A7A7A7]">{new Date(selectedDiscussion.createdAt).toLocaleString()}</p>
                                         </div>
                                         <div className="flex items-center gap-2 px-4 py-2 bg-[#F6F8FB] rounded-xl">
-                                            <MessageSquare size={16} className="text-[#5678E9]" />
-                                            <span className="text-xs font-bold text-[#5678E9]">{answers.length} Answers</span>
+                                            <MessageSquare size={16} className="text-secondary" />
+                                            <span className="text-xs font-bold text-secondary">{answers.length} Answers</span>
                                         </div>
                                     </div>
 
@@ -452,7 +389,7 @@ export default function CommunitiesDiscussion() {
                                     <div className="space-y-6 pt-10">
                                         <div className="flex items-center justify-between">
                                             <h4 className="text-base font-bold text-[#202224]">Discussion Threads</h4>
-                                            <div className="h-[2px] flex-1 mx-6 bg-[#F4F4F4]" />
+                                            <div className="h-0.5 flex-1 mx-6 bg-[#F4F4F4]" />
                                         </div>
 
                                         <div className="space-y-6">
@@ -460,9 +397,9 @@ export default function CommunitiesDiscussion() {
                                                 answers.map((a: any) => (
                                                     <div key={a._id} className="relative pl-12 group">
                                                         <div className="absolute left-4 top-0 bottom-0 w-[2px] bg-[#F4F4F4] group-last:bottom-auto group-last:h-4" />
-                                                        <div className="absolute left-3.5 top-4 size-1.5 rounded-full bg-[#5678E9] border-2 border-white ring-4 ring-white" />
-                                                        
-                                                        <div className="bg-[#F9FBFF] rounded-2xl p-5 border border-[#F4F4F4] transition-all hover:border-[#5678E9]/20">
+                                                        <div className="absolute left-3.5 top-4 size-1.5 rounded-full bg-secondary border-2 border-white ring-4 ring-white" />
+
+                                                        <div className="bg-[#F9FBFF] rounded-2xl p-5 border border-[#F4F4F4] transition-all hover:border-secondary/20">
                                                             <div className="flex items-center justify-between mb-4">
                                                                 <div className="flex items-center gap-3">
                                                                     <Avatar src={a.author?.profileImage} name={`${a.author?.firstname} ${a.author?.lastname}`} size="xs" />
@@ -476,8 +413,8 @@ export default function CommunitiesDiscussion() {
                                                                     className={cn(
                                                                         "flex items-center gap-2 px-3 py-1.5 rounded-lg border text-[11px] font-bold transition-all",
                                                                         a.votes?.includes(currentUser?._id)
-                                                                            ? "bg-[#FF6B35] border-[#FF6B35] text-white"
-                                                                            : "bg-white border-[#D9D9D9] text-[#A7A7A7] hover:border-[#FF6B35] hover:text-[#FF6B35]"
+                                                                            ? "bg-primary-light border-primary-light text-white"
+                                                                            : "bg-white border-[#D9D9D9] text-[#A7A7A7] hover:border-primary-light hover:text-primary-light"
                                                                     )}
                                                                 >
                                                                     <ThumbsUp size={12} />
@@ -501,7 +438,7 @@ export default function CommunitiesDiscussion() {
                                     {/* Answer Input */}
                                     <div className="space-y-4 pt-10">
                                         <div className="flex items-center gap-2 mb-2">
-                                            <div className="size-2 rounded-full bg-[#FF6B35]" />
+                                            <div className="size-2 rounded-full bg-primary-light" />
                                             <label className="text-sm font-bold text-[#202224]">Your Perspective</label>
                                         </div>
                                         <div className="relative group">
@@ -509,13 +446,13 @@ export default function CommunitiesDiscussion() {
                                                 value={answerText}
                                                 onChange={(e) => setAnswerText(e.target.value)}
                                                 placeholder="Write your answer here..."
-                                                className="w-full min-h-[160px] rounded-3xl border-2 border-[#F4F4F4] p-6 text-sm outline-none focus:border-[#5678E9] focus:bg-white bg-white transition-all resize-none shadow-sm group-hover:border-[#D9D9D9]"
+                                                className="w-full min-h-[160px] rounded-3xl border-2 border-[#F4F4F4] p-6 text-sm outline-none focus:border-secondary focus:bg-white bg-white transition-all resize-none shadow-sm group-hover:border-[#D9D9D9]"
                                             />
                                             <div className="absolute bottom-6 right-6">
                                                 <Button
                                                     onClick={handlePostAnswer}
                                                     disabled={submitting || !answerText.trim()}
-                                                    className="bg-[#FF6B35] hover:bg-[#E85D2A] text-white border-none rounded-2xl font-bold h-12 px-10 shadow-xl shadow-[#FF6B35]/30 active:scale-95 transition-all disabled:opacity-50 disabled:scale-100"
+                                                    className="bg-primary-light hover:bg-primary-light/80 text-white border-none rounded-2xl font-bold h-12 px-10 shadow-xl shadow-primary-light/30 active:scale-95 transition-all disabled:opacity-50 disabled:scale-100"
                                                 >
                                                     {submitting ? <Loader2 className="animate-spin" size={20} /> : "Post Answer"}
                                                 </Button>

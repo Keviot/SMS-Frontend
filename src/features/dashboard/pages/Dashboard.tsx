@@ -7,7 +7,7 @@ import ImportantNumbersCard from "../components/ImportantNumbersCard";
 import { Loader2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
-import { authApi, complaintApi, importantNumberApi, financialApi, announcementApi, residentApi, dashboardApi } from "../../../services/api";
+import { authApi, complaintApi, importantNumberApi, financialApi, announcementApi, dashboardApi } from "../../../services/api";
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -127,7 +127,7 @@ export default function Dashboard() {
             amount: (m.amount || m.maintenanceSetup?.maintenanceAmount || 0).toString()
           }));
 
-    
+
         setData({
           complaints: mappedComplaints,
           importantNumbers: mappedNumbers,
@@ -156,7 +156,7 @@ export default function Dashboard() {
   if (loading) {
     return (
       <div className="grid min-h-[60vh] place-items-center">
-        <Loader2 className="size-10 animate-spin text-[var(--primary)]" />
+        <Loader2 className="size-10 animate-spin text-(--primary)" />
       </div>
     );
   }
@@ -177,7 +177,7 @@ export default function Dashboard() {
           <div className="mt-6 flex justify-center">
             <button
               type="button"
-              onClick={() => navigate("/security-guard")}
+              onClick={() => navigate("/security-management/visitor-logs")}
               className="rounded-xl bg-[#FE512E] px-6 py-2.5 text-sm font-bold text-white shadow-lg shadow-orange-100 transition hover:opacity-90"
             >
               Visitor Tracking

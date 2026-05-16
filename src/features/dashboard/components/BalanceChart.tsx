@@ -36,6 +36,8 @@ export default function BalanceChart({ data = [], total = "0" }: BalanceChartPro
     }
   };
 
+  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
+
   const { labels, values: chartValues } = getChartConfig();
   const maxVal = Math.max(...chartValues, 50000);
 
@@ -62,7 +64,7 @@ export default function BalanceChart({ data = [], total = "0" }: BalanceChartPro
   };
 
   return (
-    <Card className="flex min-h-[24rem] flex-col p-5">
+    <Card className="flex min-h-96 flex-col p-5">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <h2 className="text-xl font-semibold leading-6 text-[#202224]">
@@ -123,7 +125,7 @@ export default function BalanceChart({ data = [], total = "0" }: BalanceChartPro
 
       <div className="mt-0 min-h-0 flex-1">
         <div className="grid h-full grid-cols-[3rem_minmax(0,1fr)]">
-          <div className="relative h-[286px] text-sm font-normal text-[#4F4F4F]">
+          <div className="relative h-72 text-sm font-normal text-[#4F4F4F]">
             {[
               { label: "50k", top: "14%" },
               { label: "40k", top: "29.6%" },
@@ -147,7 +149,7 @@ export default function BalanceChart({ data = [], total = "0" }: BalanceChartPro
               <svg
                 viewBox="0 0 100 100"
                 preserveAspectRatio="none"
-                className="h-[286px] w-full overflow-visible"
+                className="h-72 w-full overflow-visible"
               >
                 {[14, 29.6, 45.2, 60.8, 76.4, 92].map((y) => (
                   <line
@@ -207,7 +209,7 @@ export default function BalanceChart({ data = [], total = "0" }: BalanceChartPro
               </svg>
 
               {/* Perfectly round points rendered as HTML */}
-              <div className="pointer-events-none absolute inset-0">
+              <div className="absolute inset-0">
                 {chartValues.map((value, index) => {
                   const x = 4 + (index / (chartValues.length - 1)) * 92;
                   const y = 92 - (value / maxVal) * 78;
@@ -215,9 +217,18 @@ export default function BalanceChart({ data = [], total = "0" }: BalanceChartPro
                   return (
                     <div
                       key={index}
-                      className="absolute size-[10px] -translate-x-1/2 -translate-y-1/2 rounded-full border-[1.5px] border-white bg-[#8EA2FF] shadow-[0_2px_4px_rgba(142,162,255,0.4)]"
+                      onMouseEnter={() => setHoveredIndex(index)}
+                      onMouseLeave={() => setHoveredIndex(null)}
+                      className="absolute size-[10px] -translate-x-1/2 -translate-y-1/2 rounded-full border-1.5px border-white bg-[#8EA2FF] shadow-[0_2px_4px_rgba(142,162,255,0.4)] cursor-pointer transition-transform hover:scale-150 z-10"
                       style={{ left: `${x}%`, top: `${y}%` }}
-                    />
+                    >
+                      {hoveredIndex === index && (
+                        <div className="absolute bottom-full left-1/2 mb-3 -translate-x-1/2 whitespace-nowrap rounded-lg  px-3 py-1.5 text-[11px] font-bold text-[#8EA2FF] shadow-xl animate-in fade-in zoom-in-95 duration-200">
+                          {value.toLocaleString()}
+                          <div className="absolute top-full left-1/2 -translate-x-1/2 border-[5px] border-transparent" />
+                        </div>
+                      )}
+                    </div>
                   );
                 })}
               </div>
