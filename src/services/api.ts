@@ -1375,7 +1375,7 @@ export const eventPaymentApi = {
 };
 
 export const videoApi = {
-    generateToken: async (userId: string) => {
+    generateToken: async (userId: string, userName?: string, userImage?: string) => {
         const response = await fetch(`${API_URL}/video/generate-token`, {
             method: "POST",
             credentials: "include",
@@ -1383,7 +1383,7 @@ export const videoApi = {
                 "Content-Type": "application/json",
                 ...getAuthHeader()
             },
-            body: JSON.stringify({ userId }),
+            body: JSON.stringify({ userId, userName, userImage }),
         });
         return handleResponse(response);
     }

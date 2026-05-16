@@ -481,9 +481,15 @@ function VideoCallUI({ onLeave, onMinimize }: { onLeave: () => void, onMinimize:
 
 // Helper component for Incoming Call Notification
 const IncomingCallNotification = ({ call, onAccept, onReject }: { call: Call, onAccept: () => void, onReject: () => void }) => {
-    const { useCallCallingState } = useCallStateHooks();
-    const callingState = useCallCallingState();
+    const [callingState, setCallingState] = useState(call.state.callingState);
     const [caller, setCaller] = useState<any>(null);
+
+    useEffect(() => {
+        const subscription = call.state.callingState$.subscribe((state) => {
+            setCallingState(state);
+        });
+        return () => subscription.unsubscribe();
+    }, [call]);
 
     useEffect(() => {
         setCaller(call.state.createdBy);
@@ -539,6 +545,53 @@ const IncomingCallNotification = ({ call, onAccept, onReject }: { call: Call, on
     );
 };
 
+// Component to discover and manage incoming calls within the StreamVideo context
+const CallDiscovery = ({ currentUser, activeCall, onAccept, onReject }: any) => {
+    const calls = useCalls();
+    
+    // Filter for incoming ringing calls that were not created by the current user
+    const incomingCall = calls.find(c => {
+        const callingState = c.state.callingState;
+        const createdById = String(c.state.createdBy?.id || "").trim();
+        const currentUserId = String(currentUser?._id || "").trim();
+        
+        const isRinging = callingState === CallingState.RINGING;
+        const isNotFromMe = createdById !== currentUserId;
+        
+        // Safety check: Ensure I am actually a member of this call
+        const myMemberEntry = c.state.members.find(m => 
+            String(m.user?.id || m.user_id || "").trim() === currentUserId
+        );
+        
+        if (isRinging && isNotFromMe) {
+            console.log("[CallDiscovery] Incoming call:", c.id);
+            console.log("[CallDiscovery] Created by:", createdById);
+            console.log("[CallDiscovery] My ID:", currentUserId);
+            console.log("[CallDiscovery] Am I a member?", !!myMemberEntry);
+            if (myMemberEntry) console.log("[CallDiscovery] My role in call:", myMemberEntry.role);
+        }
+        
+        return currentUser && isRinging && isNotFromMe && !!myMemberEntry;
+    });
+
+    // If we are already in a call, don't show the incoming call popup
+    if (!incomingCall || activeCall) return null;
+
+    return (
+        <IncomingCallNotification 
+            call={incomingCall} 
+            onAccept={() => {
+                console.log("[CallDiscovery] Accepting call:", incomingCall.id);
+                onAccept(incomingCall);
+            }}
+            onReject={() => {
+                console.log("[CallDiscovery] Rejecting call:", incomingCall.id);
+                onReject(incomingCall);
+            }}
+        />
+    );
+};
+
 export default function AccessForums() {
     const { socket, setActiveChatId } = useSocket();
     const [contacts, setContacts] = useState<Contact[]>([]);
@@ -553,23 +606,34 @@ export default function AccessForums() {
     const [isCallMinimized, setIsCallMinimized] = useState(false);
     const [isScreenShared, setIsScreenShared] = useState(false);
 
-    // Incoming Call Listener (Main Component Scope)
-    const calls = useCalls();
-    const incomingCall = calls.find(c => currentUser && c.state.callingState === CallingState.RINGING && c.state.createdBy?.id !== currentUser?._id);
 
     const handleAcceptCall = async (call: Call) => {
         try {
+            console.log("[AccessForums] Refreshing call state before accept:", call.id);
+            // Force a refresh from server to ensure membership is synced
+            await call.get();
+            
+            const myId = String(currentUser?._id || "").trim();
+            const memberIds = call.state.members.map(m => String(m.user?.id || m.user_id || "").trim());
+            console.log("[AccessForums] Refreshed members:", memberIds);
+            console.log("[AccessForums] My ID:", myId);
+
+            if (!memberIds.includes(myId)) {
+                console.warn("[AccessForums] My ID not found in members list! Attempting to join anyway...");
+            }
+
             await call.accept();
             setActiveCall(call);
             setIsCallMinimized(false);
-        } catch (error) {
+        } catch (error: any) {
             console.error("Failed to accept call:", error);
-            toast.error("Failed to accept call");
+            toast.error(`Failed to accept call: ${error.message || "Unknown error"}`);
         }
     };
 
     const handleRejectCall = async (call: Call) => {
         try {
+            console.log("[AccessForums] Rejecting call:", call.id);
             await call.reject();
         } catch (error) {
             console.error("Failed to reject call:", error);
@@ -596,12 +660,18 @@ export default function AccessForums() {
                 const user = profile.user;
                 if (!user) return;
 
-                const tokenData = await videoApi.generateToken(user._id);
+                const userName = `${user.firstname} ${user.lastname}`.trim();
+                const tokenData = await videoApi.generateToken(user._id, userName, user.profileImage);
+
+                if (!tokenData.token) {
+                    throw new Error("Server returned an empty Stream token. Check backend STREAM_API_KEY and STREAM_SECRET.");
+                }
+
                 client = new StreamVideoClient({
                     apiKey,
                     user: {
-                        id: user._id,
-                        name: `${user.firstname} ${user.lastname}`,
+                        id: String(user._id),
+                        name: userName,
                         image: user.profileImage,
                     },
                     token: tokenData.token,
@@ -975,38 +1045,50 @@ export default function AccessForums() {
         }
 
         try {
-            let callId;
-            if (activeContact.id === "community") {
-                const societyId = currentUser.society || currentUser.societies?.[0]?._id;
+            const isCommunity = activeContact.id === "community";
+            let callId: string;
+            const currentUserId = String(currentUser._id).trim();
+            const contactId = String(activeContact.id).trim();
+            
+            const members: { user_id: string; role?: string }[] = [
+                { user_id: currentUserId, role: 'admin' }
+            ];
+
+            if (isCommunity) {
+                const societyId = String(currentUser.society?._id || currentUser.society || currentUser.societies?.[0]?._id || "").trim();
                 callId = `society_${societyId}`;
             } else {
-                const ids = [currentUser._id, activeContact.id].sort();
+                const ids = [currentUserId, contactId].sort();
                 callId = `personal_${ids[0]}_${ids[1]}`;
+                // Set both as admin for personal calls to avoid permission issues
+                members.push({ user_id: contactId, role: 'admin' });
             }
 
             const call = videoClient.call("default", callId);
             setActiveCall(call);
 
-            // Create the call on the server with members first
+            console.log("[AccessForums] Starting call:", callId, "with members:", members);
+
             await call.getOrCreate({
-                data: {
-                    members: [
-                        { user_id: currentUser._id, role: 'admin' },
-                        { user_id: activeContact.id }
-                    ]
-                }
+                ring: !isCommunity,
+                data: { members },
             });
             
-            // Then trigger the ringing notification
-            await call.ring();
+            // Extra safety: ensure members are added if call already existed
+            if (!isCommunity) {
+                await call.updateCallMembers({ update_members: members });
+            }
+
             await call.join();
         } catch (error: any) {
             console.error("Failed to start call:", error);
             setActiveCall(null);
-            if (error.isWSFailure || error.message?.includes("WS connection")) {
-                toast.error("Connection failed: Please check if STREAM_SECRET is correct in backend .env");
+            if (error.message?.includes("no users to ring")) {
+                toast.error("The other user isn't online on Stream yet. They need to open the app first.");
+            } else if (error.isWSFailure || error.message?.includes("WS connection")) {
+                toast.error("Connection failed: Please check STREAM_SECRET in backend .env");
             } else {
-                toast.error("Failed to start video call");
+                toast.error(`Failed to start video call: ${error.message || "Unknown error"}`);
             }
         }
     };
@@ -1018,33 +1100,50 @@ export default function AccessForums() {
         }
 
         try {
-            let callId;
-            if (activeContact.id === "community") {
-                const societyId = currentUser.society || currentUser.societies?.[0]?._id;
+            const isCommunity = activeContact.id === "community";
+            let callId: string;
+            const currentUserId = String(currentUser._id).trim();
+            const contactId = String(activeContact.id).trim();
+
+            const members: { user_id: string; role?: string }[] = [
+                { user_id: currentUserId, role: 'admin' }
+            ];
+
+            if (isCommunity) {
+                const societyId = String(currentUser.society?._id || currentUser.society || currentUser.societies?.[0]?._id || "").trim();
                 callId = `society_audio_${societyId}`;
             } else {
-                const ids = [currentUser._id, activeContact.id].sort();
+                const ids = [currentUserId, contactId].sort();
                 callId = `personal_audio_${ids[0]}_${ids[1]}`;
+                // Set both as admin for personal calls
+                members.push({ user_id: contactId, role: 'admin' });
             }
 
             const call = videoClient.call("default", callId);
             setActiveCall(call);
 
+            console.log("[AccessForums] Starting audio call:", callId, "with members:", members);
+
+            // Use getOrCreate with ring:true
             await call.getOrCreate({
-                data: {
-                    members: [
-                        { user_id: currentUser._id },
-                        ...(activeContact.id !== "community" ? [{ user_id: activeContact.id }] : [])
-                    ]
-                }
+                ring: !isCommunity,
+                data: { members },
             });
 
-            await call.join({ create: true });
+            if (!isCommunity) {
+                await call.updateCallMembers({ update_members: members });
+            }
+
+            await call.join();
             await call.camera.disable();
         } catch (error: any) {
             console.error("Failed to start audio call:", error);
             setActiveCall(null);
-            toast.error("Failed to start audio call");
+            if (error.message?.includes("no users to ring")) {
+                toast.error("The other user isn't online on Stream yet. They need to open the app first.");
+            } else {
+                toast.error(`Failed to start audio call: ${error.message || "Unknown error"}`);
+            }
         }
     };
 
@@ -1056,227 +1155,237 @@ export default function AccessForums() {
         );
     }
 
-    return (
-        <StreamVideo client={videoClient || new StreamVideoClient({ apiKey: "placeholder", user: { id: "placeholder" }, token: "" })}>
-            {/* Incoming Call Notification */}
-            {incomingCall && !activeCall && (
-                <IncomingCallNotification 
-                    call={incomingCall} 
-                    onAccept={() => handleAcceptCall(incomingCall)}
-                    onReject={() => handleRejectCall(incomingCall)}
-                />
-            )}
+    // ─── Chat-only UI (no video client yet, or video not in use) ────────────
+    const chatUI = (
+        <div className="flex h-[calc(100vh-120px)] w-full overflow-hidden rounded-2xl bg-white shadow-sm border border-[#F4F4F4] relative">
+            <ChatSidebar
+                contacts={contacts}
+                activeContactId={activeContact?.id || ""}
+                onContactSelect={(contact) => {
+                    setActiveContact(contact);
+                    setContacts(prev => prev.map(c =>
+                        c.id === contact.id ? { ...c, unread: 0 } : c
+                    ));
+                }}
+            />
 
-            <div className="flex h-[calc(100vh-120px)] w-full overflow-hidden rounded-2xl bg-white shadow-sm border border-[#F4F4F4] relative">
-                {/* Full Screen Video Call Overlay */}
-                {activeCall && !isCallMinimized && (
-                    <div className="absolute inset-0 z-[200] animate-in fade-in zoom-in-95 duration-300">
-                        <StreamCall call={activeCall}>
-                            <VideoCallUI 
-                                onMinimize={() => setIsCallMinimized(true)}
-                                onLeave={() => {
-                                    activeCall.leave();
-                                    setActiveCall(null);
-                                }} 
-                            />
-                        </StreamCall>
+            {/* Chat Area */}
+            <div className="hidden flex-1 flex-col md:flex relative">
+                {activeContact ? (
+                    <>
+                        {/* Header */}
+                        <div className="flex items-center justify-between border-b border-[#F4F4F4] px-6 py-4 bg-white z-10">
+                            <div className="flex items-center gap-3">
+                                <Avatar
+                                    src={activeContact.avatar}
+                                    name={activeContact.name}
+                                />
+                                <div>
+                                    <h3 className="text-sm font-bold text-[#202224]">
+                                        {activeContact.name} {activeContact.unit}
+                                    </h3>
+                                    <p className={cn("text-[10px]", activeContact.typing ? "text-[#5678E9] font-bold" : "text-[#A7A7A7]")}>
+                                        {activeContact.typing ? "Typing..." : "Active Now"}
+                                    </p>
+                                </div>
+                            </div>
+
+                            {/* Minimised call pill (show when call is active but minimised) */}
+                            {activeCall && isCallMinimized && (
+                                <div
+                                    onClick={() => setIsCallMinimized(false)}
+                                    className="flex items-center gap-3 px-4 py-2 bg-[#1a1b1e] rounded-2xl border border-white/10 shadow-2xl cursor-pointer hover:scale-105 transition-all animate-in slide-in-from-top-2"
+                                >
+                                    <div className="relative">
+                                        <div className="h-2 w-2 rounded-full bg-[#34A853] animate-pulse" />
+                                    </div>
+                                    <span className="text-xs font-semibold text-white/90">Call in progress · Tap to return</span>
+                                    <button
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            activeCall.leave().catch(console.warn);
+                                            setActiveCall(null);
+                                            setIsCallMinimized(false);
+                                        }}
+                                        className="h-7 w-7 rounded-full bg-[#EA4335] flex items-center justify-center hover:bg-[#D93025] transition-all shadow-lg"
+                                    >
+                                        <Phone size={12} className="text-white rotate-[135deg]" />
+                                    </button>
+                                </div>
+                            )}
+
+                            <div className="flex items-center gap-4">
+                                <button
+                                    onClick={startCall}
+                                    disabled={!videoClient}
+                                    className="rounded-full p-2 text-[#202224] hover:bg-[#F6F8FB] transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                                    title="Video call"
+                                >
+                                    <Video size={20} />
+                                </button>
+                                <button
+                                    onClick={startAudioCall}
+                                    disabled={!videoClient}
+                                    className="rounded-full p-2 text-[#202224] hover:bg-[#F6F8FB] transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                                    title="Voice call"
+                                >
+                                    <Phone size={18} />
+                                </button>
+                                <div className="relative">
+                                    <button
+                                        onClick={() => setIsMenuOpen(!isMenuOpen)}
+                                        className="rounded-full p-2 text-[#202224] hover:bg-[#F6F8FB] transition-colors"
+                                    >
+                                        <MoreVertical size={20} />
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Messages List */}
+                        <div className="flex-1 overflow-y-auto p-6 space-y-6 custom-scrollbar bg-[#F9FBFF]/30">
+                            {messages.map((msg) => (
+                                <div
+                                    key={msg.id}
+                                    className={cn(
+                                        "flex flex-col max-w-[70%]",
+                                        msg.sender === "me" ? "ml-auto items-end" : "items-start"
+                                    )}
+                                >
+                                    {activeContact.id === "community" && msg.sender !== "me" && (
+                                        <span className="mb-1 text-[10px] font-bold text-[#5678E9] px-2">{msg.senderName}</span>
+                                    )}
+                                    <div
+                                        className={cn(
+                                            "rounded-2xl px-4 py-2.5 text-sm shadow-sm",
+                                            msg.sender === "me"
+                                                ? "bg-[#5678E9] text-white rounded-tr-none"
+                                                : "bg-[#F1F4FF] text-[#202224] rounded-tl-none"
+                                        )}
+                                    >
+                                        {msg.type === "text" && <p>{msg.text}</p>}
+                                        {msg.type === "image" && (
+                                            <div className="overflow-hidden rounded-xl border border-[#F1F1F1] bg-white p-1">
+                                                <a href={msg.fileUrl} target="_blank" rel="noopener noreferrer">
+                                                    <img src={msg.fileUrl} alt="Sent" className="max-h-60 w-full rounded-lg object-cover cursor-pointer" />
+                                                </a>
+                                            </div>
+                                        )}
+                                        {(msg.type === "pdf" || msg.type === "file") && (
+                                            <a
+                                                href={msg.fileUrl}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className={cn(
+                                                    "flex items-center gap-3 rounded-xl p-2 hover:opacity-80 transition-opacity",
+                                                    msg.sender === "me" ? "bg-white/10" : "bg-white"
+                                                )}
+                                            >
+                                                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#FEECEC] text-[#E74C3C]">
+                                                    <FileText size={20} />
+                                                </div>
+                                                <div className="flex-1 overflow-hidden pr-4">
+                                                    <p className={cn("truncate font-bold text-sm", msg.sender === "me" ? "text-white" : "text-[#202224]")}>{msg.text || "Document"}</p>
+                                                    <p className={cn("text-[10px]", msg.sender === "me" ? "text-white/70" : "text-[#A7A7A7]")}>Click to view</p>
+                                                </div>
+                                            </a>
+                                        )}
+                                    </div>
+                                    <span className="mt-1 text-[10px] text-[#A7A7A7]">{msg.time}</span>
+                                </div>
+                            ))}
+                            <div ref={messagesEndRef} />
+                        </div>
+
+                        {/* Footer Input */}
+                        <div className="border-t border-[#F4F4F4] p-4">
+                            <form onSubmit={handleSendMessage} className="flex items-center gap-3">
+                                <button type="button" onClick={() => handleIconClick('Emoji')} className="text-[#202224] hover:text-[#5678E9] transition-colors">
+                                    <Smile size={24} />
+                                </button>
+                                <input
+                                    type="text"
+                                    value={newMessage}
+                                    onChange={handleInputChange}
+                                    placeholder="Type a message"
+                                    className="flex-1 bg-transparent text-sm outline-none placeholder:text-[#A7A7A7]"
+                                />
+                                <div className="flex items-center gap-3">
+                                    <input
+                                        type="file"
+                                        ref={fileInputRef}
+                                        onChange={handleFileUpload}
+                                        className="hidden"
+                                    />
+                                    <button type="button" onClick={() => handleIconClick('Attach File')} className="text-[#202224] hover:text-[#5678E9] transition-colors">
+                                        <Paperclip size={20} />
+                                    </button>
+                                    <button type="button" onClick={() => handleIconClick('Camera')} className="text-[#202224] hover:text-[#5678E9] transition-colors">
+                                        <Camera size={20} />
+                                    </button>
+                                    <button
+                                        type="submit"
+                                        className={cn(
+                                            "flex h-10 w-10 items-center justify-center rounded-full transition-all",
+                                            newMessage.trim() ? "bg-[#5678E9] text-white shadow-lg" : "bg-[#F1F4FF] text-[#5678E9]"
+                                        )}
+                                    >
+                                        {newMessage.trim() ? <Send size={18} /> : <Mic size={20} />}
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </>
+                ) : (
+                    <div className="flex flex-1 items-center justify-center text-gray-400">
+                        Select a contact to start chatting
                     </div>
                 )}
+            </div>
 
-                <ChatSidebar
-                    contacts={contacts}
-                    activeContactId={activeContact?.id || ""}
-                    onContactSelect={(contact) => {
-                        setActiveContact(contact);
-                        setContacts(prev => prev.map(c =>
-                            c.id === contact.id ? { ...c, unread: 0 } : c
-                        ));
-                    }}
-                />
+            {/* Mobile Back Button */}
+            <div className="md:hidden absolute top-4 left-4 z-20">
+                <button className="p-2 rounded-full bg-white shadow-md">
+                    <ChevronLeft size={24} />
+                </button>
+            </div>
+        </div>
+    );
 
-                {/* Chat Area */}
-                <div className="hidden flex-1 flex-col md:flex relative">
-                    {activeContact ? (
-                        <>
-                            {/* Header */}
-                            <div className="flex items-center justify-between border-b border-[#F4F4F4] px-6 py-4 bg-white z-10">
-                                <div className="flex items-center gap-3">
-                                    <Avatar
-                                        src={activeContact.avatar}
-                                        name={activeContact.name}
-                                    />
-                                    <div>
-                                        <h3 className="text-sm font-bold text-[#202224]">
-                                            {activeContact.name} {activeContact.unit}
-                                        </h3>
-                                        <p className={cn("text-[10px]", activeContact.typing ? "text-[#5678E9] font-bold" : "text-[#A7A7A7]")}>
-                                            {activeContact.typing ? "Typing..." : "Active Now"}
-                                        </p>
-                                    </div>
-                                </div>
+    // ─── If video client is not ready yet, render chat-only (no Stream context) ─
+    if (!videoClient) {
+        return chatUI;
+    }
 
-                                {/* Ringing Pill / Call Status in Header (Matches user image) */}
-                                {activeCall && (
-                                    <div 
-                                        onClick={() => setIsCallMinimized(false)}
-                                        className="flex items-center gap-4 px-4 py-2 bg-[#1a1b1e] rounded-2xl border border-white/5 shadow-2xl cursor-pointer hover:scale-105 transition-all animate-in slide-in-from-top-2"
-                                    >
-                                        <div className="relative">
-                                            <AlertCircle size={16} className="text-[#8AB4F8]" />
-                                            <div className="absolute inset-0 bg-[#8AB4F8]/20 rounded-full animate-ping" />
-                                        </div>
-                                        <span className="text-xs font-semibold text-white/90">Ringing 1 member</span>
-                                        <button 
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                activeCall.leave();
-                                                setActiveCall(null);
-                                            }}
-                                            className="h-8 w-8 rounded-full bg-[#EA4335] flex items-center justify-center hover:bg-[#D93025] transition-all hover:scale-110 shadow-lg"
-                                        >
-                                            <Phone size={14} className="text-white rotate-[135deg]" />
-                                        </button>
-                                    </div>
-                                )}
+    // ─── Full render with Stream Video context ────────────────────────────────
+    return (
+        <StreamVideo client={videoClient}>
+            {/* ── Incoming call discovery (must be inside StreamVideo) ── */}
+            <CallDiscovery
+                currentUser={currentUser}
+                activeCall={activeCall}
+                onAccept={handleAcceptCall}
+                onReject={handleRejectCall}
+            />
 
-                                <div className="flex items-center gap-4">
-                                    <button 
-                                        onClick={() => {
-                                            startCall();
-                                            setIsCallMinimized(true);
-                                        }} 
-                                        className="rounded-full p-2 text-[#202224] hover:bg-[#F6F8FB] transition-colors"
-                                    >
-                                        <Video size={20} />
-                                    </button>
-                                    <button 
-                                        onClick={() => {
-                                            startAudioCall();
-                                            setIsCallMinimized(true);
-                                        }} 
-                                        className="rounded-full p-2 text-[#202224] hover:bg-[#F6F8FB] transition-colors"
-                                    >
-                                        <Phone size={18} />
-                                    </button>
-                                    <div className="relative">
-                                        <button
-                                            onClick={() => setIsMenuOpen(!isMenuOpen)}
-                                            className="rounded-full p-2 text-[#202224] hover:bg-[#F6F8FB] transition-colors"
-                                        >
-                                            <MoreVertical size={20} />
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* Messages List */}
-                                <div className="flex-1 overflow-y-auto p-6 space-y-6 custom-scrollbar bg-[#F9FBFF]/30">
-                                    {messages.map((msg) => (
-                                        <div
-                                            key={msg.id}
-                                            className={cn(
-                                                "flex flex-col max-w-[70%]",
-                                                msg.sender === "me" ? "ml-auto items-end" : "items-start"
-                                            )}
-                                        >
-                                            {activeContact.id === "community" && msg.sender !== "me" && (
-                                                <span className="mb-1 text-[10px] font-bold text-[#5678E9] px-2">{msg.senderName}</span>
-                                            )}
-                                            <div
-                                                className={cn(
-                                                    "rounded-2xl px-4 py-2.5 text-sm shadow-sm",
-                                                    msg.sender === "me"
-                                                        ? "bg-[#5678E9] text-white rounded-tr-none"
-                                                        : "bg-[#F1F4FF] text-[#202224] rounded-tl-none"
-                                                )}
-                                            >
-                                                {msg.type === "text" && <p>{msg.text}</p>}
-                                                {msg.type === "image" && (
-                                                    <div className="overflow-hidden rounded-xl border border-[#F1F1F1] bg-white p-1">
-                                                        <a href={msg.fileUrl} target="_blank" rel="noopener noreferrer">
-                                                            <img src={msg.fileUrl} alt="Sent" className="max-h-60 w-full rounded-lg object-cover cursor-pointer" />
-                                                        </a>
-                                                    </div>
-                                                )}
-                                                {(msg.type === "pdf" || msg.type === "file") && (
-                                                    <a
-                                                        href={msg.fileUrl}
-                                                        target="_blank"
-                                                        rel="noopener noreferrer"
-                                                        className={cn(
-                                                            "flex items-center gap-3 rounded-xl p-2 hover:opacity-80 transition-opacity",
-                                                            msg.sender === "me" ? "bg-white/10" : "bg-white"
-                                                        )}
-                                                    >
-                                                        <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#FEECEC] text-[#E74C3C]">
-                                                            <FileText size={20} />
-                                                        </div>
-                                                        <div className="flex-1 overflow-hidden pr-4">
-                                                            <p className={cn("truncate font-bold text-sm", msg.sender === "me" ? "text-white" : "text-[#202224]")}>{msg.text || "Document"}</p>
-                                                            <p className={cn("text-[10px]", msg.sender === "me" ? "text-white/70" : "text-[#A7A7A7]")}>Click to view</p>
-                                                        </div>
-                                                    </a>
-                                                )}
-                                            </div>
-                                            <span className="mt-1 text-[10px] text-[#A7A7A7]">{msg.time}</span>
-                                        </div>
-                                    ))}
-                                    <div ref={messagesEndRef} />
-                                </div>
-
-                                {/* Footer Input */}
-                                <div className="border-t border-[#F4F4F4] p-4">
-                                    <form onSubmit={handleSendMessage} className="flex items-center gap-3">
-                                        <button type="button" onClick={() => handleIconClick('Emoji')} className="text-[#202224] hover:text-[#5678E9] transition-colors">
-                                            <Smile size={24} />
-                                        </button>
-                                        <input
-                                            type="text"
-                                            value={newMessage}
-                                            onChange={handleInputChange}
-                                            placeholder="Type a message"
-                                            className="flex-1 bg-transparent text-sm outline-none placeholder:text-[#A7A7A7]"
-                                        />
-                                        <div className="flex items-center gap-3">
-                                            <input
-                                                type="file"
-                                                ref={fileInputRef}
-                                                onChange={handleFileUpload}
-                                                className="hidden"
-                                            />
-                                            <button type="button" onClick={() => handleIconClick('Attach File')} className="text-[#202224] hover:text-[#5678E9] transition-colors">
-                                                <Paperclip size={20} />
-                                            </button>
-                                            <button type="button" onClick={() => handleIconClick('Camera')} className="text-[#202224] hover:text-[#5678E9] transition-colors">
-                                                <Camera size={20} />
-                                            </button>
-                                            <button
-                                                type="submit"
-                                                className={cn(
-                                                    "flex h-10 w-10 items-center justify-center rounded-full transition-all",
-                                                    newMessage.trim() ? "bg-[#5678E9] text-white shadow-lg" : "bg-[#F1F4FF] text-[#5678E9]"
-                                                )}
-                                            >
-                                                {newMessage.trim() ? <Send size={18} /> : <Mic size={20} />}
-                                            </button>
-                                        </div>
-                                    </form>
-                                </div>
-                            </>
-                        ) : (
-                            <div className="flex flex-1 items-center justify-center text-gray-400">
-                                Select a contact to start chatting
-                            </div>
-                        )}
-                    </div>
-
-                    {/* Mobile Back Button */}
-                    <div className="md:hidden absolute top-4 left-4 z-20">
-                        <button className="p-2 rounded-full bg-white shadow-md">
-                            <ChevronLeft size={24} />
-                        </button>
-                    </div>
+            {/* ── Full-screen video call (Google Meet style) ── */}
+            {activeCall && !isCallMinimized && (
+                <div className="fixed inset-0 z-[500]">
+                    <StreamCall call={activeCall}>
+                        <VideoCallUI
+                            onMinimize={() => setIsCallMinimized(true)}
+                            onLeave={() => {
+                                activeCall.leave().catch(console.warn);
+                                setActiveCall(null);
+                                setIsCallMinimized(false);
+                            }}
+                        />
+                    </StreamCall>
                 </div>
+            )}
+
+            {/* ── Chat UI (always visible, call minimises over it) ── */}
+            {chatUI}
         </StreamVideo>
     );
 }
