@@ -33,16 +33,16 @@ export default function Modal({
           className
         )}
       >
-        <div className="mb-6 flex items-center justify-between gap-4">
-          <h2 className="text-xl font-extrabold text-[#202224]">{title}</h2>
+        <div className="mb-6 flex items-center justify-between gap-4 border-b border-[#f3f3f3]">
+          <h4 className="text-xl font-semibold text-[#2022 24]">{title}</h4>
 
-          <button
+          {/* <button
             type="button"
             onClick={onClose}
             className="grid h-9 w-9 place-items-center rounded-xl bg-[#F5F6FA] text-[#6F7786] transition hover:bg-[#FFEDE6] hover:text-[#FF5630]"
           >
             <X size={18} />
-          </button>
+          </button> */}
         </div>
 
         {children}
