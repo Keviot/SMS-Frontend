@@ -289,12 +289,24 @@ function VideoCallUI({ onLeave, onMinimize }: { onLeave: () => void, onMinimize:
 
     const isRinging = callingState === CallingState.RINGING || (callingState === CallingState.JOINING && participants.length <= 1);
 
-    if (callingState !== CallingState.JOINED && !isRinging) {
+    // Show loader if we are in the middle of joining
+    const isJoining = callingState === CallingState.JOINING;
+    const isJoiningOrIdle = callingState === CallingState.JOINING || callingState === CallingState.IDLE;
+
+    if (isJoiningOrIdle && !isRinging) {
         return (
             <div className="flex h-full items-center justify-center bg-[#202124] text-white">
                 <div className="flex flex-col items-center gap-4">
-                    <Loader2 className="h-10 w-10 animate-spin text-[#8AB4F8]" />
-                    <p className="text-lg font-medium">Joining meeting...</p>
+                    <div className="relative">
+                        <Loader2 className="h-16 w-16 animate-spin text-[#00A3FF]" strokeWidth={3} />
+                        <div className="absolute inset-0 flex items-center justify-center">
+                            <Video size={24} className="text-[#00A3FF] animate-pulse" />
+                        </div>
+                    </div>
+                    <div className="flex flex-col items-center gap-2 text-center">
+                        <p className="text-xl font-bold tracking-tight">Joining your meeting</p>
+                        <p className="text-white/40 text-sm font-medium">Connecting to community secure server...</p>
+                    </div>
                 </div>
             </div>
         );
@@ -546,33 +558,59 @@ const IncomingCallNotification = ({ call, onAccept, onReject }: { call: Call, on
 };
 
 // Component to discover and manage incoming calls within the StreamVideo context
-const CallDiscovery = ({ currentUser, activeCall, onAccept, onReject }: any) => {
+const CallDiscovery = ({ client, currentUser, activeCall, onAccept, onReject }: any) => {
     const calls = useCalls();
+    const [incomingCall, setIncomingCall] = useState<Call | null>(null);
     
-    // Filter for incoming ringing calls that were not created by the current user
-    const incomingCall = calls.find(c => {
-        const callingState = c.state.callingState;
-        const createdById = String(c.state.createdBy?.id || "").trim();
+    // 1. Listen for new calls directly from the client (more reliable than useCalls alone)
+    useEffect(() => {
+        if (!client || !currentUser) return;
+
+        const handleCallCreated = (event: any) => {
+            if (event.call && event.call_type && event.call_id) {
+                const call = client.call(event.call_type, event.call_id);
+                // The SDK will handle membership check when the call state is fetched
+                console.log("[CallDiscovery] New call event received:", event.call_id);
+            }
+        };
+
+        const unsubscribe = client.on('call.created', handleCallCreated);
+        const unsubscribeRing = client.on('call.ring', handleCallCreated);
+
+        return () => {
+            unsubscribe();
+            unsubscribeRing();
+        };
+    }, [client, currentUser]);
+
+    // 2. Monitor calls list to find the one ringing for us
+    useEffect(() => {
         const currentUserId = String(currentUser?._id || "").trim();
         
-        const isRinging = callingState === CallingState.RINGING;
-        const isNotFromMe = createdById !== currentUserId;
-        
-        // Safety check: Ensure I am actually a member of this call
-        const myMemberEntry = c.state.members.find(m => 
-            String(m.user?.id || m.user_id || "").trim() === currentUserId
-        );
-        
-        if (isRinging && isNotFromMe) {
-            console.log("[CallDiscovery] Incoming call:", c.id);
-            console.log("[CallDiscovery] Created by:", createdById);
-            console.log("[CallDiscovery] My ID:", currentUserId);
-            console.log("[CallDiscovery] Am I a member?", !!myMemberEntry);
-            if (myMemberEntry) console.log("[CallDiscovery] My role in call:", myMemberEntry.role);
+        const ringingCall = calls.find(c => {
+            const callingState = c.state.callingState;
+            const createdById = String(c.state.createdBy?.id || "").trim();
+            
+            const isRinging = callingState === CallingState.RINGING;
+            const isNotFromMe = createdById !== currentUserId;
+            
+            // Check membership
+            const myMemberEntry = c.state.members.find(m => 
+                String(m.user?.id || m.user_id || "").trim() === currentUserId
+            );
+            
+            if (isRinging && isNotFromMe && !!myMemberEntry) {
+                return true;
+            }
+            return false;
+        });
+
+        if (ringingCall) {
+            setIncomingCall(ringingCall);
+        } else if (incomingCall && incomingCall.state.callingState !== CallingState.RINGING) {
+            setIncomingCall(null);
         }
-        
-        return currentUser && isRinging && isNotFromMe && !!myMemberEntry;
-    });
+    }, [calls, currentUser, incomingCall]);
 
     // If we are already in a call, don't show the incoming call popup
     if (!incomingCall || activeCall) return null;
@@ -651,23 +689,34 @@ export default function AccessForums() {
         scrollToBottom();
     }, [messages]);
 
-    // Initialize Video Client
+    // Initialize Video Client (Stable initialization)
+    const videoClientRef = useRef<StreamVideoClient | null>(null);
+    const videoClientIdRef = useRef<string | null>(null);
+
     useEffect(() => {
-        let client: StreamVideoClient | null = null;
         const initVideo = async () => {
             try {
                 const profile = await authApi.getProfile();
                 const user = profile.user;
                 if (!user) return;
 
+                // Prevent duplicate initialization
+                const currentUserIdStr = String(user._id);
+                if (videoClientRef.current) {
+                    if (videoClientIdRef.current === currentUserIdStr) {
+                        return; // Already initialized for this user
+                    }
+                    await videoClientRef.current.disconnectUser();
+                }
+
                 const userName = `${user.firstname} ${user.lastname}`.trim();
                 const tokenData = await videoApi.generateToken(user._id, userName, user.profileImage);
 
                 if (!tokenData.token) {
-                    throw new Error("Server returned an empty Stream token. Check backend STREAM_API_KEY and STREAM_SECRET.");
+                    throw new Error("Server returned an empty Stream token.");
                 }
 
-                client = new StreamVideoClient({
+                const client = new StreamVideoClient({
                     apiKey,
                     user: {
                         id: String(user._id),
@@ -676,17 +725,24 @@ export default function AccessForums() {
                     },
                     token: tokenData.token,
                 });
+
+                videoClientRef.current = client;
+                videoClientIdRef.current = currentUserIdStr;
                 setVideoClient(client);
             } catch (error) {
                 console.error("Video initialization failed:", error);
-                toast.error("Video calling initialization failed. Please check your API credentials.");
             }
         };
 
         initVideo();
 
         return () => {
-            if (client) client.disconnectUser();
+            if (videoClientRef.current) {
+                videoClientRef.current.disconnectUser().catch(console.error);
+                videoClientRef.current = null;
+                videoClientIdRef.current = null;
+                setVideoClient(null);
+            }
         };
     }, []);
 
@@ -1051,7 +1107,7 @@ export default function AccessForums() {
             const contactId = String(activeContact.id).trim();
             
             const members: { user_id: string; role?: string }[] = [
-                { user_id: currentUserId, role: 'admin' }
+                { user_id: currentUserId, role: 'user' }
             ];
 
             if (isCommunity) {
@@ -1060,8 +1116,7 @@ export default function AccessForums() {
             } else {
                 const ids = [currentUserId, contactId].sort();
                 callId = `personal_${ids[0]}_${ids[1]}`;
-                // Set both as admin for personal calls to avoid permission issues
-                members.push({ user_id: contactId, role: 'admin' });
+                members.push({ user_id: contactId, role: 'user' });
             }
 
             const call = videoClient.call("default", callId);
@@ -1074,12 +1129,11 @@ export default function AccessForums() {
                 data: { members },
             });
             
-            // Extra safety: ensure members are added if call already existed
             if (!isCommunity) {
                 await call.updateCallMembers({ update_members: members });
             }
 
-            await call.join();
+            await call.join({ create: true });
         } catch (error: any) {
             console.error("Failed to start call:", error);
             setActiveCall(null);
@@ -1115,7 +1169,6 @@ export default function AccessForums() {
             } else {
                 const ids = [currentUserId, contactId].sort();
                 callId = `personal_audio_${ids[0]}_${ids[1]}`;
-                // Set both as admin for personal calls
                 members.push({ user_id: contactId, role: 'admin' });
             }
 
@@ -1124,7 +1177,6 @@ export default function AccessForums() {
 
             console.log("[AccessForums] Starting audio call:", callId, "with members:", members);
 
-            // Use getOrCreate with ring:true
             await call.getOrCreate({
                 ring: !isCommunity,
                 data: { members },
@@ -1134,7 +1186,7 @@ export default function AccessForums() {
                 await call.updateCallMembers({ update_members: members });
             }
 
-            await call.join();
+            await call.join({ create: true });
             await call.camera.disable();
         } catch (error: any) {
             console.error("Failed to start audio call:", error);
@@ -1362,6 +1414,7 @@ export default function AccessForums() {
         <StreamVideo client={videoClient}>
             {/* ── Incoming call discovery (must be inside StreamVideo) ── */}
             <CallDiscovery
+                client={videoClient}
                 currentUser={currentUser}
                 activeCall={activeCall}
                 onAccept={handleAcceptCall}
