@@ -781,20 +781,36 @@ export default function Income() {
         <div className="flex flex-col gap-0">
             {selectedTab === "Maintenance" && (
                 <div className="mb-4 flex flex-col gap-4 rounded-2xl bg-white p-4 sm:p-5 lg:min-h-36 lg:flex-row lg:items-center lg:justify-between">
-                    <div className="grid w-full grid-cols-1 gap-3 sm:grid-cols-2 lg:w-auto lg:flex lg:items-center lg:gap-2">
-                        {/* Total Collected */}
-                        <div className="flex min-h-24 w-full flex-col justify-center rounded-2xl border border-l-4 border-[#39973D] bg-white px-3 py-4 shadow-sm lg:w-60">
-                            <div className="text-xs font-medium text-[#202224]">Total Collected</div>
+                    <div className="grid w-full grid-cols-1 gap-4 sm:grid-cols-2 lg:w-auto lg:flex lg:items-center lg:gap-4">
+                        {/* Maintenance Amount */}
+                        <div className="relative flex min-h-24 w-full flex-col justify-center rounded-2xl bg-white pl-8 pr-4 py-4 shadow-sm lg:w-64 border border-gray-100 overflow-hidden">
+                            {/* Left Pill */}
+                            <div className="absolute left-[-4px] top-1/2 -translate-y-1/2 h-10 w-2 rounded-full bg-[#39973D] opacity-60" />
+                            {/* Top-Right Accent with Extended Right Border Fade */}
+                            <div
+                                className="absolute -top-[1.5px] -right-[1.5px] h-20 w-16 rounded-tr-2xl border-r-3 border-t-2 border-[#39973D]"
+                                style={{ maskImage: 'radial-gradient(ellipse at top right, black 0%, transparent 70%)', WebkitMaskImage: 'radial-gradient(ellipse at top right, black 0%, transparent 70%)' }}
+                            />
+
+                            <div className="text-sm font-semibold text-[#202224] opacity-70">Maintenance Amount</div>
                             <div className="mt-1 text-2xl font-bold text-[#39973D]">
-                                {loading ? <Loader2 className="size-6 animate-spin" /> : `₹ ${(summary.maintenanceAmount + summary.penaltyAmount + otherIncomeSummary.totalAmount).toLocaleString()}`}
+                                {loading ? <Loader2 className="size-6 animate-spin" /> : `₹ ${summary.maintenanceAmount.toLocaleString()}`}
                             </div>
                         </div>
 
-                        {/* Total Pending */}
-                        <div className="flex min-h-24 w-full flex-col justify-center rounded-2xl border border-l-4 border-[#E74C3C] bg-white px-3 py-4 shadow-sm lg:w-60">
-                            <div className="text-xs font-medium text-[#202224]">Total Pending</div>
+                        {/* Penalty Amount */}
+                        <div className="relative flex min-h-24 w-full flex-col justify-center rounded-2xl bg-white pl-8 pr-4 py-4 shadow-sm lg:w-64 border border-gray-100 overflow-hidden">
+                            {/* Left Pill */}
+                            <div className="absolute left-[-4px] top-1/2 -translate-y-1/2 h-10 w-2 rounded-full bg-[#E74C3C] opacity-60" />
+                            {/* Top-Right Accent with Extended Right Border Fade */}
+                            <div
+                                className="absolute -top-[1.5px] -right-[1.5px] h-20 w-16 rounded-tr-2xl border-r-3 border-t-2 border-[#E74C3C]"
+                                style={{ maskImage: 'radial-gradient(ellipse at top right, black 0%, transparent 70%)', WebkitMaskImage: 'radial-gradient(ellipse at top right, black 0%, transparent 70%)' }}
+                            />
+
+                            <div className="text-sm font-semibold text-[#202224] opacity-70">Penalty Amount</div>
                             <div className="mt-1 text-2xl font-bold text-[#E74C3C]">
-                                {loading ? <Loader2 className="size-6 animate-spin" /> : `₹ ${summary.totalDue.toLocaleString()}`}
+                                {loading ? <Loader2 className="size-6 animate-spin" /> : `₹ ${summary.penaltyAmount.toLocaleString()}`}
                             </div>
                         </div>
                     </div>
