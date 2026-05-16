@@ -1,23 +1,57 @@
 // src/pages/complaint-tracking/CreateComplaint.tsx
 
-import { useMemo, useState, useEffect } from "react";
+import { useState, useEffect, type ReactNode } from "react";
 import Button from "../../../ui/Button";
-import { 
-    ComplaintFormModal, 
-    ComplaintViewModal, 
+import {
+    ComplaintFormModal,
+    ComplaintViewModal,
     RequestFormModal,
     RequestViewModal,
-    DeleteConfirmModal, 
-    type ComplaintFormData,
-    type RequestFormData
+    DeleteConfirmModal
 } from "../components";
-import { complaintApi, requestTrackingApi, authApi, societyApi } from "../../../services/api";
+import {
+    EditIcon,
+    EyeIcon,
+    TrashIcon,
+} from "../../../assets/icons/admin-dashboard-icons";
+import { complaintApi, requestTrackingApi, authApi } from "../../../services/api";
 import toast from "react-hot-toast";
 import { Loader2, MoreVertical } from "lucide-react";
 import { cn } from "../../../lib/cn";
 
 type Priority = "Medium" | "Low" | "High";
 type Status = "Pending" | "Open" | "Closed" | "Solved";
+
+function ActionButton({
+    label,
+    variant,
+    children,
+    onClick,
+}: {
+    label: string;
+    variant: "edit" | "view" | "delete";
+    children: ReactNode;
+    onClick?: () => void;
+}) {
+    const variantClasses = {
+        edit: "bg-[#E8F7EC] text-[#39973D]",
+        view: "bg-[#EEF2FF] text-[#5678E9]",
+        delete: "bg-[#FFF0F0] text-[#E74C3C]",
+    };
+
+    return (
+        <button
+            type="button"
+            aria-label={label}
+            onClick={onClick}
+            className={`inline-flex aspect-square min-w-8 items-center justify-center rounded-[10px] transition hover:scale-105 ${variantClasses[variant]}`}
+        >
+            <span className="flex size-4 items-center justify-center [&>svg]:size-4 [&>svg]:text-current">
+                {children}
+            </span>
+        </button>
+    );
+}
 
 type Item = {
     id: string;
@@ -153,35 +187,46 @@ export default function CreateComplaint() {
     };
 
     return (
-        <div className="space-y-6">
-            {/* Tabs */}
-            <div className="flex rounded-t-xl bg-white p-1 w-fit shadow-sm">
-                <button
-                    onClick={() => setActiveTab("complaint")}
-                    className={cn(
-                        "px-6 py-2.5 text-sm font-bold rounded-lg transition-all duration-200",
-                        activeTab === "complaint" ? "bg-[#FF6B35] text-white shadow-md" : "text-[#A7A7A7] hover:text-[#202224]"
-                    )}
-                >
-                    Complaint Submission
-                </button>
-                <button
-                    onClick={() => setActiveTab("request")}
-                    className={cn(
-                        "px-6 py-2.5 text-sm font-bold rounded-lg transition-all duration-200",
-                        activeTab === "request" ? "bg-[#FF6B35] text-white shadow-md" : "text-[#A7A7A7] hover:text-[#202224]"
-                    )}
-                >
-                    Request Submission
-                </button>
-            </div>
+        <div className="flex flex-col gap-0">
+            {/* Tabs - Only show for residents */}
+            {currentUser?.role !== "admin" && (
+                <div className="relative z-10 flex w-full items-end overflow-x-auto">
+                    <button
+                        type="button"
+                        onClick={() => setActiveTab("complaint")}
+                        className={cn(
+                            "min-h-14 min-w-32 shrink-0 px-5 py-4 text-sm font-semibold transition-all",
+                            activeTab === "complaint"
+                                ? "rounded-t-xl bg-gradient-to-r from-[#FE512E] to-[#F09619] text-white"
+                                : "rounded-t-xl border border-b-2 border-[#D9DCE5] border-b-[#F09619] bg-white text-[#202224] hover:bg-gray-50"
+                        )}
+                    >
+                        Complaint Submission
+                    </button>
+                    <button
+                        type="button"
+                        onClick={() => setActiveTab("request")}
+                        className={cn(
+                            "min-h-14 min-w-32 shrink-0 px-5 py-4 text-sm font-semibold transition-all",
+                            activeTab === "request"
+                                ? "rounded-t-xl bg-gradient-to-r from-[#FE512E] to-[#F09619] text-white"
+                                : "rounded-t-xl border border-b-2 border-[#D9DCE5] border-b-[#F09619] bg-white text-[#202224] hover:bg-gray-50"
+                        )}
+                    >
+                        Request Submission
+                    </button>
+                </div>
+            )}
 
-            {/* Main Container */}
-            <div className="rounded-2xl bg-white p-6 shadow-sm border border-[#F4F4F4]">
-                <div className="mb-8 flex items-center justify-between">
+            {/* Content */}
+            <div className={cn(
+                "border border-[#D9DCE5] bg-white p-4 sm:p-5",
+                currentUser?.role !== "admin" ? "-mt-px rounded-2xl rounded-tl-none" : "rounded-2xl"
+            )}>
+                <div className="mb-6 flex items-center justify-between">
                     <h2 className="text-xl font-bold text-[#202224]">
-                        {currentUser?.role === "admin" 
-                            ? (activeTab === "complaint" ? "Create Complaint" : "Request Tracking")
+                        {currentUser?.role === "admin"
+                            ? (activeTab === "complaint" ? "Create Complaint" : "Create Request")
                             : (activeTab === "complaint" ? "Complaint" : "Request")}
                     </h2>
                     <Button
@@ -192,135 +237,198 @@ export default function CreateComplaint() {
                     </Button>
                 </div>
 
-                {loading ? (
-                    <div className="flex h-64 items-center justify-center">
-                        <Loader2 className="h-10 w-10 animate-spin text-[#FF6B35]" />
-                    </div>
-                ) : items.length === 0 ? (
-                    <div className="flex h-64 flex-col items-center justify-center text-gray-400">
-                        <p>No {activeTab}s found.</p>
-                    </div>
-                ) : currentUser?.role === "admin" ? (
-                    /* Admin Table View */
-                    <div className="overflow-x-auto">
-                        <table className="w-full border-separate border-spacing-y-0">
-                            <thead>
-                                <tr className="bg-[#F1F3FF]">
-                                    <th className="px-6 py-4 text-left text-sm font-bold text-[#202224] rounded-l-xl">Complainer Name</th>
-                                    <th className="px-6 py-4 text-left text-sm font-bold text-[#202224] truncate max-w-[150px]">
-                                        {activeTab === "complaint" ? "Complaint Name" : "Request Name"}
-                                    </th>
-                                    <th className="px-6 py-4 text-left text-sm font-bold text-[#202224]">Description</th>
-                                    <th className="px-6 py-4 text-left text-sm font-bold text-[#202224]">Unit Number</th>
-                                    <th className="px-6 py-4 text-center text-sm font-bold text-[#202224]">Priority</th>
-                                    <th className="px-6 py-4 text-center text-sm font-bold text-[#202224]">Status</th>
-                                    <th className="px-6 py-4 text-center text-sm font-bold text-[#202224] rounded-r-xl">Action</th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-gray-100">
-                                {items.map((item) => (
-                                    <tr key={item.id} className="hover:bg-gray-50 transition-colors">
-                                        <td className="px-6 py-4">
-                                            <div className="flex items-center gap-3">
-                                                <div className="h-10 w-10 rounded-full bg-gray-100 flex items-center justify-center overflow-hidden">
-                                                    <img src={`https://ui-avatars.com/api/?name=${item.complainerName}&background=random`} alt="" className="h-full w-full object-cover" />
-                                                </div>
-                                                <span className="text-sm font-semibold text-[#4F5B7D]">{item.complainerName}</span>
-                                            </div>
-                                        </td>
-                                        <td className="px-6 py-4 text-sm font-semibold text-[#4F5B7D]">{item.title}</td>
-                                        <td className="px-6 py-4">
-                                            <p className="text-sm font-semibold text-[#4F5B7D] truncate max-w-[200px]">{item.description}</p>
-                                        </td>
-                                        <td className="px-6 py-4">
-                                            <div className="flex items-center gap-2">
-                                                <span className="h-6 w-6 rounded-full bg-[#F6F8FB] text-[#5678E9] flex items-center justify-center text-[10px] font-bold">{item.wing}</span>
-                                                <span className="text-sm font-semibold text-[#4F5B7D]">{item.unit}</span>
-                                            </div>
-                                        </td>
-                                        <td className="px-6 py-4">
-                                            <span className={cn(
-                                                "mx-auto flex w-24 items-center justify-center rounded-full py-1.5 text-xs font-bold",
-                                                item.priority === "High" ? "bg-[#E74C3C] text-white" :
-                                                item.priority === "Medium" ? "bg-[#5678E9] text-white" : "bg-[#39973D] text-white"
-                                            )}>
-                                                {item.priority}
-                                            </span>
-                                        </td>
-                                        <td className="px-6 py-4">
-                                            <span className={cn(
-                                                "mx-auto flex w-24 items-center justify-center rounded-full py-1.5 text-xs font-bold",
-                                                item.status === "Pending" ? "bg-[#FFF7E6] text-[#F0A000]" :
-                                                item.status === "Open" ? "bg-[#EEF2FF] text-[#5678E9]" : "bg-[#E5F4E8] text-[#39973D]"
-                                            )}>
-                                                {item.status}
-                                            </span>
-                                        </td>
-                                        <td className="px-6 py-4">
-                                            <div className="flex items-center justify-center gap-2">
-                                                <button onClick={() => handleAction(item, "edit")} className="p-2 rounded-lg bg-[#E8F7EC] text-[#39973D] hover:scale-110 transition-transform">
-                                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
-                                                </button>
-                                                <button onClick={() => handleAction(item, "view")} className="p-2 rounded-lg bg-[#EEF2FF] text-[#5678E9] hover:scale-110 transition-transform">
-                                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
-                                                </button>
-                                                <button onClick={() => handleAction(item, "delete")} className="p-2 rounded-lg bg-[#FFF0F0] text-[#E74C3C] hover:scale-110 transition-transform">
-                                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
-                                                </button>
-                                            </div>
-                                        </td>
+                <div className="overflow-x-auto">
+                    <div className="min-w-[980px]">
+                        {loading ? (
+                            <div className="flex items-center justify-center py-12">
+                                <Loader2 className="h-8 w-8 animate-spin text-orange-500" />
+                                <span className="ml-3 text-gray-600">Loading...</span>
+                            </div>
+                        ) : items.length === 0 ? (
+                            <div className="flex flex-col items-center justify-center py-12 text-center">
+                                <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-gray-100">
+                                    <svg
+                                        className="h-8 w-8 text-gray-400"
+                                        fill="none"
+                                        viewBox="0 0 24 24"
+                                        stroke="currentColor"
+                                    >
+                                        <path
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                            strokeWidth={2}
+                                            d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
+                                        />
+                                    </svg>
+                                </div>
+                                <p className="text-lg font-semibold text-gray-700">
+                                    No {activeTab}s Available
+                                </p>
+                                <p className="mt-2 text-sm text-gray-500">
+                                    There are no {activeTab}s at the moment.
+                                </p>
+                            </div>
+                        ) : currentUser?.role === "admin" ? (
+                            /* Admin Table View */
+                            <table className="w-full border-collapse">
+                                <thead className="sticky top-0 z-10 bg-[#F1F3FF]">
+                                    <tr>
+                                        <th className="rounded-l-xl px-5 py-4 text-left text-sm font-semibold text-[#202224]">
+                                            Complainer Name
+                                        </th>
+                                        <th className="px-5 py-4 text-left text-sm font-semibold text-[#202224]">
+                                            {activeTab === "complaint" ? "Complaint Name" : "Request Name"}
+                                        </th>
+                                        <th className="px-5 py-4 text-left text-sm font-semibold text-[#202224]">
+                                            Description
+                                        </th>
+                                        <th className="px-5 py-4 text-left text-sm font-semibold text-[#202224]">
+                                            Unit Number
+                                        </th>
+                                        <th className="px-5 py-4 text-center text-sm font-semibold text-[#202224]">
+                                            Priority
+                                        </th>
+                                        <th className="px-5 py-4 text-center text-sm font-semibold text-[#202224]">
+                                            Status
+                                        </th>
+                                        <th className="rounded-r-xl px-5 py-4 text-center text-sm font-semibold text-[#202224]">
+                                            Action
+                                        </th>
                                     </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </div>
-                ) : (
-                    /* Resident Card View */
-                    <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                        {items.map((item) => (
-                            <div key={item.id} className="overflow-hidden rounded-2xl border border-[#F4F4F4] bg-white shadow-sm hover:shadow-md transition-shadow">
-                                <div className="flex items-center justify-between bg-[#5678E9] px-4 py-3 text-white">
-                                    <h4 className="text-sm font-bold truncate pr-2">{item.title}</h4>
-                                    <div className="relative group">
-                                        <button className="p-1 rounded-full hover:bg-white/20 transition-colors">
-                                            <MoreVertical size={16} />
-                                        </button>
-                                        <div className="absolute right-0 top-full mt-1 hidden group-hover:block z-10 w-32 rounded-xl bg-white p-1 shadow-xl border border-[#F4F4F4]">
-                                            <button onClick={() => handleAction(item, "view")} className="w-full text-left px-4 py-2 text-xs font-bold text-[#202224] hover:bg-gray-50 rounded-lg">View</button>
-                                            {currentUser?.role === "admin" && (
-                                                <>
-                                                    <button onClick={() => handleAction(item, "edit")} className="w-full text-left px-4 py-2 text-xs font-bold text-[#202224] hover:bg-gray-50 rounded-lg">Edit</button>
-                                                    <button onClick={() => handleAction(item, "delete")} className="w-full text-left px-4 py-2 text-xs font-bold text-red-500 hover:bg-red-50 rounded-lg">Delete</button>
-                                                </>
-                                            )}
+                                </thead>
+
+                                <tbody>
+                                    {items.map((item) => (
+                                        <tr
+                                            key={item.id}
+                                            className="border-b border-[#EDF0F5] last:border-b-0 hover:bg-gray-50 transition-colors"
+                                        >
+                                            <td className="px-5 py-4">
+                                                <div className="flex items-center gap-3">
+                                                    <div className="h-10 w-10 rounded-full bg-gray-100 flex items-center justify-center overflow-hidden">
+                                                        <img src={`https://ui-avatars.com/api/?name=${item.complainerName}&background=random`} alt="" className="h-full w-full object-cover" />
+                                                    </div>
+                                                    <span className="text-sm font-medium text-[#434A57]">{item.complainerName}</span>
+                                                </div>
+                                            </td>
+
+                                            <td className="px-5 py-4 text-sm font-medium text-[#434A57]">
+                                                {item.title}
+                                            </td>
+
+                                            <td className="max-w-md px-5 py-4">
+                                                <p className="truncate text-sm font-medium text-[#434A57]">
+                                                    {item.description}
+                                                </p>
+                                            </td>
+
+                                            <td className="px-5 py-4">
+                                                <div className="flex items-center gap-2">
+                                                    <span className="grid size-6 shrink-0 place-items-center rounded-full bg-[#F1F6FF] text-xs font-bold text-[#5678E9]">{item.wing}</span>
+                                                    <span className="font-medium text-[#202224]">{item.unit}</span>
+                                                </div>
+                                            </td>
+
+                                            <td className="px-5 py-4">
+                                                <span className={cn(
+                                                    "mx-auto flex min-w-24 items-center justify-center rounded-full px-2.5 py-2 text-xs font-semibold",
+                                                    item.priority === "High" ? "bg-[#E74C3C] text-white" :
+                                                        item.priority === "Medium" ? "bg-[#5678E9] text-white" : "bg-[#39973D] text-white"
+                                                )}>
+                                                    {item.priority}
+                                                </span>
+                                            </td>
+
+                                            <td className="px-5 py-4">
+                                                <span className={cn(
+                                                    "mx-auto flex min-w-24 items-center justify-center rounded-full px-2.5 py-2 text-xs font-semibold",
+                                                    item.status === "Pending" ? "bg-[#FFF7E6] text-[#F0A000]" :
+                                                        item.status === "Open" ? "bg-[#EEF2FF] text-[#5678E9]" : "bg-[#E5F4E8] text-[#39973D]"
+                                                )}>
+                                                    {item.status}
+                                                </span>
+                                            </td>
+
+                                            <td className="px-5 py-4">
+                                                <div className="flex items-center justify-center gap-3">
+                                                    <ActionButton
+                                                        label="Edit complaint"
+                                                        variant="edit"
+                                                        onClick={() => handleAction(item, "edit")}
+                                                    >
+                                                        <EditIcon />
+                                                    </ActionButton>
+
+                                                    <ActionButton
+                                                        label="View complaint"
+                                                        variant="view"
+                                                        onClick={() => handleAction(item, "view")}
+                                                    >
+                                                        <EyeIcon />
+                                                    </ActionButton>
+
+                                                    <ActionButton
+                                                        label="Delete complaint"
+                                                        variant="delete"
+                                                        onClick={() => handleAction(item, "delete")}
+                                                    >
+                                                        <TrashIcon />
+                                                    </ActionButton>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        ) : (
+                            /* Resident Card View */
+                            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                                {items.map((item) => (
+                                    <div key={item.id} className="overflow-hidden rounded-2xl border border-[#F4F4F4] bg-white shadow-sm hover:shadow-md transition-shadow">
+                                        <div className="flex items-center justify-between bg-[#5678E9] px-4 py-3 text-white">
+                                            <h4 className="text-sm font-bold truncate pr-2">{item.title}</h4>
+                                            <div className="relative group">
+                                                <button className="p-1 rounded-full hover:bg-white/20 transition-colors">
+                                                    <MoreVertical size={16} />
+                                                </button>
+                                                <div className="absolute right-0 top-full mt-1 hidden group-hover:block z-10 w-32 rounded-xl bg-white p-1 shadow-xl border border-[#F4F4F4]">
+                                                    <button onClick={() => handleAction(item, "view")} className="w-full text-left px-4 py-2 text-xs font-bold text-[#202224] hover:bg-gray-50 rounded-lg">View</button>
+                                                    {currentUser?.role === "admin" && (
+                                                        <>
+                                                            <button onClick={() => handleAction(item, "edit")} className="w-full text-left px-4 py-2 text-xs font-bold text-[#202224] hover:bg-gray-50 rounded-lg">Edit</button>
+                                                            <button onClick={() => handleAction(item, "delete")} className="w-full text-left px-4 py-2 text-xs font-bold text-red-500 hover:bg-red-50 rounded-lg">Delete</button>
+                                                        </>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div className="p-4 space-y-3">
+                                            <div className="flex justify-between items-center">
+                                                <span className="text-[11px] font-bold text-[#A7A7A7]">Request Date</span>
+                                                <span className="text-xs font-bold text-[#202224]">{item.date}</span>
+                                            </div>
+                                            <div className="flex justify-between items-center">
+                                                <span className="text-[11px] font-bold text-[#A7A7A7]">Status</span>
+                                                <span className={cn(
+                                                    "text-xs font-bold px-3 py-1 rounded-full",
+                                                    item.status === "Open" ? "bg-[#EEF2FF] text-[#5678E9]" : "bg-[#E5F4E8] text-[#39973D]"
+                                                )}>
+                                                    {item.status}
+                                                </span>
+                                            </div>
+                                            <div className="space-y-1">
+                                                <span className="text-[11px] font-bold text-[#A7A7A7]">Description</span>
+                                                <p className="text-[11px] leading-relaxed text-[#202224] line-clamp-2">
+                                                    {item.description}
+                                                </p>
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
-                                <div className="p-4 space-y-3">
-                                    <div className="flex justify-between items-center">
-                                        <span className="text-[11px] font-bold text-[#A7A7A7]">Request Date</span>
-                                        <span className="text-xs font-bold text-[#202224]">{item.date}</span>
-                                    </div>
-                                    <div className="flex justify-between items-center">
-                                        <span className="text-[11px] font-bold text-[#A7A7A7]">Status</span>
-                                        <span className={cn(
-                                            "text-xs font-bold px-3 py-1 rounded-full",
-                                            item.status === "Open" ? "bg-[#EEF2FF] text-[#5678E9]" : "bg-[#E5F4E8] text-[#39973D]"
-                                        )}>
-                                            {item.status}
-                                        </span>
-                                    </div>
-                                    <div className="space-y-1">
-                                        <span className="text-[11px] font-bold text-[#A7A7A7]">Description</span>
-                                        <p className="text-[11px] leading-relaxed text-[#202224] line-clamp-2">
-                                            {item.description}
-                                        </p>
-                                    </div>
-                                </div>
+                                ))}
                             </div>
-                        ))}
+                        )}
                     </div>
-                )}
+                </div>
             </div>
 
             {/* Modals */}

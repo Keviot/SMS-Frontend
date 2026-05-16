@@ -5,8 +5,6 @@ import {
   Users,
   CreditCard,
   ShieldCheck,
-  UserSearch,
-  AlertTriangle,
   Shield
 } from "lucide-react";
 import {
@@ -123,11 +121,6 @@ export const residentNavigation: NavItem[] = [
       { label: "Polls", path: "/community/polls" },
       { label: "Communities Discussion", path: "/community/discussion" },
     ],
-  },
-  {
-    label: "Facility",
-    icon: BuildingIcon,
-    path: "/facility-management",
   },
   {
     label: "Payment Portal",
