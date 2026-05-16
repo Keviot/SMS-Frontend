@@ -64,7 +64,7 @@ export default function BalanceChart({ data = [], total = "0" }: BalanceChartPro
   };
 
   return (
-    <Card className="flex min-h-96 flex-col p-5">
+    <Card className="flex min-h-100 flex-col p-5">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <h2 className="text-xl font-semibold leading-6 text-[#202224]">

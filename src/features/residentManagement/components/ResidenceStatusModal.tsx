@@ -96,7 +96,7 @@ export default function ResidenceStatusModal({ isOpen, onClose, onSuccess, resid
             <div
               onClick={() => setSelectedStatus("occupied")}
               className={cn(
-                "flex items-center gap-3 p-4 border rounded-xl cursor-pointer transition-all",
+                "flex items-center h-11 gap-3 p-4 border rounded-xl cursor-pointer transition-all",
                 selectedStatus === "occupied" ? "border-[#FF6B35] bg-[#FFF8F5]" : "border-[#F1F1F1] bg-white"
               )}
             >
@@ -114,7 +114,7 @@ export default function ResidenceStatusModal({ isOpen, onClose, onSuccess, resid
             <div
               onClick={() => setSelectedStatus("vacate")}
               className={cn(
-                "flex items-center gap-3 p-4 border rounded-xl cursor-pointer transition-all",
+                "flex items-center h-11 gap-3 p-4 border rounded-xl cursor-pointer transition-all",
                 selectedStatus === "vacate" ? "border-[#FF6B35] bg-[#FFF8F5]" : "border-[#F1F1F1] bg-white"
               )}
             >
@@ -137,7 +137,7 @@ export default function ResidenceStatusModal({ isOpen, onClose, onSuccess, resid
             )}>
               {agreed && <Check size={14} className="text-white" />}
             </div>
-            <p className="text-sm text-[#4D4D4D]">
+            <p className="mt-5 text-sm text-[#4D4D4D]">
               By submitting, you agree to select <span className="capitalize">{selectedStatus}</span>
             </p>
           </div>

@@ -97,9 +97,9 @@ export default function SecurityGuard() {
       key: "shift",
       header: "Select Shift",
       render: (row: any) => (
-        <span className={`inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-bold ${row.shift?.toLowerCase() === 'day' ? 'bg-[#FFF9E7] text-[#FFB302]' : 'bg-[#313131] text-white'
+        <span className={`inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-bold ${row.shift === 'Day' ? 'bg-[#FFF9E7] text-[#FFB302]' : 'bg-[#313131] text-white'
           }`}>
-          {row.shift?.toLowerCase() === 'day' ? <Sun size={16} /> : <Moon size={16} />}
+          {row.shift === 'Day' ? <Sun size={16} /> : <Moon size={16} />}
           <span className="capitalize">{row.shift}</span>
         </span>
       )

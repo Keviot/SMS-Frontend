@@ -27,7 +27,7 @@ export default function Modal({
     <div className="fixed inset-0 z-100 flex items-center justify-center bg-black/50 px-4">
       <div
         className={cn(
-          "relative max-h-[90vh] w-full rounded-2xl bg-white p-6 shadow-2xl",
+          "relative max-h-[90vh] w-103 rounded-2xl bg-white p-6 shadow-2xl",
           maxWidth,
           overflowVisible ? "overflow-visible" : "overflow-y-auto",
           className
