@@ -575,8 +575,7 @@ const CallDiscovery = ({ client, currentUser, activeCall, onAccept, onReject }: 
                 try {
                     const { calls: queriedCalls } = await client.queryCalls({
                         filter_conditions: { id: { $eq: callId } },
-                        watch: true,
-                        subscribe: true
+                        watch: true
                     });
                     
                     if (queriedCalls.length > 0) {
@@ -993,11 +992,27 @@ export default function AccessForums() {
         socket.on("new-message", handleNewMessage);
         socket.on("user-typing", handleTypingStart);
         socket.on("user-stop-typing", handleTypingStop);
+        
+        socket.on("call:incoming", async (data: any) => {
+            console.log("[Socket] Incoming call signal received:", data.callId);
+            if (videoClientRef.current) {
+                try {
+                    await videoClientRef.current.queryCalls({
+                        filter_conditions: { id: { $eq: data.callId } },
+                        watch: true
+                    });
+                    console.log("[Socket] Call queried and watched successfully after signal:", data.callId);
+                } catch (err) {
+                    console.error("[Socket] Failed to query call after signal:", err);
+                }
+            }
+        });
 
         return () => {
             socket.off("new-message", handleNewMessage);
             socket.off("user-typing", handleTypingStart);
             socket.off("user-stop-typing", handleTypingStop);
+            socket.off("call:incoming");
         };
     }, [socket]);
 
@@ -1165,6 +1180,14 @@ export default function AccessForums() {
                     callId,
                     type: 'video'
                 });
+            } else {
+                const societyId = String(currentUser.society?._id || currentUser.society || currentUser.societies?.[0]?._id || "").trim();
+                socket.emit('call:community-incoming', {
+                    societyId,
+                    from: currentUserId,
+                    callId,
+                    type: 'video'
+                });
             }
 
             // Use getOrCreate with ring:true
@@ -1233,6 +1256,14 @@ export default function AccessForums() {
             if (!isCommunity) {
                 socket.emit('call:incoming', { 
                     to: contactId, 
+                    from: currentUserId,
+                    callId,
+                    type: 'audio'
+                });
+            } else {
+                const societyId = String(currentUser.society?._id || currentUser.society || currentUser.societies?.[0]?._id || "").trim();
+                socket.emit('call:community-incoming', {
+                    societyId,
                     from: currentUserId,
                     callId,
                     type: 'audio'
