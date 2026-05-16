@@ -115,6 +115,9 @@ export default function Header({ onMenuClick }: HeaderProps) {
                 const path = `/${pathParts.slice(0, index + 1).join("/")}`;
                 const isLast = index === pathParts.length - 1;
 
+                // Skip IDs in breadcrumbs (24-char hex)
+                if (/^[0-9a-fA-F]{24}$/.test(part)) return null;
+
                 // Map segments to friendly names
                 const nameMap: Record<string, string> = {
                   "resident-management": "Resident Management",

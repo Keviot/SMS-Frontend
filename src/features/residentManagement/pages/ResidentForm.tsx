@@ -40,6 +40,7 @@ export default function ResidentForm() {
   const [members, setMembers] = useState<any[]>([]);
   const [vehicles, setVehicles] = useState<any[]>([]);
   const [files, setFiles] = useState<Record<string, File>>({});
+  const [previews, setPreviews] = useState<Record<string, string>>({});
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -89,6 +90,15 @@ export default function ResidentForm() {
           setMemberCount(resident.members?.length || 0);
           setVehicles(resident.vehicles || []);
           setVehicleCount(resident.vehicles?.length || 0);
+
+          // Set existing file previews
+          setPreviews({
+            profileImage: resident.profileImage || "",
+            uploadAadharfront: resident.uploadAadharfront || "",
+            uploadAadharback: resident.uploadAadharback || "",
+            addressProof: resident.addressProof || "",
+            rentAgreeMent: resident.rentAgreeMent || "",
+          });
         }
       } catch (error) {
         toast.error("Failed to fetch resident details");
@@ -154,6 +164,18 @@ export default function ResidentForm() {
     }
   };
 
+  const isFormValid = () => {
+    const requiredFields = ["name", "phoneNumber", "age", "gender", "wing", "unit", "relation"];
+    const basicFieldsValid = requiredFields.every(field => formData[field as keyof typeof formData]?.trim());
+    
+    if (activeTab === "tenant") {
+      const tenantFieldsValid = ["ownerName", "ownerPhone", "ownerAddress"].every(field => formData[field as keyof typeof formData]?.trim());
+      return basicFieldsValid && tenantFieldsValid;
+    }
+    
+    return basicFieldsValid;
+  };
+
   const memberOptions = Array.from({ length: 11 }, (_, i) => ({ label: `${i}`, value: `${i}` }));
   const vehicleOptions = Array.from({ length: 11 }, (_, i) => ({ label: `${i}`, value: `${i}` }));
 
@@ -200,14 +222,19 @@ export default function ResidentForm() {
             <div className="relative h-28 w-28 overflow-hidden rounded-full border-2 border-[#F1F1F1] bg-gray-50 flex items-center justify-center group">
               {files.profileImage ? (
                 <img src={URL.createObjectURL(files.profileImage)} className="h-full w-full object-cover" alt="Profile" />
+              ) : previews.profileImage ? (
+                <img src={previews.profileImage} className="h-full w-full object-cover" alt="Profile" />
               ) : (
-                <img src="" className="h-full w-full object-cover" alt="" />
+                <div className="flex h-full w-full items-center justify-center bg-gray-100 text-gray-400">
+                  <ImageIcon size={32} />
+                </div>
               )}
               <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                 <Camera size={24} className="text-white" />
               </div>
               <input
                 type="file"
+                accept="image/*"
                 className="absolute inset-0 cursor-pointer opacity-0"
                 onChange={(e) => {
                   const file = e.target.files?.[0];
@@ -239,7 +266,25 @@ export default function ResidentForm() {
                 ]}
                 placeholder="Select Gender"
               />
-              <FormInput label="Wing" required value={formData.wing} onChange={(val) => handleInputChange("wing", val)} placeholder="A" />
+              <Select
+                label="Wing"
+                required
+                value={formData.wing}
+                onChange={(e) => handleInputChange("wing", e.target.value)}
+                options={[
+                  { label: "A", value: "A" },
+                  { label: "B", value: "B" },
+                  { label: "C", value: "C" },
+                  { label: "D", value: "D" },
+                  { label: "E", value: "E" },
+                  { label: "F", value: "F" },
+                  { label: "G", value: "G" },
+                  { label: "H", value: "H" },
+                  { label: "I", value: "I" },
+                  { label: "J", value: "J" }
+                ]}
+                placeholder="Select Wing"
+              />
               <FormInput label="Unit" required value={formData.unit} onChange={(val) => handleInputChange("unit", val)} placeholder="1001" />
               <FormInput label="Relation" required value={formData.relation} onChange={(val) => handleInputChange("relation", val)} placeholder="Father" />
             </div>
@@ -259,22 +304,32 @@ export default function ResidentForm() {
                 label={doc.label}
                 onChange={(file) => handleFileChange(doc.key, file)}
               />
-              {files[doc.key] && (
+              {(files[doc.key] || previews[doc.key]) && (
                 <div className="flex items-center gap-3 rounded-xl border border-[#F1F1F1] p-3 shadow-sm">
                   <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#F6F8FB] text-[#5678E9]">
                     <ImageIcon size={20} />
                   </div>
                   <div className="flex-1 overflow-hidden">
-                    <p className="truncate text-sm font-bold text-[#202224]">{files[doc.key].name}</p>
-                    <p className="text-xs font-semibold text-[#A7A7A7]">{(files[doc.key].size / (1024 * 1024)).toFixed(1)} MB</p>
+                    <p className="truncate text-sm font-bold text-[#202224]">
+                      {files[doc.key] ? files[doc.key].name : "Existing Document"}
+                    </p>
+                    <p className="text-xs font-semibold text-[#A7A7A7]">
+                      {files[doc.key] ? `${(files[doc.key].size / (1024 * 1024)).toFixed(1)} MB` : "Uploaded"}
+                    </p>
                   </div>
-                  <button onClick={() => {
-                    const newFiles = { ...files };
-                    delete newFiles[doc.key];
-                    setFiles(newFiles);
-                  }} className="text-[#A7A7A7] hover:text-[#E74C3C]">
-                    <Trash2 size={18} />
-                  </button>
+                  {files[doc.key] ? (
+                    <button onClick={() => {
+                      const newFiles = { ...files };
+                      delete newFiles[doc.key];
+                      setFiles(newFiles);
+                    }} className="text-[#A7A7A7] hover:text-[#E74C3C]">
+                      <Trash2 size={18} />
+                    </button>
+                  ) : (
+                    <a href={previews[doc.key]} target="_blank" rel="noopener noreferrer" className="text-[#5678E9] hover:underline text-xs font-bold">
+                      View
+                    </a>
+                  )}
                 </div>
               )}
             </div>
@@ -292,13 +347,13 @@ export default function ResidentForm() {
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2">
               <span className="text-sm font-semibold text-[#202224]">Select Member</span>
-              <select
-                value={memberCount}
+              <Select
+                value={memberCount.toString()}
                 onChange={(e) => setMemberCount(parseInt(e.target.value))}
-                className="h-10 w-16 rounded-lg border border-[#D3D3D3] px-2 text-sm font-bold outline-none"
-              >
-                {memberOptions.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
-              </select>
+                options={memberOptions}
+                className="w-16"
+                showRadio={false}
+              />
             </div>
             <button onClick={() => setIsMembersOpen(!isMembersOpen)}>
               {isMembersOpen ? <ChevronUp size={20} className="text-[#202224]" /> : <ChevronDown size={20} className="text-[#202224]" />}
@@ -339,13 +394,13 @@ export default function ResidentForm() {
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2">
               <span className="text-sm font-semibold text-[#202224]">Select Vehicle</span>
-              <select
-                value={vehicleCount}
+              <Select
+                value={vehicleCount.toString()}
                 onChange={(e) => setVehicleCount(parseInt(e.target.value))}
-                className="h-10 w-16 rounded-lg border border-[#D3D3D3] px-2 text-sm font-bold outline-none"
-              >
-                {vehicleOptions.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
-              </select>
+                options={vehicleOptions}
+                className="w-16"
+                showRadio={false}
+              />
             </div>
             <button onClick={() => setIsVehiclesOpen(!isVehiclesOpen)}>
               {isVehiclesOpen ? <ChevronUp size={20} className="text-[#202224]" /> : <ChevronDown size={20} className="text-[#202224]" />}
@@ -377,7 +432,7 @@ export default function ResidentForm() {
       </div>
 
       {/* Footer Buttons */}
-      <div className="mt-8 flex justify-end gap-4 pb-8">
+      <div className="mt-5 flex justify-end gap-4 pb-8">
         <Button
           variant="outline"
           className="h-12 w-32 rounded-xl text-base font-bold text-[#202224] border-[#D3D3D3]"
@@ -386,11 +441,17 @@ export default function ResidentForm() {
           Cancel
         </Button>
         <Button
-          className="h-12 w-32 rounded-xl text-base font-bold bg-[#FF6B35] hover:bg-[#E85D2A] border-none"
+          className={cn(
+            "h-12 w-32 rounded-xl text-base font-bold transition-all duration-200",
+            !isFormValid() 
+              ? "bg-[#F6F8FB] text-[#A7A7A7] cursor-not-allowed border-none shadow-none" 
+              : "bg-primary-gradient text-white border-none"
+          )}
           onClick={handleSubmit}
           loading={isSubmitting}
+          disabled={!isFormValid()}
         >
-          Save
+          {id ? "Save" : "Create"}
         </Button>
       </div>
     </div>
