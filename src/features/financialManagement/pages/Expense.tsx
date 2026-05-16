@@ -50,7 +50,7 @@ export default function Expense() {
                     id: item._id,
                     title: item.title,
                     description: item.description,
-                    date: new Date(item.date).toLocaleDateString("en-GB"),
+                    date: item.date, // Keep ISO string for better handling
                     amount: item.amount,
                     billFormat,
                     uploadBill: item.uploadBill,
@@ -228,7 +228,7 @@ export default function Expense() {
                                                 </td>
 
                                                 <td className="px-5 py-4 text-sm font-medium text-[#434A57]">
-                                                    {expense.date}
+                                                    {new Date(expense.date).toLocaleDateString("en-GB")}
                                                 </td>
 
                                                 <td className="px-5 py-4 text-sm font-semibold text-[#39973D]">
@@ -315,7 +315,7 @@ export default function Expense() {
                         ? {
                             title: selectedExpense.title,
                             description: selectedExpense.description,
-                            date: selectedExpense.date,
+                            date: new Date(selectedExpense.date).toISOString().split("T")[0],
                             amount: String(selectedExpense.amount),
                             billName: selectedExpense.uploadBill || "Uploaded Bill",
                             billSize: "3.5 MB",
@@ -336,7 +336,7 @@ export default function Expense() {
                             id: selectedExpense.id,
                             title: selectedExpense.title,
                             description: selectedExpense.description,
-                            date: selectedExpense.date,
+                            date: new Date(selectedExpense.date).toLocaleDateString("en-GB"),
                             amount: selectedExpense.amount,
                             billName: selectedExpense.uploadBill || "Uploaded Bill",
                             billSize: "3.5 MB",
