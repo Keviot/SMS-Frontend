@@ -121,172 +121,121 @@ export default function Profile() {
   }
 
   return (
-    <div className="relative p-0 -m-[15px] sm:-m-[20px] lg:-m-[30px]">
-      {/* Profile Header Background */}
-      <div className="h-72 w-full relative overflow-hidden">
+    <div className="relative p-0 -m-[15px] sm:-m-[20px] lg:-m-[30px] bg-[#F6F8FB] min-h-screen font-sans">
+      {/* Profile Header Background with Full Pattern */}
+      <div className="h-48 w-full relative overflow-hidden bg-[#b1c0f0]">
         <img
           src={profileBG}
           alt="Profile Background"
           className="absolute inset-0 w-full h-full object-cover"
         />
-        <div className="absolute inset-0 flex flex-col px-6 pt-6">
-          <div className="max-w-6xl mx-auto w-full">
+        <div className="absolute inset-0 bg-black/5" />
+      </div>
 
-            <div className="flex justify-between items-end mt-4 mb-2">
-              <h1 className="text-2xl font-bold text-gray-900">{isEditing ? "Edit Profile" : "Profile"}</h1>
+      <div className="px-4 sm:px-6 -mt-32 relative z-10 pb-10">
+        <div className="max-w-6xl mx-auto">
+          {/* Breadcrumbs */}
+          <div className="flex items-center gap-2 text-sm font-medium mb-6">
+            <span className="text-gray-400">Home</span>
+            <span className="text-gray-400 font-bold">{">"}</span>
+            <span className="text-[#5678E9]">Edit Profile</span>
+          </div>
+
+          <div className="bg-white rounded-3xl shadow-[0_10px_40px_rgba(0,0,0,0.03)] overflow-hidden">
+            {/* Card Header */}
+            <div className="px-10 py-8 flex justify-between items-center">
+              <h2 className="text-2xl font-bold text-[#202224]">Profile</h2>
               {!isEditing && (
                 <button
                   onClick={() => setIsEditing(true)}
-                  className="flex items-center gap-2 bg-[#FE512E] text-white px-6 py-2.5 rounded-xl font-bold shadow-lg hover:opacity-90 transition-all active:scale-[0.98]"
+                  className="flex items-center gap-2 bg-[#FE512E] text-white px-6 py-3 rounded-xl font-bold shadow-lg hover:opacity-90 transition-all active:scale-[0.98]"
                 >
                   <Edit2 size={18} />
                   Edit Profile
                 </button>
               )}
             </div>
+
+            <div className="px-10 pb-12 flex flex-col lg:flex-row gap-16">
+              {/* Left Side: Avatar Section */}
+              <div className="flex flex-col items-center lg:w-1/4 xl:w-1/5 pt-4">
+                <div className="relative group">
+                  <div className="w-44 h-44 rounded-full p-1 bg-white shadow-[0_4px_20px_rgba(0,0,0,0.08)] border border-gray-100 overflow-hidden">
+                    <img
+                      src={previewUrl || (formData.profileImage ? (formData.profileImage.startsWith("http") ? formData.profileImage : `${BASE_URL}/${formData.profileImage}`) : "https://cdn-icons-png.flaticon.com/512/149/149071.png")}
+                      alt="Profile"
+                      className="w-full h-full rounded-full object-cover"
+                    />
+                  </div>
+                  {isEditing && (
+                    <>
+                      <input
+                        type="file"
+                        ref={fileInputRef}
+                        onChange={handleFileChange}
+                        accept="image/*"
+                        className="hidden"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => fileInputRef.current?.click()}
+                        className="absolute bottom-2 right-4 p-2.5 bg-white text-black rounded-full shadow-md border border-gray-100 transition-all transform hover:scale-110 active:scale-95 z-20"
+                      >
+                        <Edit2 size={16} />
+                      </button>
+                    </>
+                  )}
+                </div>
+                <h3 className="mt-6 text-xl font-bold text-[#202224] tracking-tight text-center">
+                  {formData.firstName} {formData.lastName}
+                </h3>
+              </div>
+
+              {/* Right Side: Form Fields */}
+              <div className="flex-1">
+                <form onSubmit={handleUpdate} className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-8">
+                  {[
+                    { label: "First Name", key: "firstName", required: true },
+                    { label: "Last Name", key: "lastName", required: true },
+                    { label: "Phone Number", key: "phoneNumber", required: true },
+                    { label: "Email Address", key: "email", required: false },
+                    { label: "Select Society", key: "society", required: true },
+                    { label: "Country", key: "country", required: true },
+                    { label: "State", key: "state", required: true },
+                    { label: "City", key: "city", required: true },
+                  ].map((field) => (
+                    <div key={field.key} className="space-y-2">
+                      <label className="text-sm font-bold text-[#202224]">
+                        {field.label}{field.required && <span className="text-[#E74C3C] ml-1">*</span>}
+                      </label>
+                      <input
+                        type="text"
+                        value={(formData as any)[field.key]}
+                        onChange={(e) => setFormData({ ...formData, [field.key]: e.target.value })}
+                        disabled={!isEditing}
+                        className="w-full h-[52px] px-5 py-3 rounded-xl border border-gray-300 focus:border-[#5678E9] focus:ring-1 focus:ring-[#5678E9] outline-none transition-all text-gray-700 font-medium disabled:bg-[#F8F9FB] disabled:text-gray-500 disabled:cursor-not-allowed placeholder:text-gray-400"
+                        placeholder={`Enter ${field.label}`}
+                      />
+                    </div>
+                  ))}
+
+                  {isEditing && (
+                    <div className="md:col-span-2 mt-8 flex justify-end">
+                      <button
+                        type="submit"
+                        disabled={isSubmitting}
+                        className="bg-gradient-to-r from-[#FE512E] to-[#F09619] text-white px-12 py-3.5 rounded-xl font-bold shadow-lg hover:opacity-90 transition-all active:scale-[0.98] disabled:opacity-70 flex items-center gap-2"
+                      >
+                        {isSubmitting && <Loader2 size={18} className="animate-spin" />}
+                        {isSubmitting ? "Updating..." : "Update Profile"}
+                      </button>
+                    </div>
+                  )}
+                </form>
+              </div>
+            </div>
           </div>
         </div>
-      </div>
-
-      <div className="px-6 -mt-44 relative z-10 pb-10">
-        <form onSubmit={handleUpdate} className="max-w-6xl mx-auto bg-white rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.04)] border border-gray-100 p-8 flex flex-col md:flex-row gap-8 lg:gap-16 min-h-[500px]">
-
-          {/* Left Side: Avatar */}
-          <div className="flex flex-col items-center text-center pt-8 md:w-1/4">
-            <div className="relative group ">
-              <input
-                type="file"
-                ref={fileInputRef}
-                onChange={handleFileChange}
-                accept="image/*"
-                className="hidden"
-              />
-              <img
-                src={previewUrl || (formData.profileImage ? (formData.profileImage.startsWith("http") ? formData.profileImage : `${BASE_URL}/${formData.profileImage}`) : "https://cdn-icons-png.flaticon.com/512/149/149071.png")}
-                alt="Profile"
-                className="w-40 h-40 rounded-full object-cover border-4 border-white transition-all duration-300 group-hover:brightness-90"
-              />
-              {isEditing && (
-                <button
-                  type="button"
-                  onClick={() => fileInputRef.current?.click()}
-                  className="absolute bottom-4 right-2 p-2.5 bg-white text-black rounded-full transition-all transform hover:scale-110 active:scale-95 z-20"
-                >
-                  <Edit2 size={16} />
-                </button>
-              )}
-            </div>
-            <h2 className="mt-4 text-xl font-bold text-gray-900 tracking-tight">{formData.firstName} {formData.lastName}</h2>
-          </div>
-
-
-
-          {/* Right Side: Form Fields */}
-          <div className="flex-1 pt-8 ">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-8">
-              <div className="space-y-2">
-                <label className="text-sm font-semibold text-gray-700">First Name<span className="text-red-500">*</span></label>
-                <input
-                  type="text"
-                  value={formData.firstName}
-                  onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
-                  disabled={!isEditing}
-                  className="w-full h-12 px-4 py-3 rounded-lg border border-gray-200 focus:border-[#FE512E] focus:ring-2 focus:ring-[#FE512E]/10 outline-none transition-all text-gray-800 font-medium disabled:bg-gray-50 disabled:cursor-not-allowed"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-sm font-semibold text-gray-700">Last Name<span className="text-red-500">*</span></label>
-                <input
-                  type="text"
-                  value={formData.lastName}
-                  onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
-                  disabled={!isEditing}
-                  className="w-full h-12 px-4 py-3 rounded-lg border border-gray-200 focus:border-[#FE512E] focus:ring-2 focus:ring-[#FE512E]/10 outline-none transition-all text-gray-800 font-medium disabled:bg-gray-50 disabled:cursor-not-allowed"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-sm font-semibold text-gray-700">Phone Number<span className="text-red-500">*</span></label>
-                <input
-                  type="text"
-                  value={formData.phoneNumber}
-                  onChange={(e) => setFormData({ ...formData, phoneNumber: e.target.value })}
-                  disabled={!isEditing}
-                  className="w-full h-12 px-4 py-3 rounded-lg border border-gray-200 focus:border-[#FE512E] focus:ring-2 focus:ring-[#FE512E]/10 outline-none transition-all text-gray-800 font-medium disabled:bg-gray-50 disabled:cursor-not-allowed"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-sm font-semibold text-gray-700">Email Address</label>
-                <input
-                  type="text"
-                  value={formData.email}
-                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  disabled={!isEditing}
-                  className="w-full h-12 px-4 py-3 rounded-lg border border-gray-200 focus:border-[#FE512E] focus:ring-2 focus:ring-[#FE512E]/10 outline-none transition-all text-gray-800 font-medium disabled:bg-gray-50 disabled:cursor-not-allowed"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-sm font-semibold text-gray-700">Select Society<span className="text-red-500">*</span></label>
-                <input
-                  type="text"
-                  value={formData.society}
-                  onChange={(e) => setFormData({ ...formData, society: e.target.value })}
-                  disabled={!isEditing}
-                  className="w-full h-12 px-4 py-3 rounded-lg border border-gray-200 focus:border-[#FE512E] focus:ring-2 focus:ring-[#FE512E]/10 outline-none transition-all text-gray-800 font-medium disabled:bg-gray-50 disabled:cursor-not-allowed"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-sm font-semibold text-gray-700">Country<span className="text-red-500">*</span></label>
-                <input
-                  type="text"
-                  value={formData.country}
-                  onChange={(e) => setFormData({ ...formData, country: e.target.value })}
-                  disabled={!isEditing}
-                  className="w-full h-12 px-4 py-3 rounded-lg border border-gray-200 focus:border-[#FE512E] focus:ring-2 focus:ring-[#FE512E]/10 outline-none transition-all text-gray-800 font-medium disabled:bg-gray-50 disabled:cursor-not-allowed"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-sm font-semibold text-gray-700">State<span className="text-red-500">*</span></label>
-                <input
-                  type="text"
-                  value={formData.state}
-                  onChange={(e) => setFormData({ ...formData, state: e.target.value })}
-                  disabled={!isEditing}
-                  className="w-full h-12 px-4 py-3 rounded-lg border border-gray-200 focus:border-[#FE512E] focus:ring-2 focus:ring-[#FE512E]/10 outline-none transition-all text-gray-800 font-medium disabled:bg-gray-50 disabled:cursor-not-allowed"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-sm font-semibold text-gray-700">City<span className="text-red-500">*</span></label>
-                <input
-                  type="text"
-                  value={formData.city}
-                  onChange={(e) => setFormData({ ...formData, city: e.target.value })}
-                  disabled={!isEditing}
-                  className="w-full h-12 px-4 py-3 rounded-lg border border-gray-200 focus:border-[#FE512E] focus:ring-2 focus:ring-[#FE512E]/10 outline-none transition-all text-gray-800 font-medium disabled:bg-gray-50 disabled:cursor-not-allowed"
-                />
-              </div>
-            </div>
-
-            {isEditing && (
-              <div className="mt-12 flex justify-end">
-                <button
-                  type="submit"
-                  disabled={isSubmitting}
-                  className="bg-[#FE512E] text-white px-10 py-3 rounded-xl font-bold shadow-lg hover:opacity-90 transition-all active:scale-[0.98] disabled:opacity-70 flex items-center gap-2"
-                >
-                  {isSubmitting && <Loader2 size={18} className="animate-spin" />}
-                  {isSubmitting ? "Updating..." : "Update Profile"}
-                </button>
-              </div>
-            )}
-          </div>
-        </form>
       </div>
     </div>
   );

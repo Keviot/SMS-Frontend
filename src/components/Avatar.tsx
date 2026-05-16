@@ -20,7 +20,7 @@ export default function Avatar({ src, name, className, size = "md" }: AvatarProp
     const getInitials = (name: string) => {
         if (!name) return "";
         const parts = name.trim().split(/\s+/).filter(p => /^[a-zA-Z]/.test(p));
-        
+
         if (parts.length >= 2) {
             return (parts[0][0] + parts[1][0]).toUpperCase();
         }
@@ -46,7 +46,7 @@ export default function Avatar({ src, name, className, size = "md" }: AvatarProp
                 alt={name}
                 onError={() => setError(true)}
                 className={cn(
-                    "rounded-full object-cover border border-[#F1F1F1]",
+                    "rounded-full object-cover border-seashell",
                     sizeClasses[size],
                     className
                 )}
@@ -57,7 +57,7 @@ export default function Avatar({ src, name, className, size = "md" }: AvatarProp
     return (
         <div
             className={cn(
-                "flex items-center justify-center rounded-full bg-[#F1F4FF] font-bold text-[#5678E9] border border-[#F1F1F1]",
+                "flex items-center justify-center rounded-full bg-blue-white font-bold text-Shiny-Blue border-seashell",
                 sizeClasses[size],
                 className
             )}
