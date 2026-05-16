@@ -1,7 +1,7 @@
 import { ChevronDown, Menu, Search, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { authApi, BASE_URL } from "../services/api";
+import { BASE_URL } from "../services/api";
 import { NotificationBingIcon } from "../assets/icons/admin-dashboard-icons";
 import NotificationDropdown from "../components/NotificationDropdown";
 import { useSocket } from "../context/SocketContext";
@@ -25,14 +25,14 @@ export default function Header({ onMenuClick }: HeaderProps) {
 
   // Simple breadcrumb logic based on path
   const pathParts = location.pathname.split("/").filter(Boolean);
-  const currentPage = pathParts[pathParts.length - 1]
-    ?.split("-")
-    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-    .join(" ") || "Dashboard";
+  // const currentPage = pathParts[pathParts.length - 1]
+  //   ?.split("-")
+  //   .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+  //   .join(" ") || "Dashboard";
 
-  const userInitials = profile
-    ? `${profile.firstname?.[0] || ""}${profile.lastname?.[0] || ""}`.toUpperCase()
-    : "FL";
+  // const userInitials = profile
+  //   ? `${profile.firstname?.[0] || ""}${profile.lastname?.[0] || ""}`.toUpperCase()
+  //   : "FL";
   const userName = profile
     ? `${profile.firstname || ""} ${profile.lastname && profile.lastname !== "-" ? profile.lastname : ""}`.trim()
     : "First Lastname";
@@ -69,13 +69,13 @@ export default function Header({ onMenuClick }: HeaderProps) {
 
   return (
     <>
-      <header className="fixed left-0 right-0 top-0 z-40 flex h-[80px] items-center justify-between gap-3 border-b border-[var(--border-light)] bg-white px-[15px] sm:px-[20px] lg:left-[280px] lg:h-[100px] lg:px-[25px]">
+      <header className="fixed left-0 right-0 top-0 z-40 flex h-25 items-center justify-between gap-3 border-b border-(--border-light) bg-white px-[15px] sm:px-5 lg:left-70 lg:h-25 lg:px-6">
         <div className="flex flex-1 items-center gap-3 min-w-0">
           <Button
             variant="outline"
             size="md"
             onClick={onMenuClick}
-            className="h-[45px] w-[45px] flex shrink-0 rounded-xl p-0 lg:hidden"
+            className="h-11 w-11 flex shrink-0 rounded-xl p-0 lg:hidden"
           >
             <Menu size={21} />
           </Button>
@@ -83,12 +83,12 @@ export default function Header({ onMenuClick }: HeaderProps) {
           {isDashboard ? (
             <>
               {/* Desktop: Full search bar */}
-              <div className="hidden sm:block w-full max-w-[400px]">
+              <div className="hidden sm:block w-full max-w-100">
                 <Input
                   type="text"
                   placeholder="Search Here"
                   leftIcon={<Search size={18} strokeWidth={2} />}
-                  className="h-[45px] rounded-full border-border-light lg:h-[50px]"
+                  className="h-11 rounded-full border-border-light lg:h-12.5"
                 />
               </div>
 
@@ -97,7 +97,7 @@ export default function Header({ onMenuClick }: HeaderProps) {
                 variant="outline"
                 size="md"
                 onClick={() => setSearchOpen(!searchOpen)}
-                className="h-[45px] w-[45px] flex shrink-0 rounded-full p-0 sm:hidden"
+                className="h-11 w-11 flex shrink-0 rounded-full p-0 sm:hidden"
               >
                 <Search size={20} strokeWidth={2} />
               </Button>
@@ -140,7 +140,7 @@ export default function Header({ onMenuClick }: HeaderProps) {
                   <div key={path} className="flex items-center gap-2">
                     <span className="text-[#202224] font-bold">{">"}</span>
                     {isLast ? (
-                      <span className="text-[#5678E9] font-semibold">
+                      <span className="text-secondary font-semibold">
                         {friendlyName}
                       </span>
                     ) : (
@@ -181,24 +181,24 @@ export default function Header({ onMenuClick }: HeaderProps) {
             <Button
               variant="ghost"
               size="md"
-              className="h-[45px] gap-2 rounded-xl p-0 hover:bg-transparent lg:h-[50px] lg:gap-3"
+              className="h-11 gap-2 rounded-xl p-0 hover:bg-transparent lg:h-12.5 lg:gap-3"
             >
               <Avatar
                 src={profileImageUrl || ""}
                 name={userName}
-                className="lg:h-[50px] lg:w-[50px]"
+                className="lg:h-12.5 lg:w-12.5"
               />
 
               <div className="hidden text-left sm:block">
-                <h4 className="text-[13px] font-bold leading-tight text-[var(--text-primary)] lg:text-[14px]">
+                <h4 className="text-sm font-bold leading-tight text-(--text-primary) lg:text-sm">
                   {userName}
                 </h4>
-                <p className="mt-0.5 text-[11px] font-medium text-[var(--text-light)] lg:text-[12px] capitalize">
+                <p className="mt-0.5 text-xs font-medium text-(--text-light) lg:text-[12px] capitalize">
                   {profile?.role || "Admin"}
                 </p>
               </div>
 
-              <ChevronDown size={16} className="hidden text-[var(--text-light)] sm:block lg:w-[18px] lg:h-[18px]" strokeWidth={2} />
+              <ChevronDown size={16} className="hidden text-(--text-light) sm:block lg:w-[18px] lg:h-[18px]" strokeWidth={2} />
             </Button>
           </Link>
         </div>
@@ -216,7 +216,7 @@ export default function Header({ onMenuClick }: HeaderProps) {
 
             {/* Search bar */}
             <div
-              className="absolute inset-x-0 top-[80px] z-50 bg-white p-4 shadow-lg"
+              className="absolute inset-x-0 top-20 z-50 bg-white p-4 shadow-lg"
               onClick={(e) => e.stopPropagation()}
             >
               <Input
@@ -233,14 +233,14 @@ export default function Header({ onMenuClick }: HeaderProps) {
                     <X size={18} strokeWidth={2} />
                   </button>
                 }
-                className="h-11 rounded-full border-[var(--border)]"
+                className="h-11 rounded-full border-(--border)"
               />
             </div>
           </div>
         )}
       </header>
 
-      <div className="h-[80px] lg:h-[100px]" />
+      <div className="h-20 lg:h-25" />
     </>
   );
 }

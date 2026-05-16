@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { authApi } from "../../../services/api";
 import Profile from "./Profile";
 import PersonalDetail from "./PersonalDetail";
+import GuardProfile from "./GuardProfile";
 import { Loader2 } from "lucide-react";
 
 export default function ProfileSelector() {
@@ -27,11 +28,13 @@ export default function ProfileSelector() {
   if (loading) {
     return (
       <div className="flex h-[400px] items-center justify-center">
-        <Loader2 className="h-10 w-10 animate-spin text-[var(--primary)]" />
+        <Loader2 className="h-10 w-10 animate-spin text-(--primary)" />
       </div>
     );
   }
 
-  // Render high-fidelity Profile for Admins, PersonalDetail for Residents
-  return role === "admin" ? <Profile /> : <PersonalDetail />;
+  // Render high-fidelity Profile for Admins, GuardProfile for Guards, and PersonalDetail for Residents
+  if (role === "admin") return <Profile />;
+  if (role === "guard") return <GuardProfile />;
+  return <PersonalDetail />;
 }
