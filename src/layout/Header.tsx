@@ -9,6 +9,8 @@ import Button from "../ui/Button";
 import Input from "../ui/Input";
 import Avatar from "../components/Avatar";
 
+import { useAuth } from "../context/AuthContext";
+
 type HeaderProps = {
   onMenuClick: () => void;
 };
@@ -16,22 +18,8 @@ type HeaderProps = {
 export default function Header({ onMenuClick }: HeaderProps) {
   const [notificationOpen, setNotificationOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
-  const [profile, setProfile] = useState<any>(null);
+  const { user: profile } = useAuth();
   const location = useLocation();
-
-  useEffect(() => {
-    const fetchProfile = async () => {
-      try {
-        const data = await authApi.getProfile();
-        if (data.user) {
-          setProfile(data.user);
-        }
-      } catch (error) {
-        console.error("Failed to fetch profile in header:", error);
-      }
-    };
-    fetchProfile();
-  }, []);
 
   const isDashboard = location.pathname === "/dashboard";
 

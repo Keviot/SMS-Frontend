@@ -2,6 +2,7 @@ import React, { createContext, useContext, useEffect, useState, useRef } from 'r
 import { io, Socket } from 'socket.io-client';
 import toast from 'react-hot-toast';
 import { BASE_URL, notificationApi, authApi } from '../services/api';
+import { useAuth } from './AuthContext';
 
 interface Notification {
   id: string;
@@ -42,7 +43,7 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const [isConnected, setIsConnected] = useState(false);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [activeChatId, setActiveChatId] = useState<string | null>(null);
-  const [currentUser, setCurrentUser] = useState<any>(null);
+  const { user: currentUser } = useAuth();
 
   // Use refs to access latest values in socket listeners without re-binding
   const currentUserRef = useRef(currentUser);
@@ -75,17 +76,10 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   };
 
   useEffect(() => {
-    const init = async () => {
-      try {
-        const profile = await authApi.getProfile();
-        setCurrentUser(profile.user);
-        await fetchInitialNotifications();
-      } catch (error) {
-        console.error("Failed to initialize SocketContext:", error);
-      }
-    };
-    init();
-  }, []);
+    if (currentUser) {
+      fetchInitialNotifications();
+    }
+  }, [currentUser]);
 
   useEffect(() => {
     fetchInitialNotifications();

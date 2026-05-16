@@ -42,116 +42,160 @@ import AccessForums from './features/community/pages/AccessForums'
 import Polls from './features/community/pages/Polls'
 import CommunitiesDiscussion from './features/community/pages/CommunitiesDiscussion'
 
+import { AuthProvider, useAuth } from './context/AuthContext'
+import ProtectedRoute from './components/ProtectedRoute'
+import PublicRoute from './components/PublicRoute'
+import { getRoleHomePath } from './utils/roleRoutes'
+
+const RootRedirect = () => {
+  const { user, role, loading } = useAuth();
+  if (loading) return (
+    <div className="flex items-center justify-center min-h-screen">
+      <div className="h-10 w-10 animate-spin rounded-full border-4 border-[#FE512E] border-t-transparent" />
+    </div>
+  );
+  return <Navigate to={user && role ? getRoleHomePath(role) : "/login"} replace />;
+};
 
 function App() {
   return (
-    <SocketProvider>
-      <Router>
-        <Toaster position="top-right" reverseOrder={false} />
-        <Routes>
-          <Route path="/" element={<Navigate to="/login" replace />} />
+    <AuthProvider>
+      <SocketProvider>
+        <Router>
+          <Toaster position="top-right" reverseOrder={false} />
+          <Routes>
+            <Route path="/" element={<RootRedirect />} />
 
-          {/* Auth Routes */}
-          <Route path="/register" element={
-            <AuthLayout title="Registration" step={1}>
-              <Register />
-            </AuthLayout>
-          } />
-          <Route path="/login" element={
-            <AuthLayout
-              title="Login"
-              illustration={collab}
-              step={2}
-              tagline={
-                <h2 className="text-xl font-bold text-gray-800 px-8 leading-tight">
-                  Your Space, Your Place.<br /><span className="text-[#EE641D]">Society Management Made Simple.</span>
-                </h2>
-              }
-            >
-              <Login />
-            </AuthLayout>
-          } />
-          <Route path="/create-password/:token" element={<CreatePassword />} />
-          <Route path="/forgot-password" element={
-            <AuthLayout
-              title="Forget Password"
-              illustration={reset}
-              step={1}
-              tagline={
-                <h2 className="text-xl font-bold text-gray-800 px-8 leading-tight">
-                  Your Security, Our Priority.<br />
-                  <span className="text-[#EE641D]">Reset your password securely.</span>
-                </h2>
-              }
-            >
-              <ForgotPassword />
-            </AuthLayout>
-          } />
-          <Route path="/verify-otp" element={
-            <AuthLayout
-              title="Enter OTP"
-              illustration={reset}
-              step={2}
-              tagline={
-                <h2 className="text-xl font-bold text-gray-800 px-8 leading-tight">
-                  Your Security, Our Priority.<br />
-                  <span className="text-[#EE641D]">Verify your identity.</span>
-                </h2>
-              }
-            >
-              <VerifyOtp />
-            </AuthLayout>
-          } />
-          <Route path="/reset-password" element={
-            <AuthLayout
-              title="Reset Password"
-              illustration={reset}
-              step={2}
-              tagline={
-                <h2 className="text-xl font-bold text-gray-800 px-8 leading-tight">
-                  Your Security, Our Priority.<br />
-                  <span className="text-[#EE641D]">Reset your password securely.</span>
-                </h2>
-              }
-            >
-              <ResetPassword />
-            </AuthLayout>
-          } />
+            {/* Public Auth Routes */}
+            <Route element={<PublicRoute />}>
+              <Route path="/register" element={
+                <AuthLayout title="Registration" step={1}>
+                  <Register />
+                </AuthLayout>
+              } />
+              <Route path="/login" element={
+                <AuthLayout
+                  title="Login"
+                  illustration={collab}
+                  step={2}
+                  tagline={
+                    <h2 className="text-xl font-bold text-gray-800 px-8 leading-tight">
+                      Your Space, Your Place.<br /><span className="text-[#EE641D]">Society Management Made Simple.</span>
+                    </h2>
+                  }
+                >
+                  <Login />
+                </AuthLayout>
+              } />
+              <Route path="/forgot-password" element={
+                <AuthLayout
+                  title="Forget Password"
+                  illustration={reset}
+                  step={1}
+                  tagline={
+                    <h2 className="text-xl font-bold text-gray-800 px-8 leading-tight">
+                      Your Security, Our Priority.<br />
+                      <span className="text-[#EE641D]">Reset your password securely.</span>
+                    </h2>
+                  }
+                >
+                  <ForgotPassword />
+                </AuthLayout>
+              } />
+              <Route path="/verify-otp" element={
+                <AuthLayout
+                  title="Enter OTP"
+                  illustration={reset}
+                  step={2}
+                  tagline={
+                    <h2 className="text-xl font-bold text-gray-800 px-8 leading-tight">
+                      Your Security, Our Priority.<br />
+                      <span className="text-[#EE641D]">Verify your identity.</span>
+                    </h2>
+                  }
+                >
+                  <VerifyOtp />
+                </AuthLayout>
+              } />
+              <Route path="/reset-password" element={
+                <AuthLayout
+                  title="Reset Password"
+                  illustration={reset}
+                  step={2}
+                  tagline={
+                    <h2 className="text-xl font-bold text-gray-800 px-8 leading-tight">
+                      Your Security, Our Priority.<br />
+                      <span className="text-[#EE641D]">Reset your password securely.</span>
+                    </h2>
+                  }
+                >
+                  <ResetPassword />
+                </AuthLayout>
+              } />
+            </Route>
 
-          {/* App Routes (Sidebar + Header) */}
-          <Route element={<AppLayout />}>
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/resident-management" element={<ResidentManagement />} />
-            <Route path="/resident-management/add" element={<ResidentForm />} />
-            <Route path="/resident-management/edit/:id" element={<ResidentForm />} />
-            <Route path="/financial-management" element={<Income />} />
-            <Route path="/financial-management/income" element={<Income />} />
-            <Route path="/financial-management/expense" element={<Expense />} />
-            <Route path="/financial-management/note" element={<Note />} />
-            <Route path="/facility-management" element={<FacilityManagement />} />
-            <Route path="/complaint-tracking" element={<CreateComplaint />} />
-            <Route path="/complaint-tracking/create-complaint" element={<CreateComplaint />} />
-            <Route path="/complaint-tracking/request-tracking" element={<RequestTracking />} />
-            <Route path="/security-management" element={<SecurityManagement />} />
-            <Route path="/security-management/visitor-logs" element={<VisitorLogs />} />
-            <Route path="/security-management/security-protocols" element={<SecurityProtocols />} />
-            <Route path="/security-management/protocols" element={<ResidentSecurityProtocols />} />
-            <Route path="/security-management/emergency" element={<EmergencyManagement />} />
-            <Route path="/security-guard" element={<SecurityGuard />} />
-            <Route path="/announcement" element={<Announcement />} />
-            <Route path="/events-participation" element={<EventsParticipation />} />
-            <Route path="/payment-portal" element={<ShowMaintenanceDetails />} />
-            <Route path="/payment-portal/maintenance-invoices" element={<MaintenanceInvoices />} />
-            <Route path="/payment-portal/other-invoices" element={<OtherInvoices />} />
-            <Route path="/payment-portal/event-invoices" element={<EventInvoices />} />
-            <Route path="/community/access-forums" element={<AccessForums />} />
-            <Route path="/community/polls" element={<Polls />} />
-            <Route path="/community/discussion" element={<CommunitiesDiscussion />} />
-            <Route path="/profile" element={<ProfileSelector />} />
-          </Route>
-        </Routes>
-      </Router>
-    </SocketProvider>
+            <Route path="/create-password/:token" element={<CreatePassword />} />
+
+            {/* Protected Routes */}
+            <Route element={<AppLayout />}>
+              {/* Common Protected Routes (Admin & Resident) */}
+              <Route element={<ProtectedRoute allowedRoles={["admin", "resident"]} />}>
+                <Route path="/dashboard" element={<Dashboard />} />
+                <Route path="/complaint-tracking" element={<CreateComplaint />} />
+                <Route path="/complaint-tracking/create-complaint" element={<CreateComplaint />} />
+                <Route path="/community/access-forums" element={<AccessForums />} />
+                <Route path="/community/polls" element={<Polls />} />
+                <Route path="/community/discussion" element={<CommunitiesDiscussion />} />
+              </Route>
+
+              {/* Admin Only Routes */}
+              <Route element={<ProtectedRoute allowedRoles={["admin"]} />}>
+                <Route path="/resident-management" element={<ResidentManagement />} />
+                <Route path="/resident-management/add" element={<ResidentForm />} />
+                <Route path="/resident-management/edit/:id" element={<ResidentForm />} />
+                <Route path="/financial-management" element={<Income />} />
+                <Route path="/financial-management/income" element={<Income />} />
+                <Route path="/financial-management/expense" element={<Expense />} />
+                <Route path="/financial-management/note" element={<Note />} />
+                <Route path="/facility-management" element={<FacilityManagement />} />
+                <Route path="/complaint-tracking/request-tracking" element={<RequestTracking />} />
+                <Route path="/security-management" element={<SecurityManagement />} />
+                <Route path="/security-management/security-protocols" element={<SecurityProtocols />} />
+                <Route path="/security-guard" element={<SecurityGuard />} />
+                <Route path="/announcement" element={<Announcement />} />
+                <Route path="/community/access-forums" element={<AccessForums />} />
+                <Route path="/community/polls" element={<Polls />} />
+                <Route path="/community/discussion" element={<CommunitiesDiscussion />} />
+              </Route>
+
+              {/* Resident Only Routes */}
+              <Route element={<ProtectedRoute allowedRoles={["resident"]} />}>
+                <Route path="/profile" element={<ProfileSelector />} />
+                <Route path="/events-participation" element={<EventsParticipation />} />
+                <Route path="/payment-portal" element={<ShowMaintenanceDetails />} />
+                <Route path="/payment-portal/maintenance-invoices" element={<MaintenanceInvoices />} />
+                <Route path="/payment-portal/other-invoices" element={<OtherInvoices />} />
+                <Route path="/payment-portal/event-invoices" element={<EventInvoices />} />
+                <Route path="/community/access-forums" element={<AccessForums />} />
+                <Route path="/community/polls" element={<Polls />} />
+                <Route path="/community/discussion" element={<CommunitiesDiscussion />} />
+                <Route path="/security-management/protocols" element={<ResidentSecurityProtocols />} />
+              </Route>
+
+              {/* Security Only Routes */}
+              <Route element={<ProtectedRoute allowedRoles={["security"]} />}>
+                <Route path="/security-management/emergency" element={<EmergencyManagement />} />
+              </Route>
+
+              {/* Shared by Admin and Security */}
+              <Route element={<ProtectedRoute allowedRoles={["admin", "security"]} />}>
+                <Route path="/security-management/visitor-logs" element={<VisitorLogs />} />
+              </Route>
+            </Route>
+          </Routes>
+        </Router>
+      </SocketProvider>
+    </AuthProvider>
   )
 }
 
