@@ -7,6 +7,8 @@ import ConfirmPopup from "../ui/ConfirmPopup";
 import { authApi } from "../services/api";
 import toast from "react-hot-toast";
 
+import { useAuth } from "../context/AuthContext";
+
 type SidebarProps = {
   open: boolean;
   onClose: () => void;
@@ -17,21 +19,7 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
   const location = useLocation();
   const [expanded, setExpanded] = useState<string[]>([]);
   const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
-  const [role, setRole] = useState<string | null>(null);
-
-  useEffect(() => {
-    const fetchRole = async () => {
-      try {
-        const data = await authApi.getProfile();
-        if (data.user) {
-          setRole(data.user.role);
-        }
-      } catch (error) {
-        console.error("Failed to fetch role in sidebar:", error);
-      }
-    };
-    fetchRole();
-  }, []);
+  const { role, logout: contextLogout } = useAuth();
 
   const toggleExpand = (label: string) => {
     setExpanded((prev) =>
@@ -54,11 +42,12 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
     try {
       await authApi.logout();
       toast.success("Logged out successfully");
+      contextLogout();
       navigate("/login");
     } catch (error: any) {
       toast.error(error.message || "Logout failed");
-      // Still navigate as fallback
-      localStorage.removeItem("token");
+      // Still logout locally as fallback
+      contextLogout();
       navigate("/login");
     } finally {
       setIsLogoutModalOpen(false);

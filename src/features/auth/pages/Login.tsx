@@ -5,9 +5,11 @@ import { authApi } from "../../../services/api";
 import toast from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
 import { cn } from "../../../lib/cn";
+import { useAuth } from "../../../context/AuthContext";
 
 export default function Login() {
   const navigate = useNavigate();
+  const { refetch } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -30,9 +32,8 @@ export default function Login() {
       const data = await authApi.login(formData);
       if (data.success || data.token) {
         toast.success("Login Successful!");
-        setTimeout(() => {
-          navigate("/dashboard");
-        }, 1500);
+        // Refetch profile to update AuthContext state
+        await refetch();
       } else {
         const msg = data.message || "Login Failed.";
         setError(msg);
