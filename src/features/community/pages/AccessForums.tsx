@@ -287,25 +287,24 @@ function VideoCallUI({ onLeave, onMinimize }: { onLeave: () => void, onMinimize:
     const [pinnedParticipantId, setPinnedParticipantId] = useState<string | null>(null);
     const [startTime] = useState(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
 
+    // Show loader only if we are truly in a transient state
+    const isJoined = callingState === CallingState.JOINED;
+    const isBusy = callingState === CallingState.JOINING || callingState === CallingState.MIGRATING;
     const isRinging = callingState === CallingState.RINGING || (callingState === CallingState.JOINING && participants.length <= 1);
 
-    // Show loader if we are in the middle of joining
-    const isJoining = callingState === CallingState.JOINING;
-    const isJoiningOrIdle = callingState === CallingState.JOINING || callingState === CallingState.IDLE;
-
-    if (isJoiningOrIdle && !isRinging) {
+    if (!isJoined && !isRinging && isBusy) {
         return (
             <div className="flex h-full items-center justify-center bg-[#202124] text-white">
-                <div className="flex flex-col items-center gap-4">
+                <div className="flex flex-col items-center gap-6">
                     <div className="relative">
-                        <Loader2 className="h-16 w-16 animate-spin text-[#00A3FF]" strokeWidth={3} />
+                        <div className="h-20 w-20 rounded-full border-4 border-t-[#00A3FF] border-white/10 animate-spin" />
                         <div className="absolute inset-0 flex items-center justify-center">
-                            <Video size={24} className="text-[#00A3FF] animate-pulse" />
+                            <Video size={32} className="text-[#00A3FF]" />
                         </div>
                     </div>
                     <div className="flex flex-col items-center gap-2 text-center">
-                        <p className="text-xl font-bold tracking-tight">Joining your meeting</p>
-                        <p className="text-white/40 text-sm font-medium">Connecting to community secure server...</p>
+                        <p className="text-2xl font-bold tracking-tight">Initializing Meeting</p>
+                        <p className="text-white/40 text-sm font-medium">Securing connection to the community hub...</p>
                     </div>
                 </div>
             </div>
@@ -561,33 +560,54 @@ const IncomingCallNotification = ({ call, onAccept, onReject }: { call: Call, on
 const CallDiscovery = ({ client, currentUser, activeCall, onAccept, onReject }: any) => {
     const calls = useCalls();
     const [incomingCall, setIncomingCall] = useState<Call | null>(null);
+    const [manualCalls, setManualCalls] = useState<Call[]>([]);
     
     // 1. Listen for new calls directly from the client (more reliable than useCalls alone)
     useEffect(() => {
         if (!client || !currentUser) return;
 
-        const handleCallCreated = (event: any) => {
-            if (event.call && event.call_type && event.call_id) {
-                const call = client.call(event.call_type, event.call_id);
-                // The SDK will handle membership check when the call state is fetched
-                console.log("[CallDiscovery] New call event received:", event.call_id);
+        const handleCallEvent = async (event: any) => {
+            const callId = event.call_id || (event.call && event.call.id);
+            const callType = event.call_type || (event.call && event.call.type) || 'default';
+            
+            if (callId) {
+                console.log("[CallDiscovery] Aggressive discovery for call:", callId);
+                try {
+                    const { calls: queriedCalls } = await client.queryCalls({
+                        filter_conditions: { id: { $eq: callId } },
+                        watch: true,
+                        subscribe: true
+                    });
+                    
+                    if (queriedCalls.length > 0) {
+                        setManualCalls(prev => {
+                            if (prev.find(c => c.id === callId)) return prev;
+                            return [...prev, queriedCalls[0]];
+                        });
+                    }
+                } catch (err) {
+                    console.error("[CallDiscovery] Query failed:", err);
+                }
             }
         };
 
-        const unsubscribe = client.on('call.created', handleCallCreated);
-        const unsubscribeRing = client.on('call.ring', handleCallCreated);
+        const unsubscribeCreated = client.on('call.created', handleCallEvent);
+        const unsubscribeRing = client.on('call.ring', handleCallEvent);
+        const unsubscribeNotification = client.on('notification.message_new', handleCallEvent);
 
         return () => {
-            unsubscribe();
+            unsubscribeCreated();
             unsubscribeRing();
+            unsubscribeNotification();
         };
     }, [client, currentUser]);
 
-    // 2. Monitor calls list to find the one ringing for us
+    // 2. Monitor both useCalls() and manualCalls to find the one ringing for us
     useEffect(() => {
         const currentUserId = String(currentUser?._id || "").trim();
+        const allAvailableCalls = [...calls, ...manualCalls];
         
-        const ringingCall = calls.find(c => {
+        const ringingCall = allAvailableCalls.find(c => {
             const callingState = c.state.callingState;
             const createdById = String(c.state.createdBy?.id || "").trim();
             
@@ -610,7 +630,7 @@ const CallDiscovery = ({ client, currentUser, activeCall, onAccept, onReject }: 
         } else if (incomingCall && incomingCall.state.callingState !== CallingState.RINGING) {
             setIncomingCall(null);
         }
-    }, [calls, currentUser, incomingCall]);
+    }, [calls, manualCalls, currentUser, incomingCall]);
 
     // If we are already in a call, don't show the incoming call popup
     if (!incomingCall || activeCall) return null;
@@ -633,6 +653,7 @@ const CallDiscovery = ({ client, currentUser, activeCall, onAccept, onReject }: 
 export default function AccessForums() {
     const { socket, setActiveChatId } = useSocket();
     const [contacts, setContacts] = useState<Contact[]>([]);
+    const [societyMembers, setSocietyMembers] = useState<any[]>([]);
     const [activeContact, setActiveContact] = useState<Contact | null>(null);
     const [messages, setMessages] = useState<any[]>([]);
     const [newMessage, setNewMessage] = useState("");
@@ -660,7 +681,10 @@ export default function AccessForums() {
                 console.warn("[AccessForums] My ID not found in members list! Attempting to join anyway...");
             }
 
+            // Accept and then explicitly JOIN to establish the media connection
             await call.accept();
+            await call.join({ create: true });
+            
             setActiveCall(call);
             setIsCallMinimized(false);
         } catch (error: any) {
@@ -765,6 +789,7 @@ export default function AccessForums() {
 
                 // Fetch Members
                 const response = await chatApi.getMembers(societyId);
+                setSocietyMembers(response.members);
 
                 // Add Community Forum as a special contact
                 const communityForum: Contact = {
@@ -1107,12 +1132,20 @@ export default function AccessForums() {
             const contactId = String(activeContact.id).trim();
             
             const members: { user_id: string; role?: string }[] = [
-                { user_id: currentUserId, role: 'user' }
+                { user_id: currentUserId, role: 'admin' }
             ];
 
             if (isCommunity) {
                 const societyId = String(currentUser.society?._id || currentUser.society || currentUser.societies?.[0]?._id || "").trim();
                 callId = `society_${societyId}`;
+                
+                // Ring all society members for community calls
+                societyMembers.forEach(member => {
+                    const memberId = String(member._id).trim();
+                    if (memberId !== currentUserId) {
+                        members.push({ user_id: memberId, role: 'user' });
+                    }
+                });
             } else {
                 const ids = [currentUserId, contactId].sort();
                 callId = `personal_${ids[0]}_${ids[1]}`;
@@ -1122,10 +1155,21 @@ export default function AccessForums() {
             const call = videoClient.call("default", callId);
             setActiveCall(call);
 
-            console.log("[AccessForums] Starting call:", callId, "with members:", members);
+            console.log("[AccessForums] Starting call:", callId, "with members count:", members.length);
 
+            // Notify via socket for faster signaling
+            if (!isCommunity) {
+                socket.emit('call:incoming', { 
+                    to: contactId, 
+                    from: currentUserId,
+                    callId,
+                    type: 'video'
+                });
+            }
+
+            // Use getOrCreate with ring:true
             await call.getOrCreate({
-                ring: !isCommunity,
+                ring: true, // Always ring for both personal and community
                 data: { members },
             });
             
@@ -1166,6 +1210,14 @@ export default function AccessForums() {
             if (isCommunity) {
                 const societyId = String(currentUser.society?._id || currentUser.society || currentUser.societies?.[0]?._id || "").trim();
                 callId = `society_audio_${societyId}`;
+
+                // Ring all society members
+                societyMembers.forEach(member => {
+                    const memberId = String(member._id).trim();
+                    if (memberId !== currentUserId) {
+                        members.push({ user_id: memberId, role: 'user' });
+                    }
+                });
             } else {
                 const ids = [currentUserId, contactId].sort();
                 callId = `personal_audio_${ids[0]}_${ids[1]}`;
@@ -1175,10 +1227,20 @@ export default function AccessForums() {
             const call = videoClient.call("default", callId);
             setActiveCall(call);
 
-            console.log("[AccessForums] Starting audio call:", callId, "with members:", members);
+            console.log("[AccessForums] Starting audio call:", callId, "with members count:", members.length);
+
+            // Notify via socket
+            if (!isCommunity) {
+                socket.emit('call:incoming', { 
+                    to: contactId, 
+                    from: currentUserId,
+                    callId,
+                    type: 'audio'
+                });
+            }
 
             await call.getOrCreate({
-                ring: !isCommunity,
+                ring: true,
                 data: { members },
             });
 
