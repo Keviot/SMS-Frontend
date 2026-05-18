@@ -64,16 +64,16 @@ export default function BalanceChart({ data = [], total = "0" }: BalanceChartPro
   };
 
   return (
-    <Card className="flex min-h-100 flex-col p-5">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+    <Card className="flex  max-w-[788px] w-full h-full flex-col p-5">
+      <div className="flex flex-col  gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h2 className="text-xl font-semibold leading-6 text-[#202224]">
             Total Balance
           </h2>
 
-          <p className="mt-0 text-3xl font-semibold leading-tight tracking-[-0.4px] text-[#202224]">
+          {/* <p className="mt-0 text-3xl font-semibold leading-tight tracking-[-0.4px] text-[#202224]">
             {Number(total).toLocaleString()}
-          </p>
+          </p> */}
         </div>
 
         <div className="relative w-full sm:w-auto">
@@ -125,7 +125,7 @@ export default function BalanceChart({ data = [], total = "0" }: BalanceChartPro
 
       <div className="mt-0 min-h-0 flex-1">
         <div className="grid h-full grid-cols-[3rem_minmax(0,1fr)]">
-          <div className="relative h-72 text-sm font-normal text-[#4F4F4F]">
+          <div className="relative h-76 text-sm font-normal text-[#4F4F4F]">
             {[
               { label: "50k", top: "14%" },
               { label: "40k", top: "29.6%" },
@@ -144,12 +144,12 @@ export default function BalanceChart({ data = [], total = "0" }: BalanceChartPro
             ))}
           </div>
 
-          <div className="relative min-w-0">
+          <div className="relative h-full w-full">
             <div className="relative">
               <svg
                 viewBox="0 0 100 100"
                 preserveAspectRatio="none"
-                className="h-72 w-full overflow-visible"
+                className="h-76 w-full overflow-visible"
               >
                 {[14, 29.6, 45.2, 60.8, 76.4, 92].map((y) => (
                   <line
@@ -234,7 +234,7 @@ export default function BalanceChart({ data = [], total = "0" }: BalanceChartPro
               </div>
             </div>
 
-            <div className="relative mt-4 h-6 text-xs font-normal text-[#4F4F4F] sm:text-sm">
+            <div className="relative mt-4   text-xs font-normal text-[#4F4F4F] sm:text-sm">
               {labels.map((label, index) => {
                 const x = 4 + (index / (labels.length - 1)) * 92;
                 return (

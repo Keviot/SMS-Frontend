@@ -47,9 +47,9 @@ export default function UpcomingActivityCard({
   }, [isDropdownOpen]);
 
   return (
-    <Card className="flex h-[280px] flex-col p-5">
+    <Card className="flex full flex-col p-5">
       <div className="flex items-center justify-between gap-3">
-        <h2 className="text-base font-semibold leading-5 text-[#202224]">
+        <h2 className="text-xl font-semibold leading-5 text-[#202224]">
           Upcoming Activity
         </h2>
 
@@ -57,7 +57,7 @@ export default function UpcomingActivityCard({
           <button
             type="button"
             onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-            className="flex min-h-9 items-center gap-2 rounded-[10px] border border-[#D3D3D3] bg-white px-3.5 text-xs font-semibold text-[#202224] transition hover:bg-[#F6F8FB]"
+            className="flex min-h-11 items-center gap-2 rounded-[10px] border border-[#D3D3D3] bg-white px-3.5 text-md font-semibold text-[#202224] transition hover:bg-[#F6F8FB]"
           >
             {selectedPeriod} <ChevronDown size={14} className={`transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`} />
           </button>

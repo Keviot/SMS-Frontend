@@ -60,7 +60,7 @@ function Badge({
   return (
     <span
       className={cn(
-        "inline-flex min-h-[31px] min-w-[78px] items-center justify-center rounded-full px-4 text-xs font-medium leading-none",
+        "inline-flex min-h-[31px] min-w-[100px] w-full h-full items-center justify-center rounded-full px-4 text-sm font-medium leading-none",
         className
       )}
     >
@@ -83,7 +83,7 @@ function ActionButton({
       type="button"
       aria-label={label}
       onClick={onClick}
-      className="grid size-[30px] place-items-center rounded-md bg-[#F6F8FB] transition hover:bg-[#EEF4FF] [&_svg]:size-[17px]"
+      className="grid size-[40px] place-items-center rounded-lg bg-[#F6F8FB] transition hover:bg-[#EEF4FF] [&_svg]:size-[17px]"
     >
       {children}
     </button>
@@ -197,7 +197,7 @@ export default function ComplaintTable({ data, role }: ComplaintTableProps) {
     <>
       <Card className="flex min-h-[360px] flex-col p-4 sm:p-5">
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <h2 className="text-base font-semibold leading-5 text-[#202224]">
+          <h2 className="text-xl font-semibold leading-5 text-[#202224]">
             Complaint List
           </h2>
 
@@ -205,7 +205,7 @@ export default function ComplaintTable({ data, role }: ComplaintTableProps) {
             <button
               type="button"
               onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-              className="flex min-h-9 items-center gap-2 rounded-[10px] border border-[#D3D3D3] bg-white px-3.5 text-xs font-semibold text-[#202224] transition hover:bg-[#F6F8FB]"
+              className="flex min-h-11 items-center gap-2 rounded-[10px] border border-[#D3D3D3] bg-white px-3.5 text-md font-semibold text-[#202224] transition hover:bg-[#F6F8FB]"
             >
               {selectedPeriod} <ChevronDown size={14} className={`transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`} />
             </button>
@@ -263,7 +263,7 @@ export default function ComplaintTable({ data, role }: ComplaintTableProps) {
                     <th
                       key={heading}
                       className={cn(
-                        "px-4 py-4 text-left text-xs font-semibold text-[#202224] first:rounded-l-[10px] last:rounded-r-[10px]",
+                        "px-4 py-4 text-left text-sm font-semibold text-[#202224] first:rounded-l-[10px] last:rounded-r-[10px]",
                         index === arr.length - 1 && "text-center"
                       )}
                     >
@@ -289,17 +289,17 @@ export default function ComplaintTable({ data, role }: ComplaintTableProps) {
                           )}
                         </div>
 
-                        <span className="whitespace-nowrap text-xs font-medium text-[#202224]">
+                        <span className="whitespace-nowrap text-md font-medium text-[#202224]">
                           {row.complainerName}
                         </span>
                       </div>
                     </td>
 
-                    <td className="whitespace-nowrap px-4 py-3 text-xs font-medium text-[#202224]">
+                    <td className="whitespace-nowrap px-4 py-3 text-md font-medium text-[#202224]">
                       {row.complaintName}
                     </td>
 
-                    <td className="whitespace-nowrap px-4 py-3 text-xs font-medium text-[#202224]">
+                    <td className="whitespace-nowrap px-4 py-3 text-md font-medium text-[#202224]">
                       {row.date}
                     </td>
 
@@ -322,8 +322,8 @@ export default function ComplaintTable({ data, role }: ComplaintTableProps) {
                             label="Edit complaint"
                             onClick={() => openEditModal(row)}
                           >
-                            <EditIcon />
-                          </ActionButton>
+                            <EditIcon width={24} height={24} className="w-full h-full"/>
+                          </ActionButton> 
                         )}
 
                         <ActionButton

@@ -51,7 +51,7 @@ export default function StatCard({ title, value, type }: StatCardProps) {
   const Icon = config.icon;
 
   return (
-    <Card className="relative flex min-h-[6.5rem] items-center justify-between overflow-hidden rounded-[15px] border border-[#F4F4F4] bg-white p-5 shadow-none sm:p-6">
+    <Card className="relative flex min-h-[6.5rem] items-center justify-between overflow-hidden rounded-[15px] border border-[#F4F4F4] bg-white p-5 shadow-none sm:px-7 py-5">
       <span
         className={[
           "absolute left-0 top-1/2 h-1/2 w-1.5 -translate-y-1/2 rounded-r-full",
@@ -79,12 +79,12 @@ export default function StatCard({ title, value, type }: StatCardProps) {
 
       <div
         className={[
-          "z-[2] grid size-11 shrink-0 place-items-center rounded-[10px]",
+          "z-[2] grid max-w-12 max-h-12 w-full h-full shrink-0 place-items-center rounded-lg",
           config.iconBg,
           config.iconColor,
         ].join(" ")}
       >
-        <Icon className="size-6 [&_path]:fill-current" strokeWidth={2.2} />
+        <Icon className="size-8 [&_path]:fill-current" strokeWidth={2.2} />
       </div>
     </Card>
   );

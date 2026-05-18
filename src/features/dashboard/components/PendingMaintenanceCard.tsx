@@ -48,15 +48,15 @@ export default function PendingMaintenanceCard({
 
   return (
     <Card className="flex h-[27rem] flex-col p-5">
-      <div className="flex items-center justify-between gap-3">
-        <h2 className="text-base font-semibold leading-5 text-[#202224]">
+      <div className="flex py-3 items-center justify-between gap-3">
+        <h2 className="text-xl font-semibold leading-5 text-[#202224]">
           Pending Maintenances
         </h2>
 
         <Button
           variant="ghost"
           onClick={handleViewAll}
-          className="h-auto rounded-none p-0 text-xs font-medium text-[#5678E9] hover:bg-transparent hover:text-[#5678E9] hover:underline"
+          className="h-auto rounded-none !p-0 text-md font-medium text-[#5678E9] hover:bg-transparent hover:text-[#5678E9] hover:underline"
         >
           View all
         </Button>

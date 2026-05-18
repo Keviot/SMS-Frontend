@@ -183,8 +183,8 @@ export default function ImportantNumbersCard({
   return (
     <>
       <Card className="flex min-h-[398px] flex-col p-4">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <h2 className="text-base font-semibold leading-5 text-[#202224]">
+        <div className="flex flex-wrap py-1 items-center justify-between gap-3">
+          <h2 className=" text-xl font-semibold leading-5 text-[#202224]">
             Important Numbers
           </h2>
 
@@ -192,7 +192,7 @@ export default function ImportantNumbersCard({
             <button
               type="button"
               onClick={openAddModal}
-              className="flex min-h-[43px] items-center gap-2 rounded-[5px] bg-[linear-gradient(90deg,#FE512E_0%,#F09619_100%)] px-2.5 text-xs font-medium text-white shadow-[0_8px_18px_rgba(254,81,46,0.22)] transition hover:opacity-95"
+              className="flex min-h-[43px]  min-w-21 items-center gap-2 rounded-xl bg-[linear-gradient(90deg,#FE512E_0%,#F09619_100%)] px-2 text-md font-medium text-white shadow-[0_8px_18px_rgba(254,81,46,0.22)] transition hover:opacity-95"
             >
               <AddSquareIcon className="size-5 shrink-0" />
               Add
@@ -214,21 +214,22 @@ export default function ImportantNumbersCard({
               numbers.map((item) => (
                 <div
                   key={item.id}
-                  className="flex min-h-[75px] justify-between gap-3 rounded-[10px] border border-[#F1F1F1] bg-white p-2.5 transition hover:border-[#EDF0F5] hover:shadow-[0_6px_18px_rgba(15,23,42,0.04)]"
+                  className="flex min-h-22 h-full justify-between gap-3 rounded-[10px] border border-[#F1F1F1] bg-white p-2.5 transition hover:border-[#EDF0F5] hover:shadow-[0_6px_18px_rgba(15,23,42,0.04)]"
                 >
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-xs font-medium leading-[18px] text-[#202224]">
-                      <span className="font-semibold">Name :</span>{" "}
-                      <span className="text-[#4F4F4F]">{item.name}</span>
+                  <div className="min-w-0 h-full flex-1">
+                    <p className="truncate text-xs  leading-[18px] text-[#202224]">
+                      <span className="font-normal text-black">Name :</span>{" "}
+                      <span className="text-[#A7A7A7] font-normal">{item.name}</span>
                     </p>
 
                     <p className="mt-1 truncate text-[11px] font-medium leading-4 text-[#A7A7A7]">
-                      Ph Number :{" "}
-                      <span className="text-[#4F4F4F]">{item.phone}</span>
+                      <span className="font-normal text-black">Ph Number :</span>{" "}
+                      <span className="text-[#A7A7A7] font-normal">{item.phone}</span>
                     </p>
 
                     <p className="mt-1 truncate text-[11px] font-medium leading-4 text-[#A7A7A7]">
-                      Work : <span className="text-[#4F4F4F]">{item.work}</span>
+                      <span className="font-normal text-black">Work :</span>{" "}
+                      <span className="text-[#A7A7A7] font-normal">{item.work}</span>
                     </p>
                   </div>
 
