@@ -1,10 +1,11 @@
 // SMS-Frontend/src/features/paymentPortal/pages/MaintenanceInvoices.tsx
 import { useState, useEffect } from "react";
-import { ChevronDown, Eye, Loader2 } from "lucide-react";
+import { ChevronDown, Loader2 } from "lucide-react";
 import { cn } from "../../../lib/cn";
 import InvoiceDetailsModal from "../components/InvoiceDetailsModal";
 import { financialApi } from "../../../services/api";
 import toast from "react-hot-toast";
+import { EyeIcon } from "../../../assets/icons/admin-dashboard-icons";
 
 interface Invoice {
   _id: string;
@@ -71,9 +72,9 @@ export default function MaintenanceInvoices() {
   };
 
   return (
-    <div className="flex flex-col gap-[16px]">
-      <div className="rounded-[15px] bg-white px-[20px] py-[22px]">
-        <div className="flex min-h-[60px] items-center justify-between gap-[16px]">
+    <div className="flex flex-col">
+      <div className="rounded-[15px] bg-white p-4 sm:p-5">
+        <div className="mb-4 flex items-center justify-between gap-4">
           <h1 className="text-[20px] font-semibold leading-[28px] text-[#202224]">
             Maintenance Invoices
           </h1>
@@ -118,9 +119,7 @@ export default function MaintenanceInvoices() {
             )}
           </div>
         </div>
-      </div>
 
-      <div className="rounded-[15px] border border-[#D9DCE5] bg-white px-[16px] py-[16px]">
         {loading ? (
           <div className="flex h-[400px] items-center justify-center">
             <Loader2 className="h-10 w-10 animate-spin text-[#5678E9]" />
@@ -130,9 +129,9 @@ export default function MaintenanceInvoices() {
             <p className="text-[14px] text-[#6F7786]">No maintenance invoices found</p>
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <div className="min-w-[980px]">
-              <div className="grid h-[42px] grid-cols-[1fr_1.25fr_1.25fr_1.35fr_1.25fr_0.55fr] items-center rounded-t-[8px] bg-[#F1F4FF] px-[14px] text-[12px] font-semibold text-[#202224]">
+          <div className="max-h-[calc(100vh-18rem)] overflow-x-auto overflow-y-auto pr-1 [scrollbar-width:thin]">
+            <div className="w-full min-w-[52rem] lg:min-w-0">
+              <div className="grid h-[61px] grid-cols-[1fr_1.25fr_1.25fr_1.35fr_1.25fr_0.55fr] items-center rounded-t-[8px] bg-[#F1F4FF] px-4 text-[16px] font-medium leading-[100%] text-[#202224]">
                 <div>Invoice ID</div>
                 <div>Due Date</div>
                 <div>Payment Date</div>
@@ -144,7 +143,7 @@ export default function MaintenanceInvoices() {
               {invoices.map((invoice) => (
                 <div
                   key={invoice._id}
-                  className="grid h-[68px] grid-cols-[1fr_1.25fr_1.25fr_1.35fr_1.25fr_0.55fr] items-center border-b border-[#E8ECEF] px-[14px] text-[12px] font-medium text-[#202224] last:border-b-0"
+                  className="grid h-[68px] grid-cols-[1fr_1.25fr_1.25fr_1.35fr_1.25fr_0.55fr] items-center border-b border-[#F4F4F4] px-4 text-[14px] font-medium leading-[100%] text-[#202224] last:border-b-0"
                 >
                   <div>{invoice.invoiceId || invoice._id.slice(-6).toUpperCase()}</div>
                   <div>{formatDate(invoice.date)}</div>
@@ -158,7 +157,7 @@ export default function MaintenanceInvoices() {
                       onClick={() => handleViewInvoice(invoice)}
                       className="flex h-[24px] w-[24px] items-center justify-center rounded-[6px] bg-[#F6F8FB] text-[#5678E9] hover:bg-[#5678E9] hover:text-white transition-colors"
                     >
-                      <Eye size={14} />
+                      <EyeIcon className="size-5" />
                     </button>
                   </div>
                 </div>
