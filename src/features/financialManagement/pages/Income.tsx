@@ -3,6 +3,7 @@ import { ChevronDown, Loader2, Plus, User, Wallet } from "lucide-react";
 import DataTable, { type DataTableColumn } from "../../../ui/DataTable";
 import StatusBadge from "../../../ui/StatusBadge";
 import Button from "../../../ui/Button";
+import FormSelect from "../../../ui/FormSelect";
 import { cn } from "../../../lib/cn";
 import { authApi, financialApi, societyApi, BASE_URL } from "../../../services/api";
 import SetMaintenancePasswordModal from "../components/SetMaintenancePasswordModal";
@@ -484,6 +485,12 @@ export default function Income() {
         }
     };
 
+    // Payment mode options for FormSelect
+    const paymentModeOptions = [
+        { label: "Online", value: "Online" },
+        { label: "Cash", value: "Cash" },
+    ];
+
     const handleIncomeEdit = async (data: OtherIncomeData) => {
         try {
             if (!selectedIncome) return;
@@ -648,17 +655,16 @@ export default function Income() {
             className: "text-center",
             render: (row) => (
                 row.paymentStatus !== "paid" ? (
-                    <select
-                        value={row.paymentMode === "online" ? "Online" : "Cash"}
-                        onChange={(e) => handlePaymentUpdate(row.id, e.target.value)}
-                        className={cn(
-                            "inline-flex h-[31px] min-w-[100px] items-center justify-center rounded-full px-3 text-[12px] font-semibold capitalize outline-none cursor-pointer border-none",
-                            row.paymentMode === "online" ? "bg-[#5678E91A] text-[#5678E9]" : "bg-[#2022240D] text-[#202224]"
-                        )}
-                    >
-                        <option value="Online">Online</option>
-                        <option value="Cash">Cash</option>
-                    </select>
+                    <div className="flex items-center justify-center">
+                        <div className="h-[31px] w-[100px] overflow-visible [&>div]:h-[31px] [&>div]:w-[100px] [&_button]:h-[31px] [&_button]:rounded-full [&_button]:border-0 [&_button]:bg-[#F5F5F5] [&_button]:px-[15px] [&_button]:text-[12px] [&_button]:font-semibold [&_button]:capitalize [&_svg]:size-4">
+                            <FormSelect
+                                value={row.paymentMode === "online" ? "Online" : "Cash"}
+                                onChange={(value) => handlePaymentUpdate(row.id, value)}
+                                options={paymentModeOptions}
+                                className="w-[100px]"
+                            />
+                        </div>
+                    </div>
                 ) : (
                     <StatusBadge variant={row.paymentMode} icon={Wallet}>
                         {row.paymentMode}

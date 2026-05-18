@@ -1,3 +1,10 @@
+import {
+  BalanceIcon,
+  MoneyRecieveIcon,
+  MoneySendIcon,
+  TotalUnitIcon,
+} from "../../../assets/icons/admin-dashboard-icons";
+
 import Card from "../../../ui/Card";
 
 type StatCardType = "balance" | "income" | "expense" | "unit" | "penalty";
@@ -12,26 +19,41 @@ type StatCardProps = {
 
 const statConfig = {
   balance: {
+    icon: BalanceIcon,
+    iconBg: "bg-[#FFF1E9]",
+    iconColor: "text-[#FE512E]",
     valueColor: "text-[#202224]",
     accent: "bg-[#FFB37C]",
     border: "border-[#FFB37C]",
   },
   income: {
+    icon: MoneyRecieveIcon,
+    iconBg: "bg-[#EAFBF1]",
+    iconColor: "text-[#39973D]",
     valueColor: "text-[#39973D]",
     accent: "bg-[#39973D]",
     border: "border-[#39973D]",
   },
   expense: {
+    icon: MoneySendIcon,
+    iconBg: "bg-[#EEF4FF]",
+    iconColor: "text-[#5678E9]",
     valueColor: "text-[#5678E9]",
     accent: "bg-[#5678E9]",
     border: "border-[#5678E9]",
   },
   unit: {
+    icon: TotalUnitIcon,
+    iconBg: "bg-[#FFF0FB]",
+    iconColor: "text-[#EC4899]",
     valueColor: "text-[#EC4899]",
     accent: "bg-[#EC4899]",
     border: "border-[#EC4899]",
   },
   penalty: {
+    icon: MoneySendIcon,
+    iconBg: "bg-[#FFF1F1]",
+    iconColor: "text-[#E74C3C]",
     valueColor: "text-[#E74C3C]",
     accent: "bg-[#E74C3C]",
     border: "border-[#E74C3C]",
@@ -46,6 +68,8 @@ export default function StatCard({
   variant = "compact",
 }: StatCardProps) {
   const config = statConfig[type];
+
+  const Icon = config.icon;
 
   if (variant === "dashboard") {
     return (
@@ -84,6 +108,17 @@ export default function StatCard({
             {loading ? "..." : `${type !== "unit" ? "₹ " : ""}${value}`}
           </h3>
         </div>
+
+        <div
+          className={[
+            "relative z-[2] grid size-12 shrink-0 place-items-center rounded-lg",
+            config.iconBg,
+            config.iconColor,
+          ].join(" ")}
+        >
+          <Icon className="size-8 [&_path]:fill-current" strokeWidth={2.2} />
+        </div>
+
       </Card>
     );
   }
