@@ -823,10 +823,10 @@ export default function Income() {
                     </Button>
                 </div>
             )}
-            {(selectedTab === "Other Income" || selectedTab === "Event Participation") && (
+            {/* {(selectedTab === "Other Income" || selectedTab === "Event Participation") && (
                 <div className="mb-4 flex flex-col gap-4 rounded-2xl bg-white p-4 sm:p-5 lg:min-h-36 lg:flex-row lg:items-center lg:justify-between">
                     <div className="grid w-full grid-cols-1 gap-3 sm:grid-cols-2 lg:w-auto lg:flex lg:items-center lg:gap-2">
-                        {/* Total Collected */}
+                        
                         <div className="flex min-h-24 w-full flex-col justify-center rounded-2xl border border-l-4 border-[#39973D] bg-white px-3 py-4 shadow-sm lg:w-64">
                             <div className="text-xs font-medium text-[#202224]">Total Other Income</div>
                             <div className="mt-1 text-2xl font-bold text-[#39973D]">
@@ -835,7 +835,7 @@ export default function Income() {
                         </div>
                     </div>
                 </div>
-            )}
+            )} */}
 
 
             <div className="relative z-10 flex w-full items-end overflow-x-auto">

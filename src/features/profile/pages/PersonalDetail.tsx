@@ -290,37 +290,73 @@ export default function PersonalDetail() {
       )}
 
       {/* Maintenance Summary */}
-      <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 flex justify-between items-center">
-        <h2 className="text-xl font-bold text-gray-900">Show Maintenance Details</h2>
-        <div className="flex gap-4">
-          <div className="flex items-center gap-3 bg-white border border-gray-100 px-6 py-3 rounded-xl shadow-sm">
-            <div className="text-center">
-              <p className="text-[10px] uppercase font-bold text-gray-400 tracking-wider">Maintenance Amount</p>
-              <p className="text-lg font-bold text-[#39973D]">
-                ₹ {maintenanceRecords.reduce((sum, r) => {
-                  const isPending = r.status?.toLowerCase() === "pending";
-                  const amount = r.maintenanceSetup?.maintenanceAmount || r.amount || 0;
-                  return sum + (isPending ? Number(amount) : 0);
-                }, 0).toLocaleString()}
-              </p>
-            </div>
-            <div className="h-8 w-1 bg-[#39973D] rounded-full opacity-20" />
-          </div>
-          <div className="flex items-center gap-3 bg-white border border-gray-100 px-6 py-3 rounded-xl shadow-sm">
-            <div className="text-center">
-              <p className="text-[10px] uppercase font-bold text-gray-400 tracking-wider">Penalty Amount</p>
-              <p className="text-lg font-bold text-[#E74C3C]">
-                ₹ {maintenanceRecords.reduce((sum, r) => {
-                  const isPending = r.status?.toLowerCase() === "pending";
-                  const penalty = r.penalty || 0;
-                  return sum + (isPending ? Number(penalty) : 0);
-                }, 0).toLocaleString()}
-              </p>
-            </div>
-            <div className="h-8 w-1 bg-[#E74C3C] rounded-full opacity-20" />
-          </div>
-        </div>
+      <div className="rounded-2xl border border-gray-100 bg-white p-4 shadow-sm sm:p-5">
+  <div className="flex min-h-24 flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+    <h2 className="text-xl font-bold text-gray-900">
+      Show Maintenance Details
+    </h2>
+
+    <div className="grid w-full grid-cols-1 gap-4 sm:grid-cols-2 lg:w-auto lg:flex lg:items-center lg:gap-4">
+      <div className="relative flex min-h-24 w-full flex-col justify-center overflow-hidden rounded-2xl border border-gray-100 bg-white py-4 pl-8 pr-4 shadow-sm lg:w-64">
+        <div className="absolute left-[-4px] top-1/2 h-10 w-2 -translate-y-1/2 rounded-full bg-[#39973D] opacity-60" />
+
+        <div
+          className="absolute -right-[1.5px] -top-[1.5px] h-20 w-16 rounded-tr-2xl border-r-[3px] border-t-2 border-[#39973D]"
+          style={{
+            maskImage:
+              "radial-gradient(ellipse at top right, black 0%, transparent 70%)",
+            WebkitMaskImage:
+              "radial-gradient(ellipse at top right, black 0%, transparent 70%)",
+          }}
+        />
+
+        <p className="text-sm font-semibold text-[#202224] opacity-70">
+          Maintenance Amount
+        </p>
+
+        <p className="mt-1 text-2xl font-bold leading-8 text-[#39973D]">
+          ₹{" "}
+          {maintenanceRecords
+            .reduce((sum, r) => {
+              const isPending = r.status?.toLowerCase() === "pending";
+              const amount = r.maintenanceSetup?.maintenanceAmount || r.amount || 0;
+              return sum + (isPending ? Number(amount) : 0);
+            }, 0)
+            .toLocaleString()}
+        </p>
       </div>
+
+      <div className="relative flex min-h-24 w-full flex-col justify-center overflow-hidden rounded-2xl border border-gray-100 bg-white py-4 pl-8 pr-4 shadow-sm lg:w-64">
+        <div className="absolute left-[-4px] top-1/2 h-10 w-2 -translate-y-1/2 rounded-full bg-[#E74C3C] opacity-60" />
+
+        <div
+          className="absolute -right-[1.5px] -top-[1.5px] h-20 w-16 rounded-tr-2xl border-r-[3px] border-t-2 border-[#E74C3C]"
+          style={{
+            maskImage:
+              "radial-gradient(ellipse at top right, black 0%, transparent 70%)",
+            WebkitMaskImage:
+              "radial-gradient(ellipse at top right, black 0%, transparent 70%)",
+          }}
+        />
+
+        <p className="text-sm font-semibold text-[#202224] opacity-70">
+          Penalty Amount
+        </p>
+
+        <p className="mt-1 text-2xl font-bold leading-8 text-[#E74C3C]">
+          ₹{" "}
+          {maintenanceRecords
+            .reduce((sum, r) => {
+              const isPending = r.status?.toLowerCase() === "pending";
+              const penalty = r.penalty || 0;
+              return sum + (isPending ? Number(penalty) : 0);
+            }, 0)
+            .toLocaleString()}
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
 
       {/* Pending Maintenance Section */}
       {maintenanceRecords.filter(r => r.status?.toLowerCase() === "pending").length > 0 ? (

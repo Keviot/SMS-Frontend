@@ -300,7 +300,7 @@ export default function RequestTracking() {
   };
 
   return (
-    <div className="rounded-2xl bg-white p-4 sm:p-5">
+    <div className="rounded-2xl border border-[#D9DCE5] bg-white p-3 sm:p-5">
       {/* Header */}
       <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <h1 className="text-xl font-semibold leading-8 text-[#202224]">
@@ -310,7 +310,7 @@ export default function RequestTracking() {
         <Button
           type="button"
           onClick={handleCreateRequest}
-          className="min-h-12 w-full rounded-xl bg-gradient-to-r from-[#FE512E] to-[#F09619] px-5 text-sm font-semibold text-white shadow-none sm:w-auto"
+          className="h-11 w-full rounded-xl bg-gradient-to-r from-[#FE512E] to-[#F09619] px-6 text-sm font-bold text-white shadow-lg shadow-[#FE512E]/20 sm:w-auto sm:px-8"
         >
           Create Request
         </Button>
@@ -319,7 +319,7 @@ export default function RequestTracking() {
       {/* Table */}
       <div className="overflow-hidden rounded-xl bg-white">
         <div className="overflow-x-auto">
-          <div className="max-h-[calc(100vh-18.75rem)] min-w-[60rem] overflow-y-auto pr-1">
+          <div className="max-h-[calc(100vh-18rem)] min-w-[62rem] overflow-y-auto pr-1 [scrollbar-width:thin]">
             {loading ? (
               <div className="flex items-center justify-center py-12">
                 <Loader2 className="h-8 w-8 animate-spin text-orange-500" />
@@ -339,28 +339,28 @@ export default function RequestTracking() {
               <table className="w-full border-collapse">
                 <thead className="sticky top-0 z-10 bg-[#F1F3FF]">
                   <tr>
-                    <th className="rounded-l-xl px-5 py-4 text-left text-sm font-semibold text-[#202224]">
+                    <th className="rounded-l-xl px-4 py-3 text-left text-sm font-semibold text-[#202224]">
                       Requester Name
                     </th>
-                    <th className="px-5 py-4 text-left text-sm font-semibold text-[#202224]">
+                    <th className="px-4 py-3 text-left text-sm font-semibold text-[#202224]">
                       Request Name
                     </th>
-                    <th className="px-5 py-4 text-left text-sm font-semibold text-[#202224]">
+                    <th className="px-4 py-3 text-left text-sm font-semibold text-[#202224]">
                       Description
                     </th>
-                    <th className="px-5 py-4 text-left text-sm font-semibold text-[#202224]">
+                    <th className="px-4 py-3 text-left text-sm font-semibold text-[#202224]">
                       Request Date
                     </th>
-                    <th className="px-5 py-4 text-left text-sm font-semibold text-[#202224]">
+                    <th className="px-4 py-3 text-left text-sm font-semibold text-[#202224]">
                       Unit Number
                     </th>
-                    <th className="px-5 py-4 text-center text-sm font-semibold text-[#202224]">
+                    <th className="px-4 py-3 text-center text-sm font-semibold text-[#202224]">
                       Priority
                     </th>
-                    <th className="px-5 py-4 text-center text-sm font-semibold text-[#202224]">
+                    <th className="px-4 py-3 text-center text-sm font-semibold text-[#202224]">
                       Status
                     </th>
-                    <th className="rounded-r-xl px-5 py-4 text-center text-sm font-semibold text-[#202224]">
+                    <th className="rounded-r-xl px-4 py-3 text-center text-sm font-semibold text-[#202224]">
                       Action
                     </th>
                   </tr>
@@ -372,7 +372,7 @@ export default function RequestTracking() {
                       key={request.id}
                       className="border-b border-[#EDF0F5] last:border-b-0"
                     >
-                      <td className="px-5 py-4">
+                      <td className="px-4 py-3">
                         <div className="flex items-center gap-3">
                           <Avatar
                             src={request.avatar}
@@ -385,28 +385,28 @@ export default function RequestTracking() {
                         </div>
                       </td>
 
-                      <td className="px-5 py-4 text-sm font-medium text-[#434A57]">
+                      <td className="px-4 py-3 text-sm font-medium text-[#434A57]">
                         {request.requestName}
                       </td>
 
-                      <td className="max-w-md px-5 py-4">
+                      <td className="max-w-md px-4 py-3">
                         <p className="truncate text-sm font-medium text-[#434A57]">
                           {request.description}
                         </p>
                       </td>
 
-                      <td className="px-5 py-4 text-sm font-medium text-[#434A57]">
+                      <td className="px-4 py-3 text-sm font-medium text-[#434A57]">
                         {request.requestDate}
                       </td>
 
-                      <td className="px-5 py-4">
+                      <td className="px-4 py-3">
                         <UnitBadge
                           letter={request.unitLetter}
                           number={request.unitNumber}
                         />
                       </td>
 
-                      <td className="px-5 py-4">
+                      <td className="px-4 py-3">
                         <span
                           className={`mx-auto flex min-w-24 items-center justify-center rounded-full px-2.5 py-2 text-xs font-semibold ${priorityClass(
                             request.priority
@@ -416,7 +416,7 @@ export default function RequestTracking() {
                         </span>
                       </td>
 
-                      <td className="px-5 py-4">
+                      <td className="px-4 py-3">
                         <span
                           className={`mx-auto flex min-w-24 items-center justify-center rounded-full px-2.5 py-2 text-xs font-semibold ${statusClass(
                             request.status
@@ -426,7 +426,7 @@ export default function RequestTracking() {
                         </span>
                       </td>
 
-                      <td className="px-5 py-4">
+                      <td className="px-4 py-3">
                         <div className="flex items-center justify-center gap-3">
                           <ActionButton
                             label="Edit request"
