@@ -190,12 +190,12 @@ export default function CreateComplaint() {
         <div className="flex flex-col gap-0">
             {/* Tabs - Only show for residents */}
             {currentUser?.role !== "admin" && (
-                <div className="relative z-10 flex w-full items-end overflow-x-auto">
+                <div className="relative z-10 flex w-full items-end overflow-x-auto px-0 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                     <button
                         type="button"
                         onClick={() => setActiveTab("complaint")}
                         className={cn(
-                            "min-h-14 min-w-32 shrink-0 px-5 py-4 text-sm font-semibold transition-all",
+                            "min-h-12 shrink-0 px-4 py-3 text-xs font-semibold transition-all sm:min-h-14 sm:px-5 sm:py-4 sm:text-sm",
                             activeTab === "complaint"
                                 ? "rounded-t-xl bg-gradient-to-r from-[#FE512E] to-[#F09619] text-white"
                                 : "rounded-t-xl border border-b-2 border-[#D9DCE5] border-b-[#F09619] bg-white text-[#202224] hover:bg-gray-50"
@@ -207,7 +207,7 @@ export default function CreateComplaint() {
                         type="button"
                         onClick={() => setActiveTab("request")}
                         className={cn(
-                            "min-h-14 min-w-32 shrink-0 px-5 py-4 text-sm font-semibold transition-all",
+                            "min-h-12 shrink-0 px-4 py-3 text-xs font-semibold transition-all sm:min-h-14 sm:px-5 sm:py-4 sm:text-sm",
                             activeTab === "request"
                                 ? "rounded-t-xl bg-gradient-to-r from-[#FE512E] to-[#F09619] text-white"
                                 : "rounded-t-xl border border-b-2 border-[#D9DCE5] border-b-[#F09619] bg-white text-[#202224] hover:bg-gray-50"
@@ -220,215 +220,219 @@ export default function CreateComplaint() {
 
             {/* Content */}
             <div className={cn(
-                "border border-[#D9DCE5] bg-white p-4 sm:p-5",
+                "border border-[#D9DCE5] bg-white p-3 sm:p-5",
                 currentUser?.role !== "admin" ? "-mt-px rounded-2xl rounded-tl-none" : "rounded-2xl"
             )}>
-                <div className="mb-6 flex items-center justify-between">
-                    <h2 className="text-xl font-bold text-[#202224]">
+                <div className="mb-5 flex flex-col gap-3 sm:mb-6 sm:flex-row sm:items-center sm:justify-between">
+                    <h2 className="text-lg font-bold leading-7 text-[#202224] sm:text-xl">
                         {currentUser?.role === "admin"
                             ? (activeTab === "complaint" ? "Create Complaint" : "Create Request")
                             : (activeTab === "complaint" ? "Complaint" : "Request")}
                     </h2>
                     <Button
                         onClick={handleCreate}
-                        className="bg-[#FF6B35] hover:bg-[#E85D2A] text-white border-none rounded-xl font-bold h-11 px-8 shadow-lg shadow-[#FF6B35]/20"
-                    >
+                        className="h-11 w-full rounded-xl border-none bg-gradient-to-r from-[#FE512E] to-[#F09619] px-6 text-sm font-bold text-white shadow-lg shadow-[#FE512E]/20 hover:from-[#FE512E] hover:to-[#F09619] sm:w-auto sm:px-8"                    >
                         Create {activeTab === "complaint" ? "Complaint" : "Request"}
                     </Button>
                 </div>
 
-                <div className="overflow-x-auto">
-                    <div className="min-w-[980px]">
-                        {loading ? (
-                            <div className="flex items-center justify-center py-12">
-                                <Loader2 className="h-8 w-8 animate-spin text-orange-500" />
-                                <span className="ml-3 text-gray-600">Loading...</span>
-                            </div>
-                        ) : items.length === 0 ? (
-                            <div className="flex flex-col items-center justify-center py-12 text-center">
-                                <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-gray-100">
-                                    <svg
-                                        className="h-8 w-8 text-gray-400"
-                                        fill="none"
-                                        viewBox="0 0 24 24"
-                                        stroke="currentColor"
-                                    >
-                                        <path
-                                            strokeLinecap="round"
-                                            strokeLinejoin="round"
-                                            strokeWidth={2}
-                                            d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
-                                        />
-                                    </svg>
+                <div className="overflow-hidden rounded-xl bg-white">
+                    <div className="overflow-x-auto">
+                        <div className={cn(
+                            "overflow-y-auto pr-1 [scrollbar-width:thin]",
+                            currentUser?.role === "admin" ? "max-h-[calc(100vh-18rem)] min-w-[62rem]" : "min-w-0"
+                        )}>
+                            {loading ? (
+                                <div className="flex items-center justify-center py-12">
+                                    <Loader2 className="h-8 w-8 animate-spin text-orange-500" />
+                                    <span className="ml-3 text-gray-600">Loading...</span>
                                 </div>
-                                <p className="text-lg font-semibold text-gray-700">
-                                    No {activeTab}s Available
-                                </p>
-                                <p className="mt-2 text-sm text-gray-500">
-                                    There are no {activeTab}s at the moment.
-                                </p>
-                            </div>
-                        ) : currentUser?.role === "admin" ? (
-                            /* Admin Table View */
-                            <table className="w-full border-collapse">
-                                <thead className="sticky top-0 z-10 bg-[#F1F3FF]">
-                                    <tr>
-                                        <th className="rounded-l-xl px-5 py-4 text-left text-sm font-semibold text-[#202224]">
-                                            Complainer Name
-                                        </th>
-                                        <th className="px-5 py-4 text-left text-sm font-semibold text-[#202224]">
-                                            {activeTab === "complaint" ? "Complaint Name" : "Request Name"}
-                                        </th>
-                                        <th className="px-5 py-4 text-left text-sm font-semibold text-[#202224]">
-                                            Description
-                                        </th>
-                                        <th className="px-5 py-4 text-left text-sm font-semibold text-[#202224]">
-                                            Unit Number
-                                        </th>
-                                        <th className="px-5 py-4 text-center text-sm font-semibold text-[#202224]">
-                                            Priority
-                                        </th>
-                                        <th className="px-5 py-4 text-center text-sm font-semibold text-[#202224]">
-                                            Status
-                                        </th>
-                                        <th className="rounded-r-xl px-5 py-4 text-center text-sm font-semibold text-[#202224]">
-                                            Action
-                                        </th>
-                                    </tr>
-                                </thead>
-
-                                <tbody>
-                                    {items.map((item) => (
-                                        <tr
-                                            key={item.id}
-                                            className="border-b border-[#EDF0F5] last:border-b-0 hover:bg-gray-50 transition-colors"
+                            ) : items.length === 0 ? (
+                                <div className="flex flex-col items-center justify-center py-12 text-center">
+                                    <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-gray-100">
+                                        <svg
+                                            className="h-8 w-8 text-gray-400"
+                                            fill="none"
+                                            viewBox="0 0 24 24"
+                                            stroke="currentColor"
                                         >
-                                            <td className="px-5 py-4">
-                                                <div className="flex items-center gap-3">
-                                                    <div className="h-10 w-10 rounded-full bg-gray-100 flex items-center justify-center overflow-hidden">
-                                                        <div className="h-full w-full bg-gray-300 flex items-center justify-center text-gray-600 text-sm font-medium">
-                                                            {item.complainerName?.charAt(0)?.toUpperCase() || 'U'}
-                                                        </div>
-                                                    </div>
-                                                    <span className="text-sm font-medium text-[#434A57]">{item.complainerName}</span>
-                                                </div>
-                                            </td>
-
-                                            <td className="px-5 py-4 text-sm font-medium text-[#434A57]">
-                                                {item.title}
-                                            </td>
-
-                                            <td className="max-w-md px-5 py-4">
-                                                <p className="truncate text-sm font-medium text-[#434A57]">
-                                                    {item.description}
-                                                </p>
-                                            </td>
-
-                                            <td className="px-5 py-4">
-                                                <div className="flex items-center gap-2">
-                                                    <span className="grid size-6 shrink-0 place-items-center rounded-full bg-[#F1F6FF] text-xs font-bold text-[#5678E9]">{item.wing}</span>
-                                                    <span className="font-medium text-[#202224]">{item.unit}</span>
-                                                </div>
-                                            </td>
-
-                                            <td className="px-5 py-4">
-                                                <span className={cn(
-                                                    "mx-auto flex min-w-24 items-center justify-center rounded-full px-2.5 py-2 text-xs font-semibold",
-                                                    item.priority === "High" ? "bg-[#E74C3C] text-white" :
-                                                        item.priority === "Medium" ? "bg-[#5678E9] text-white" : "bg-[#39973D] text-white"
-                                                )}>
-                                                    {item.priority}
-                                                </span>
-                                            </td>
-
-                                            <td className="px-5 py-4">
-                                                <span className={cn(
-                                                    "mx-auto flex min-w-24 items-center justify-center rounded-full px-2.5 py-2 text-xs font-semibold",
-                                                    item.status === "Pending" ? "bg-[#FFF7E6] text-[#F0A000]" :
-                                                        item.status === "Open" ? "bg-[#EEF2FF] text-[#5678E9]" : "bg-[#E5F4E8] text-[#39973D]"
-                                                )}>
-                                                    {item.status}
-                                                </span>
-                                            </td>
-
-                                            <td className="px-5 py-4">
-                                                <div className="flex items-center justify-center gap-3">
-                                                    <ActionButton
-                                                        label="Edit complaint"
-                                                        variant="edit"
-                                                        onClick={() => handleAction(item, "edit")}
-                                                    >
-                                                        <EditIcon />
-                                                    </ActionButton>
-
-                                                    <ActionButton
-                                                        label="View complaint"
-                                                        variant="view"
-                                                        onClick={() => handleAction(item, "view")}
-                                                    >
-                                                        <EyeIcon />
-                                                    </ActionButton>
-
-                                                    <ActionButton
-                                                        label="Delete complaint"
-                                                        variant="delete"
-                                                        onClick={() => handleAction(item, "delete")}
-                                                    >
-                                                        <TrashIcon />
-                                                    </ActionButton>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        ) : (
-                            /* Resident Card View */
-                            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                                {items.map((item) => (
-                                    <div key={item.id} className="overflow-hidden rounded-2xl border border-[#F4F4F4] bg-white shadow-sm hover:shadow-md transition-shadow">
-                                        <div className="flex items-center justify-between bg-[#5678E9] px-4 py-3 text-white">
-                                            <h4 className="text-sm font-bold truncate pr-2">{item.title}</h4>
-                                            <div className="relative group">
-                                                <button className="p-1 rounded-full hover:bg-white/20 transition-colors">
-                                                    <MoreVertical size={16} />
-                                                </button>
-                                                <div className="absolute right-0 top-full mt-1 hidden group-hover:block z-10 w-32 rounded-xl bg-white p-1 shadow-xl border border-[#F4F4F4]">
-                                                    <button onClick={() => handleAction(item, "view")} className="w-full text-left px-4 py-2 text-xs font-bold text-[#202224] hover:bg-gray-50 rounded-lg">View</button>
-                                                    {currentUser?.role === "admin" && (
-                                                        <>
-                                                            <button onClick={() => handleAction(item, "edit")} className="w-full text-left px-4 py-2 text-xs font-bold text-[#202224] hover:bg-gray-50 rounded-lg">Edit</button>
-                                                            <button onClick={() => handleAction(item, "delete")} className="w-full text-left px-4 py-2 text-xs font-bold text-red-500 hover:bg-red-50 rounded-lg">Delete</button>
-                                                        </>
-                                                    )}
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div className="p-4 space-y-3">
-                                            <div className="flex justify-between items-center">
-                                                <span className="text-[11px] font-bold text-[#A7A7A7]">Request Date</span>
-                                                <span className="text-xs font-bold text-[#202224]">{item.date}</span>
-                                            </div>
-                                            <div className="flex justify-between items-center">
-                                                <span className="text-[11px] font-bold text-[#A7A7A7]">Status</span>
-                                                <span className={cn(
-                                                    "text-xs font-bold px-3 py-1 rounded-full",
-                                                    item.status === "Open" ? "bg-[#EEF2FF] text-[#5678E9]" : "bg-[#E5F4E8] text-[#39973D]"
-                                                )}>
-                                                    {item.status}
-                                                </span>
-                                            </div>
-                                            <div className="space-y-1">
-                                                <span className="text-[11px] font-bold text-[#A7A7A7]">Description</span>
-                                                <p className="text-[11px] leading-relaxed text-[#202224] line-clamp-2">
-                                                    {item.description}
-                                                </p>
-                                            </div>
-                                        </div>
+                                            <path
+                                                strokeLinecap="round"
+                                                strokeLinejoin="round"
+                                                strokeWidth={2}
+                                                d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
+                                            />
+                                        </svg>
                                     </div>
-                                ))}
-                            </div>
-                        )}
+                                    <p className="text-lg font-semibold text-gray-700">
+                                        No {activeTab}s Available
+                                    </p>
+                                    <p className="mt-2 text-sm text-gray-500">
+                                        There are no {activeTab}s at the moment.
+                                    </p>
+                                </div>
+                            ) : currentUser?.role === "admin" ? (
+                                /* Admin Table View */
+                                <table className="w-full border-collapse">
+                                    <thead className="sticky top-0 z-10 bg-[#F1F3FF]">
+                                        <tr>
+                                            <th className="rounded-l-xl px-5 py-4 text-left text-sm font-semibold text-[#202224]">
+                                                Complainer Name
+                                            </th>
+                                            <th className="px-5 py-4 text-left text-sm font-semibold text-[#202224]">
+                                                {activeTab === "complaint" ? "Complaint Name" : "Request Name"}
+                                            </th>
+                                            <th className="px-5 py-4 text-left text-sm font-semibold text-[#202224]">
+                                                Description
+                                            </th>
+                                            <th className="px-5 py-4 text-left text-sm font-semibold text-[#202224]">
+                                                Unit Number
+                                            </th>
+                                            <th className="px-5 py-4 text-center text-sm font-semibold text-[#202224]">
+                                                Priority
+                                            </th>
+                                            <th className="px-5 py-4 text-center text-sm font-semibold text-[#202224]">
+                                                Status
+                                            </th>
+                                            <th className="rounded-r-xl px-5 py-4 text-center text-sm font-semibold text-[#202224]">
+                                                Action
+                                            </th>
+                                        </tr>
+                                    </thead>
+
+                                    <tbody>
+                                        {items.map((item) => (
+                                            <tr
+                                                key={item.id}
+                                                className="border-b border-[#EDF0F5] last:border-b-0 hover:bg-gray-50 transition-colors"
+                                            >
+                                                <td className="px-5 py-4">
+                                                    <div className="flex items-center gap-3">
+                                                        <div className="h-10 w-10 rounded-full bg-gray-100 flex items-center justify-center overflow-hidden">
+                                                            <div className="h-full w-full bg-gray-300 flex items-center justify-center text-gray-600 text-sm font-medium">
+                                                                {item.complainerName?.charAt(0)?.toUpperCase() || 'U'}
+                                                            </div>
+                                                        </div>
+                                                        <span className="text-sm font-medium text-[#434A57]">{item.complainerName}</span>
+                                                    </div>
+                                                </td>
+
+                                                <td className="px-5 py-4 text-sm font-medium text-[#434A57]">
+                                                    {item.title}
+                                                </td>
+
+                                                <td className="max-w-md px-5 py-4">
+                                                    <p className="truncate text-sm font-medium text-[#434A57]">
+                                                        {item.description}
+                                                    </p>
+                                                </td>
+
+                                                <td className="px-5 py-4">
+                                                    <div className="flex items-center gap-2">
+                                                        <span className="grid size-6 shrink-0 place-items-center rounded-full bg-[#F1F6FF] text-xs font-bold text-[#5678E9]">{item.wing}</span>
+                                                        <span className="font-medium text-[#202224]">{item.unit}</span>
+                                                    </div>
+                                                </td>
+
+                                                <td className="px-5 py-4">
+                                                    <span className={cn(
+                                                        "mx-auto flex min-w-24 items-center justify-center rounded-full px-2.5 py-2 text-xs font-semibold",
+                                                        item.priority === "High" ? "bg-[#E74C3C] text-white" :
+                                                            item.priority === "Medium" ? "bg-[#5678E9] text-white" : "bg-[#39973D] text-white"
+                                                    )}>
+                                                        {item.priority}
+                                                    </span>
+                                                </td>
+
+                                                <td className="px-5 py-4">
+                                                    <span className={cn(
+                                                        "mx-auto flex min-w-24 items-center justify-center rounded-full px-2.5 py-2 text-xs font-semibold",
+                                                        item.status === "Pending" ? "bg-[#FFF7E6] text-[#F0A000]" :
+                                                            item.status === "Open" ? "bg-[#EEF2FF] text-[#5678E9]" : "bg-[#E5F4E8] text-[#39973D]"
+                                                    )}>
+                                                        {item.status}
+                                                    </span>
+                                                </td>
+
+                                                <td className="px-5 py-4">
+                                                    <div className="flex items-center justify-center gap-3">
+                                                        <ActionButton
+                                                            label="Edit complaint"
+                                                            variant="edit"
+                                                            onClick={() => handleAction(item, "edit")}
+                                                        >
+                                                            <EditIcon />
+                                                        </ActionButton>
+
+                                                        <ActionButton
+                                                            label="View complaint"
+                                                            variant="view"
+                                                            onClick={() => handleAction(item, "view")}
+                                                        >
+                                                            <EyeIcon />
+                                                        </ActionButton>
+
+                                                        <ActionButton
+                                                            label="Delete complaint"
+                                                            variant="delete"
+                                                            onClick={() => handleAction(item, "delete")}
+                                                        >
+                                                            <TrashIcon />
+                                                        </ActionButton>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            ) : (
+                                /* Resident Card View */
+                                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                                    {items.map((item) => (
+                                       <div key={item.id} className="overflow-hidden rounded-2xl border border-[#D9DCE5] bg-white shadow-sm transition-shadow hover:shadow-md">
+                                           <div className="flex min-h-10 items-center justify-between bg-[#5678E9] px-3 py-2 text-white">
+                                                <h4 className="text-sm font-bold truncate pr-2">{item.title}</h4>
+                                                <div className="relative group">
+                                                    <button className="p-1 rounded-full hover:bg-white/20 transition-colors">
+                                                        <MoreVertical size={16} />
+                                                    </button>
+                                                    <div className="absolute right-0 top-full mt-1 hidden group-hover:block z-10 w-32 rounded-xl bg-white p-1 shadow-xl border border-[#F4F4F4]">
+                                                        <button onClick={() => handleAction(item, "view")} className="w-full text-left px-4 py-2 text-xs font-bold text-[#202224] hover:bg-gray-50 rounded-lg">View</button>
+                                                        {currentUser?.role === "admin" && (
+                                                            <>
+                                                                <button onClick={() => handleAction(item, "edit")} className="w-full text-left px-4 py-2 text-xs font-bold text-[#202224] hover:bg-gray-50 rounded-lg">Edit</button>
+                                                                <button onClick={() => handleAction(item, "delete")} className="w-full text-left px-4 py-2 text-xs font-bold text-red-500 hover:bg-red-50 rounded-lg">Delete</button>
+                                                            </>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div className="space-y-2.5 p-3">
+                                                <div className="flex justify-between items-center">
+                                                    <span className="text-[11px] font-bold text-[#A7A7A7]">Request Date</span>
+                                                    <span className="text-xs font-bold text-[#202224]">{item.date}</span>
+                                                </div>
+                                                <div className="flex justify-between items-center">
+                                                    <span className="text-[11px] font-bold text-[#A7A7A7]">Status</span>
+                                                    <span className={cn(
+                                                        "text-xs font-bold px-3 py-1 rounded-full",
+                                                        item.status === "Open" ? "bg-[#EEF2FF] text-[#5678E9]" : "bg-[#E5F4E8] text-[#39973D]"
+                                                    )}>
+                                                        {item.status}
+                                                    </span>
+                                                </div>
+                                                <div className="space-y-1">
+                                                    <span className="text-[11px] font-bold text-[#A7A7A7]">Description</span>
+                                                    <p className="text-[11px] leading-relaxed text-[#202224] line-clamp-2">
+                                                        {item.description}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
                     </div>
                 </div>
             </div>

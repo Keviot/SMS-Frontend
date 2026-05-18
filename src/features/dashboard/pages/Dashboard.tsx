@@ -214,13 +214,14 @@ export default function Dashboard() {
   return (
     <div className="animate-in fade-in flex flex-col gap-5 duration-500">
       {/* Row 1: Stat Cards */}
-      <section className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-4">
+      <section className="grid w-full grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-4">
         {liveStatCards.map((card) => (
           <StatCard
             key={card.title}
             title={card.title}
             value={card.value}
             type={card.type}
+            variant="dashboard"
           />
         ))}
       </section>
