@@ -24,7 +24,7 @@ export default function AppLayout() {
         <Header onMenuClick={() => setSidebarOpen(true)} />
 
         {/* Content with responsive padding - prevents horizontal scroll */}
-        <main className="overflow-x-hidden p-[15px] sm:p-[20px] lg:p-[30px]">
+        <main className="overflow-x-hidden max-sm:mt-[20px] p-[15px] sm:p-[20px] lg:p-[30px]">
           <Outlet />
         </main>
       </div>
