@@ -121,9 +121,9 @@ export default function Profile() {
   }
 
   return (
-    <div className="relative p-0 -m-[15px] sm:-m-[20px] lg:-m-[30px] bg-[#F6F8FB] min-h-screen font-sans">
+    <div className=" p-0 -m-[15px] sm:-m-[20px] lg:-m-[30px] bg-[#F6F8FB] min-h-screen font-sans">
       {/* Profile Header Background with Full Pattern */}
-      <div className="h-48 w-full relative overflow-hidden bg-[#b1c0f0]">
+      <div className="h-77 w-full relative overflow-hidden bg-[#D0DAF3]">
         <img
           src={profileBG}
           alt="Profile Background"
@@ -132,35 +132,33 @@ export default function Profile() {
         <div className="absolute inset-0 bg-black/5" />
       </div>
 
-      <div className="px-4 sm:px-6 -mt-32 relative z-10 pb-10">
+      <div className="px-4 sm:px-6 -mt-60 relative z-10 pb-10">
         <div className="max-w-6xl mx-auto">
           {/* Breadcrumbs */}
-          <div className="flex items-center gap-2 text-sm font-medium mb-6">
-            <span className="text-gray-400">Home</span>
-            <span className="text-gray-400 font-bold">{">"}</span>
-            <span className="text-[#5678E9]">Edit Profile</span>
+
+
+          {/* Header Row (Profile Title & Edit Button) */}
+          <div className="flex justify-between items-center mb-6 px-1">
+            <h4 className="text-xl font-semibold text-[#202224] tracking-tight">Profile</h4>
+            {!isEditing && (
+              <button
+                onClick={() => setIsEditing(true)}
+                className="flex items-center gap-2 bg-gradient-to-r from-[#FE512E] to-[#F09619] text-white px-6 py-3 rounded-xl font-bold shadow-lg hover:opacity-90 transition-all active:scale-[0.98]"
+              >
+                <Edit2 size={18} />
+                <h5 className="text-lg font-semibold">
+                  Edit Profile
+                </h5>
+              </button>
+            )}
           </div>
 
           <div className="bg-white rounded-3xl shadow-[0_10px_40px_rgba(0,0,0,0.03)] overflow-hidden">
-            {/* Card Header */}
-            <div className="px-10 py-8 flex justify-between items-center">
-              <h2 className="text-2xl font-bold text-[#202224]">Profile</h2>
-              {!isEditing && (
-                <button
-                  onClick={() => setIsEditing(true)}
-                  className="flex items-center gap-2 bg-[#FE512E] text-white px-6 py-3 rounded-xl font-bold shadow-lg hover:opacity-90 transition-all active:scale-[0.98]"
-                >
-                  <Edit2 size={18} />
-                  Edit Profile
-                </button>
-              )}
-            </div>
-
-            <div className="px-10 pb-12 flex flex-col lg:flex-row gap-16">
+            <div className="px-10 py-12 flex flex-col lg:flex-row gap-16">
               {/* Left Side: Avatar Section */}
-              <div className="flex flex-col items-center lg:w-1/4 xl:w-1/5 pt-4">
+              <div className="flex flex-col items-center lg:w-1/4 xl:w-1/5 p-0">
                 <div className="relative group">
-                  <div className="w-44 h-44 rounded-full p-1 bg-white shadow-[0_4px_20px_rgba(0,0,0,0.08)] border border-gray-100 overflow-hidden">
+                  <div className="w-44 h-44 rounded-full p-1 border border-gray-100 overflow-hidden">
                     <img
                       src={previewUrl || (formData.profileImage ? (formData.profileImage.startsWith("http") ? formData.profileImage : `${BASE_URL}/${formData.profileImage}`) : "https://cdn-icons-png.flaticon.com/512/149/149071.png")}
                       alt="Profile"
@@ -186,9 +184,9 @@ export default function Profile() {
                     </>
                   )}
                 </div>
-                <h3 className="mt-6 text-xl font-bold text-[#202224] tracking-tight text-center">
+                <h5 className="mt-5 text-lg font-medium text-[#202224] tracking-tight text-center">
                   {formData.firstName} {formData.lastName}
-                </h3>
+                </h5>
               </div>
 
               {/* Right Side: Form Fields */}

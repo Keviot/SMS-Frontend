@@ -168,9 +168,13 @@ function App() {
                 <Route path="/community/discussion" element={<CommunitiesDiscussion />} />
               </Route>
 
+              {/* Shared by Admin, Resident, and Security */}
+              <Route element={<ProtectedRoute allowedRoles={["admin", "resident", "security"]} />}>
+                <Route path="/profile" element={<ProfileSelector />} />
+              </Route>
+
               {/* Resident Only Routes */}
               <Route element={<ProtectedRoute allowedRoles={["resident"]} />}>
-                <Route path="/profile" element={<ProfileSelector />} />
                 <Route path="/events-participation" element={<EventsParticipation />} />
                 <Route path="/payment-portal" element={<ShowMaintenanceDetails />} />
                 <Route path="/payment-portal/maintenance-invoices" element={<MaintenanceInvoices />} />

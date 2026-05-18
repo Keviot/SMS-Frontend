@@ -322,8 +322,8 @@ export default function ComplaintTable({ data, role }: ComplaintTableProps) {
                             label="Edit complaint"
                             onClick={() => openEditModal(row)}
                           >
-                            <EditIcon width={24} height={24} className="w-full h-full"/>
-                          </ActionButton> 
+                            <EditIcon width={24} height={24} className="w-full h-full" />
+                          </ActionButton>
                         )}
 
                         <ActionButton
