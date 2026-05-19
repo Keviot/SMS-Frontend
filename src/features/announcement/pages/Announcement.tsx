@@ -87,22 +87,22 @@ export default function Announcement() {
   };
 
   return (
-    <div className="p-4 lg:p-6 space-y-6 bg-[#F6F8FB] min-h-screen">
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-        <div className="p-6 border-b border-gray-50 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-          <h1 className="text-xl font-bold text-gray-900">Announcement</h1>
+    <div className="bg-[#F6F8FB] p-4 lg:p-5">
+      <div className="rounded-2xl bg-white p-4 shadow-sm sm:p-5">
+       <div className="mb-5 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <h1 className="text-lg font-semibold text-[#202224]">Announcement</h1>
 
           {role !== "resident" && (
             <Button
               onClick={() => setIsModalOpen(true)}
-              className="bg-[#FE512E] text-white px-6 py-2.5 rounded-xl font-bold shadow-lg flex items-center gap-2 hover:opacity-90 transition-all active:scale-[0.98] whitespace-nowrap"
+              className="h-11 rounded-xl bg-gradient-to-r from-[#FE512E] to-[#F09619] px-5 text-sm font-semibold text-white shadow-sm hover:opacity-90"
             >
               Create Announcement
             </Button>
           )}
         </div>
 
-        <div className="p-6">
+        <div>
           {loading ? (
             <div className="flex flex-col items-center justify-center h-64 gap-4">
               <Loader2 className="h-10 w-10 animate-spin text-[#FE512E]" />
@@ -114,7 +114,7 @@ export default function Announcement() {
               <p className="text-gray-500 max-w-xs">Broadcast important notices to all society members.</p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
               {announcements.map((item) => (
                 <AnnouncementCard
                   key={item._id}
@@ -173,9 +173,9 @@ function AnnouncementCard({ item, role, onEdit, onDelete, onView }: { item: Anno
   };
 
   return (
-    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden flex flex-col h-full group transition-all hover:shadow-md">
+    <div className="overflow-hidden rounded-lg border border-[#DDE5FF] bg-white shadow-sm">
       {/* Card Header */}
-      <div className={cn("text-white p-4 flex justify-between items-center", getTypeColor(item.announcementType))}>
+      <div className={cn("flex items-center justify-between px-3 py-2.5 text-white", getTypeColor(item.announcementType))}>
         <h3 className="font-bold text-sm truncate pr-2">
           {Array.isArray(item.announcementType) ? item.announcementType[0] : item.announcementType}
         </h3>
@@ -232,7 +232,7 @@ function AnnouncementCard({ item, role, onEdit, onDelete, onView }: { item: Anno
       </div>
 
       {/* Card Body */}
-      <div className="p-4 space-y-4 flex-1">
+      <div className="space-y-3 p-3">
         <div className="space-y-3">
           <div className="flex justify-between items-center">
             <span className="text-[12px] text-gray-400 font-medium">Announcement Date</span>
@@ -250,7 +250,7 @@ function AnnouncementCard({ item, role, onEdit, onDelete, onView }: { item: Anno
 
         <div className="space-y-1.5 pt-2 border-t border-gray-50">
           <p className="text-[12px] text-gray-400 font-medium">Description</p>
-          <p className="text-[13px] text-gray-900 leading-relaxed font-medium line-clamp-3">
+          <p className="line-clamp-2 text-xs font-medium leading-5 text-[#202224]">
             {item.description}
           </p>
         </div>
