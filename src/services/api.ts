@@ -2,7 +2,7 @@ export const BASE_URL = "http://localhost:5000";
 const API_URL = `${BASE_URL}/api`;
 
 // Helper to get token from local storage
-const getAuthHeader = () => {
+const getAuthHeader = (): Record<string, string> => {
   const token = localStorage.getItem("token");
   return token ? { Authorization: `Bearer ${token}` } : {};
 };

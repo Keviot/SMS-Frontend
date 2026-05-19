@@ -182,7 +182,7 @@ export default function Income() {
                     setSummary({ maintenanceAmount: 0, penaltyAmount: 0, totalDue: 0, totalPending: 0 });
                 } else {
                     const transformedData = response.data.map(normalizeMaintenanceRecord);
-                    transformedData.sort((a, b) => {
+                    transformedData.sort((a: MaintenanceRecord, b: MaintenanceRecord) => {
                         const wingA = a.unitNumber.split(" ")[0];
                         const wingB = b.unitNumber.split(" ")[0];
                         if (wingA !== wingB) return wingA.localeCompare(wingB);
@@ -321,7 +321,7 @@ export default function Income() {
             const transformedData = response.data.map(normalizeMaintenanceRecord);
 
             // Sort by Unit Number (Wing first, then Unit)
-            transformedData.sort((a, b) => {
+            transformedData.sort((a: MaintenanceRecord, b: MaintenanceRecord) => {
                 const wingA = a.unitNumber.split(" ")[0];
                 const wingB = b.unitNumber.split(" ")[0];
                 if (wingA !== wingB) return wingA.localeCompare(wingB);

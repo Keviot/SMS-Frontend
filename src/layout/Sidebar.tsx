@@ -95,7 +95,7 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
           const Icon = item.icon;
           const hasChildren = Boolean(item.children?.length);
           const isExpanded = expanded.includes(item.label);
-          const isActive = location.pathname === item.path || (hasChildren && item.children.some(child => location.pathname === child.path));
+          const isActive = location.pathname === item.path || (hasChildren && item.children?.some(child => location.pathname === child.path));
 
           return (
             <div key={item.label} className="mb-1 relative">

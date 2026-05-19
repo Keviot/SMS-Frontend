@@ -1466,7 +1466,7 @@ export default function AccessForums() {
     };
 
     const startCall = async () => {
-        if (!videoClient || !activeContact || !currentUser) {
+        if (!videoClient || !activeContact || !currentUser || !socket) {
             toast.error("Video client not ready or no contact selected");
             return;
         }
@@ -1546,7 +1546,7 @@ export default function AccessForums() {
     };
 
     const startAudioCall = async () => {
-        if (!videoClient || !activeContact || !currentUser) {
+        if (!videoClient || !activeContact || !currentUser || !socket) {
             toast.error("Call client not ready or no contact selected");
             return;
         }
