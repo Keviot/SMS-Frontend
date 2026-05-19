@@ -82,8 +82,8 @@ export default function Login() {
               placeholder="Enter Password"
               className={cn(
                 "w-full px-4 py-3 rounded-xl border outline-none transition-all placeholder:text-gray-400 text-gray-700",
-                error 
-                  ? "border-red-500 focus:border-red-500" 
+                error
+                  ? "border-red-500 focus:border-red-500"
                   : "border-gray-200 focus:border-[#EE641D] focus:ring-2 focus:ring-[#EE641D]/20"
               )}
               required

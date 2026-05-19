@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
-import { User,Mail , Phone, MapPin, Calendar, Users, Car, CreditCard, AlertCircle, Clock, FileText } from "lucide-react";
+import { User, Mail, Phone, MapPin, Calendar, Users, Car, CreditCard, AlertCircle, Clock, FileText, Eye } from "lucide-react";
 import { authApi, announcementApi, financialApi, paymentApi } from "../../../services/api";
 import toast from "react-hot-toast";
 import Avatar from "../../../components/Avatar";
+import { cn } from "../../../lib/cn";
 
 
 export default function PersonalDetail() {
@@ -50,7 +51,7 @@ export default function PersonalDetail() {
       const data = await paymentApi.createOrder(amount);
 
       const options = {
-        key: import.meta.env.VITE_RAZORPAY_KEY_ID, 
+        key: import.meta.env.VITE_RAZORPAY_KEY_ID,
         amount: data.order.amount,
         currency: data.order.currency,
         name: "SMS Project",
@@ -90,7 +91,7 @@ export default function PersonalDetail() {
       const data = await paymentApi.createOrder(amount);
 
       const options = {
-        key: import.meta.env.VITE_RAZORPAY_KEY_ID, 
+        key: import.meta.env.VITE_RAZORPAY_KEY_ID,
         amount: data.order.amount,
         currency: data.order.currency,
         name: "SMS Project",
@@ -137,138 +138,239 @@ export default function PersonalDetail() {
   if (loading) return <div className="p-8 text-center text-gray-500 font-medium">Loading personal details...</div>;
   if (!profile) return <div className="p-8 text-center text-red-500 font-medium">Profile not found</div>;
 
-  return (
-    <div className="p-4 lg:p-8 space-y-8 bg-[#F6F8FB] min-h-screen">
-      {/* Header Breadcrumbs */}
-      <div className="flex items-center gap-2 text-sm">
-        <span className="text-gray-400">Home</span>
-        <span className="text-gray-400">&gt;</span>
-        <span className="text-[#5678E9] font-medium">Personal Detail</span>
-      </div>
-
-      {/* Tabs Section */}
-      <div className="relative z-10 flex w-full items-end overflow-x-auto -mb-[1px]">
-        {profile.residentStatus?.toLowerCase() === "owner" ? (
-          <div className="min-h-14 min-w-32 shrink-0 px-8 py-4 text-sm font-bold rounded-t-xl bg-gradient-to-r from-[#FE512E] to-[#F09619] text-white flex items-center justify-center">
-            Owner
+  const renderResidentDetails = () => (
+    <div className="flex flex-col xl:flex-row gap-8 xl:gap-10 items-stretch">
+      {/* Avatar and Main Info - Mobile View */}
+      <div className="flex flex-col gap-6 flex-1 xl:hidden">
+        {/* Row with Avatar and Full Name */}
+        <div className="flex items-center gap-6">
+          <div className="h-28 w-28 shrink-0">
+            <Avatar
+              src={activeTab === (profile.residentStatus === "Owner" ? "Owner" : "Tenant") ? profile.profileImage : ""}
+              name={activeTab === (profile.residentStatus === "Owner" ? "Owner" : "Tenant")
+                ? (profile.name || `${profile.firstname} ${profile.lastname}`)
+                : (profile.ownerName || "Property Owner")}
+              size="lg"
+              className="h-28 w-28 text-2xl border-5 border-[#DFE0EB] shadow-sm"
+            />
           </div>
-        ) : (
-          <>
-            <button
-              type="button"
-              onClick={() => setActiveTab("Tenant")}
-              className={`min-h-14 min-w-32 shrink-0 px-8 py-4 text-sm font-bold transition-all ${
-                activeTab === "Tenant"
-                  ? "rounded-t-xl bg-gradient-to-r from-[#FE512E] to-[#F09619] text-white"
-                  : "rounded-t-xl border border-b-2 border-[#D9DCE5] border-b-[#F09619] bg-white text-[#202224] hover:bg-gray-50"
-              }`}
-            >
-              Tenant
-            </button>
-            <button
-              type="button"
-              onClick={() => setActiveTab("Owner")}
-              className={`min-h-14 min-w-32 shrink-0 px-8 py-4 text-sm font-bold transition-all ${
-                activeTab === "Owner"
-                  ? "rounded-t-xl bg-gradient-to-r from-[#FE512E] to-[#F09619] text-white"
-                  : "rounded-t-xl border border-b-2 border-[#D9DCE5] border-b-[#F09619] bg-white text-[#202224] hover:bg-gray-50"
-              }`}
-            >
-              Owner
-            </button>
-          </>
-        )}
-      </div>
+          <DetailItem
+            label="Full Name"
+            value={activeTab === (profile.residentStatus === "Owner" ? "Owner" : "Tenant")
+              ? (profile.name || `${profile.firstname} ${profile.lastname}`)
+              : (profile.ownerName || "Property Owner")}
+          />
+        </div>
 
-      {/* Main Profile Card */}
-      <div className="bg-white rounded-[20px] rounded-tl-none shadow-sm overflow-hidden border border-gray-100">
-        <div className="p-8 flex flex-col xl:flex-row gap-8">
-          {/* Avatar and Main Info */}
-          <div className="flex flex-col md:flex-row items-center gap-8 flex-1">
-            <div className="h-32 w-32 shrink-0">
-              <Avatar
-                src={profile.profileImage}
-                name={profile.name || `${profile.firstname} ${profile.lastname}`}
-                size="lg"
-                className="h-32 w-32 text-3xl border-4 border-[#F6F8FB] shadow-lg"
-              />
-            </div>
+        {/* Other details in a vertical stack */}
+        <div className="flex flex-col gap-5 mt-0">
+          {activeTab === (profile.residentStatus === "Owner" ? "Owner" : "Tenant") ? (
+            <>
+              <DetailItem label="Email Address" value={profile.email} />
+              <DetailItem label="Phone Number" value={profile.phoneNumber} />
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-12 gap-y-6 flex-1">
-              {/* Show self data if active tab matches current status, otherwise show owner data for tenants */}
-              {activeTab === (profile.residentStatus === "Owner" ? "Owner" : "Tenant") ? (
-                <>
-                  <DetailItem label="Full Name" value={profile.name || `${profile.firstname} ${profile.lastname}`} />
-                  <DetailItem label="Phone Number" value={profile.phoneNumber} />
-                  <DetailItem label="Email Address" value={profile.email} />
-                  <DetailItem label="Gender" value={profile.gender} isCapitalized />
-                  <DetailItem label="Wing" value={profile.wing} />
-                  <DetailItem label="Age" value={profile.age} />
-                  <DetailItem label="Unit" value={profile.unit} />
-                  <DetailItem label="Relation" value={profile.relation || "Self"} />
-                </>
-              ) : (
-                <>
-                  <DetailItem label="Full Name" value={profile.ownerName || "Property Owner"} />
-                  <DetailItem label="Phone Number" value={profile.ownerPhone || "Not Provided"} />
-                  <DetailItem label="Email Address" value="N/A" />
-                  <DetailItem label="Gender" value="N/A" />
-                  <DetailItem label="Wing" value={profile.wing} />
-                  <DetailItem label="Age" value="N/A" />
-                  <DetailItem label="Unit" value={profile.unit} />
-                  <DetailItem label="Relation" value="Owner" />
-                </>
-              )}
-            </div>
-          </div>
+              <div className="grid grid-cols-3 gap-y-5 gap-x-2">
+                <DetailItem label="Gender" value={profile.gender} isCapitalized />
+                <DetailItem label="Relation" value={profile.relation || "Self"} />
+                <DetailItem label="Age" value={profile.age} />
+              </div>
 
-          {/* Documents Section - Only show for current user */}
-          {activeTab === (profile.residentStatus || "Owner") && (
-            <div className="xl:w-80 space-y-3">
-              {profile.uploadAadharfront && <DocumentCard label="Aadhar Card Front" size="View File" url={profile.uploadAadharfront} />}
-              {profile.uploadAadharback && <DocumentCard label="Aadhar Card Back" size="View File" url={profile.uploadAadharback} />}
-              {profile.addressProof && <DocumentCard label="Address Proof" size="View File" url={profile.addressProof} />}
-              {profile.rentAgreeMent && <DocumentCard label="Rent Agreement" size="View File" url={profile.rentAgreeMent} />}
-              {!profile.uploadAadharfront && !profile.uploadAadharback && !profile.addressProof && !profile.rentAgreeMent && (
-                <div className="p-4 bg-gray-50 rounded-xl border border-dashed border-gray-200 text-center text-xs text-gray-400">
-                  No documents uploaded
-                </div>
-              )}
-            </div>
+              <div className="grid grid-cols-3 gap-y-5 gap-x-2">
+                <DetailItem label="Wing" value={profile.wing} />
+                <DetailItem label="Unit" value={profile.unit} />
+              </div>
+            </>
+          ) : (
+            <>
+              <DetailItem label="Phone Number" value={profile.ownerPhone || "Not Provided"} />
+              <DetailItem label="Email Address" value="N/A" />
+
+              <div className="grid grid-cols-3 gap-y-5 gap-x-2">
+                <DetailItem label="Gender" value="N/A" />
+                <DetailItem label="Relation" value="Owner" />
+                <DetailItem label="Age" value="N/A" />
+              </div>
+
+              <div className="grid grid-cols-3 gap-y-5 gap-x-2">
+                <DetailItem label="Wing" value={profile.wing} />
+                <DetailItem label="Unit" value={profile.unit} />
+              </div>
+            </>
           )}
         </div>
       </div>
 
+      {/* Avatar and Main Info - Large Screen View */}
+      <div className={cn(
+        "hidden xl:flex items-start gap-8 flex-1",
+        activeTab === (profile.residentStatus || "Owner") && "xl:border-r xl:border-gray-100 xl:pr-10 xl:mr-2"
+      )}>
+        <div className="h-32 w-32 shrink-0">
+          <Avatar
+            src={activeTab === (profile.residentStatus === "Owner" ? "Owner" : "Tenant") ? profile.profileImage : ""}
+            name={activeTab === (profile.residentStatus === "Owner" ? "Owner" : "Tenant")
+              ? (profile.name || `${profile.firstname} ${profile.lastname}`)
+              : (profile.ownerName || "Property Owner")}
+            size="lg"
+            className="h-32 w-32 text-3xl border-5 border-[#DFE0EB] shadow-sm"
+          />
+        </div>
+
+        <div className="flex-1 grid grid-cols-4 gap-x-8 gap-y-6 max-w-4xl">
+          {activeTab === (profile.residentStatus === "Owner" ? "Owner" : "Tenant") ? (
+            <>
+              {/* Column 1 */}
+              <div className="space-y-5">
+                <DetailItem
+                  label="Full Name"
+                  value={profile.name || `${profile.firstname} ${profile.lastname}`}
+                />
+                <DetailItem label="Wing" value={profile.wing} />
+              </div>
+              {/* Column 2 */}
+              <div className="space-y-5">
+                <DetailItem label="Phone Number" value={profile.phoneNumber} />
+                <DetailItem label="Age" value={profile.age} />
+              </div>
+              {/* Column 3 */}
+              <div className="space-y-5">
+                <DetailItem label="Email Address" value={profile.email} />
+                <DetailItem label="Unit" value={profile.unit} />
+              </div>
+              {/* Column 4 */}
+              <div className="space-y-5">
+                <DetailItem label="Gender" value={profile.gender} isCapitalized />
+                <DetailItem label="Relation" value={profile.relation || "Self"} />
+              </div>
+            </>
+          ) : (
+            <>
+              {/* Column 1 */}
+              <div className="space-y-5">
+                <DetailItem
+                  label="Full Name"
+                  value={profile.ownerName || "Property Owner"}
+                />
+                <DetailItem label="Wing" value={profile.wing} />
+              </div>
+              {/* Column 2 */}
+              <div className="space-y-5">
+                <DetailItem label="Phone Number" value={profile.ownerPhone || "Not Provided"} />
+                <DetailItem label="Age" value="N/A" />
+              </div>
+              {/* Column 3 */}
+              <div className="space-y-5">
+                <DetailItem label="Email Address" value="N/A" />
+                <DetailItem label="Unit" value={profile.unit} />
+              </div>
+              {/* Column 4 */}
+              <div className="space-y-5">
+                <DetailItem label="Gender" value="N/A" />
+                <DetailItem label="Relation" value="Owner" />
+              </div>
+            </>
+          )}
+        </div>
+      </div>
+
+      {/* Documents Section - Only show for current user */}
+      {activeTab === (profile.residentStatus || "Owner") && (
+        <div className="xl:w-80 shrink-0 space-y-3">
+          {(!profile.uploadAadharfront && !profile.uploadAadharback && !profile.addressProof && !profile.rentAgreeMent) ? (
+            <div className="p-4 bg-gray-50 rounded-xl border border-dashed border-gray-200 text-center text-xs text-gray-400">
+              No documents uploaded
+            </div>
+          ) : (
+            <div className="max-h-[148px] overflow-y-auto pr-2 space-y-3 custom-scrollbar">
+              {profile.uploadAadharfront && <DocumentCard label="Aadhar Card Front" size="View File" url={profile.uploadAadharfront} />}
+              {profile.uploadAadharback && <DocumentCard label="Aadhar Card Back" size="View File" url={profile.uploadAadharback} />}
+              {profile.addressProof && <DocumentCard label="Address Proof" size="View File" url={profile.addressProof} />}
+              {profile.rentAgreeMent && <DocumentCard label="Rent Agreement" size="View File" url={profile.rentAgreeMent} />}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+
+  return (
+    <div className="p-0 space-y-5 bg-[#F6F8FB] min-h-screen">
+      {/* Header Breadcrumbs
+      <div className="flex items-center gap-2 text-sm">
+        <span className="text-gray-400">Home</span>
+        <span className="text-gray-400">&gt;</span>
+        <span className="text-[#5678E9] font-medium">Personal Detail</span>
+      </div> */}
+
+      <div className="flex flex-col">
+        {/* Tabs Section */}
+        <div className="relative z-10 flex w-full items-end -mb-[1px] mt-0">
+          {profile.residentStatus?.toLowerCase() === "owner" ? (
+            <div className="w-full max-w-[172px] sm:w-[172px] h-[49px] sm:shrink-0 text-base font-bold rounded-t-[10px] bg-gradient-to-r from-[#FE512E] to-[#F09619] text-white flex items-center justify-center">
+              Owner
+            </div>
+          ) : (
+            <div className="w-full max-w-[172px] sm:w-[172px] h-[49px] sm:shrink-0 text-base font-bold rounded-t-[10px] bg-gradient-to-r from-[#FE512E] to-[#F09619] text-white flex items-center justify-center">
+              Tenant
+            </div>
+          )}
+        </div>
+
+        {/* Main Profile Card / Cards */}
+        {profile.residentStatus?.toLowerCase() === "tenant" ? (
+          <div className="space-y-6">
+            {/* Card 1: Owner Details (Under tab) */}
+            <div className="bg-white rounded-xl rounded-tl-none rounded-tr-none shadow-sm overflow-hidden border border-gray-100 p-6">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl">
+                <DetailItem label="Owner Name" value={profile.ownerName || "Property Owner"} />
+                <DetailItem label="Owner Phone" value={profile.ownerPhone || "Not Provided"} />
+                <DetailItem label="Owner Address" value={profile.ownerAddress || "Not Provided"} />
+              </div>
+            </div>
+
+            {/* Card 2: Resident Profile Details (Separate Card) */}
+            <div className="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-100 p-6">
+              {renderResidentDetails()}
+            </div>
+          </div>
+        ) : (
+          /* Single Card: Owner Profile Details */
+          <div className="bg-white rounded-xl rounded-tl-none rounded-tr-none shadow-sm overflow-hidden border border-gray-100 p-6">
+            {renderResidentDetails()}
+          </div>
+        )}
+      </div>
+
       {/* Conditional Sections - Only show when viewing current resident profile */}
       {activeTab === (profile.residentStatus || "Owner") && (
-        <>
-          {/* Members Section */}
-          <div className="space-y-4">
-            <h2 className="text-xl font-bold text-gray-900">Member : ({profile.members?.length || 0})</h2>
+        <div className="flex flex-col gap-6">
+          {/* Members Section Card */}
+          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 space-y-2">
+            <h6 className="text-lg font-semibold text-gray-900">Member : ({profile.members?.length || 0})</h6>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               {profile.members?.map((member: any, idx: number) => (
-                <div key={idx} className="bg-white p-5 rounded-2xl shadow-sm border border-gray-50 space-y-4">
-                  <div className="flex justify-between items-center border-b border-gray-50 pb-3">
-                    <span className="font-bold text-gray-900">{member.name}</span>
+                <div key={idx} className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 space-y-4 flex flex-col overflow-hidden">
+                  <div className="bg-blue text-white px-4 py-2 rounded-t-lg -mx-5 -mt-5 font-bold text-sm">
+                    {member.name}
                   </div>
-                  <div className="space-y-2">
+                  <div className="space-y-2 pt-2 flex-1">
                     <MemberDetailItem label="Email" value={member.email} />
                     <MemberDetailItem label="Phone Number" value={member.phoneNumber} />
                     <MemberDetailItem label="Age" value={member.age} />
                     <MemberDetailItem label="Gender" value={member.gender} isCapitalized />
-                    <MemberDetailItem label="Relation" value={member.relation} />
+                    <MemberDetailItem label="Relation" value={member.relation} isCapitalized />
                   </div>
                 </div>
               ))}
             </div>
           </div>
 
-          {/* Vehicles Section */}
-          <div className="space-y-4">
+          {/* Vehicles Section Card */}
+          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 space-y-4">
             <h2 className="text-xl font-bold text-gray-900">Vehicle : ({profile.vehicles?.length || 0})</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               {profile.vehicles?.map((vehicle: any, idx: number) => (
-                <div key={idx} className="bg-white p-5 rounded-2xl shadow-sm border border-gray-50 space-y-4">
+                <div key={idx} className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 space-y-4">
                   <div className="bg-[#5678E9] text-white px-4 py-2 rounded-t-lg -mx-5 -mt-5 font-bold text-sm">
                     {vehicle.vehicleType} Wheelers
                   </div>
@@ -286,77 +388,77 @@ export default function PersonalDetail() {
               ))}
             </div>
           </div>
-        </>
+        </div>
       )}
 
       {/* Maintenance Summary */}
       <div className="rounded-2xl border border-gray-100 bg-white p-4 shadow-sm sm:p-5">
-  <div className="flex min-h-24 flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-    <h2 className="text-xl font-bold text-gray-900">
-      Show Maintenance Details
-    </h2>
+        <div className="flex min-h-24 flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+          <h2 className="text-xl font-bold text-gray-900">
+            Show Maintenance Details
+          </h2>
 
-    <div className="grid w-full grid-cols-1 gap-4 sm:grid-cols-2 lg:w-auto lg:flex lg:items-center lg:gap-4">
-      <div className="relative flex min-h-24 w-full flex-col justify-center overflow-hidden rounded-2xl border border-gray-100 bg-white py-4 pl-8 pr-4 shadow-sm lg:w-64">
-        <div className="absolute left-[-4px] top-1/2 h-10 w-2 -translate-y-1/2 rounded-full bg-[#39973D] opacity-60" />
+          <div className="grid w-full grid-cols-1 gap-4 sm:grid-cols-2 lg:w-auto lg:flex lg:items-center lg:gap-4">
+            <div className="relative flex min-h-24 w-full flex-col justify-center overflow-hidden rounded-2xl border border-gray-100 bg-white py-4 pl-8 pr-4 shadow-sm lg:w-64">
+              <div className="absolute left-[-4px] top-1/2 h-10 w-2 -translate-y-1/2 rounded-full bg-[#39973D] opacity-60" />
 
-        <div
-          className="absolute -right-[1.5px] -top-[1.5px] h-20 w-16 rounded-tr-2xl border-r-[3px] border-t-2 border-[#39973D]"
-          style={{
-            maskImage:
-              "radial-gradient(ellipse at top right, black 0%, transparent 70%)",
-            WebkitMaskImage:
-              "radial-gradient(ellipse at top right, black 0%, transparent 70%)",
-          }}
-        />
+              <div
+                className="absolute -right-[1.5px] -top-[1.5px] h-20 w-16 rounded-tr-2xl border-r-[3px] border-t-2 border-[#39973D]"
+                style={{
+                  maskImage:
+                    "radial-gradient(ellipse at top right, black 0%, transparent 70%)",
+                  WebkitMaskImage:
+                    "radial-gradient(ellipse at top right, black 0%, transparent 70%)",
+                }}
+              />
 
-        <p className="text-sm font-semibold text-[#202224] opacity-70">
-          Maintenance Amount
-        </p>
+              <p className="text-sm font-semibold text-[#202224] opacity-70">
+                Maintenance Amount
+              </p>
 
-        <p className="mt-1 text-2xl font-bold leading-8 text-[#39973D]">
-          ₹{" "}
-          {maintenanceRecords
-            .reduce((sum, r) => {
-              const isPending = r.status?.toLowerCase() === "pending";
-              const amount = r.maintenanceSetup?.maintenanceAmount || r.amount || 0;
-              return sum + (isPending ? Number(amount) : 0);
-            }, 0)
-            .toLocaleString()}
-        </p>
+              <p className="mt-1 text-2xl font-bold leading-8 text-[#39973D]">
+                ₹{" "}
+                {maintenanceRecords
+                  .reduce((sum, r) => {
+                    const isPending = r.status?.toLowerCase() === "pending";
+                    const amount = r.maintenanceSetup?.maintenanceAmount || r.amount || 0;
+                    return sum + (isPending ? Number(amount) : 0);
+                  }, 0)
+                  .toLocaleString()}
+              </p>
+            </div>
+
+            <div className="relative flex min-h-24 w-full flex-col justify-center overflow-hidden rounded-2xl border border-gray-100 bg-white py-4 pl-8 pr-4 shadow-sm lg:w-64">
+              <div className="absolute left-[-4px] top-1/2 h-10 w-2 -translate-y-1/2 rounded-full bg-[#E74C3C] opacity-60" />
+
+              <div
+                className="absolute -right-[1.5px] -top-[1.5px] h-20 w-16 rounded-tr-2xl border-r-[3px] border-t-2 border-[#E74C3C]"
+                style={{
+                  maskImage:
+                    "radial-gradient(ellipse at top right, black 0%, transparent 70%)",
+                  WebkitMaskImage:
+                    "radial-gradient(ellipse at top right, black 0%, transparent 70%)",
+                }}
+              />
+
+              <p className="text-sm font-semibold text-[#202224] opacity-70">
+                Penalty Amount
+              </p>
+
+              <p className="mt-1 text-2xl font-bold leading-8 text-[#E74C3C]">
+                ₹{" "}
+                {maintenanceRecords
+                  .reduce((sum, r) => {
+                    const isPending = r.status?.toLowerCase() === "pending";
+                    const penalty = r.penalty || 0;
+                    return sum + (isPending ? Number(penalty) : 0);
+                  }, 0)
+                  .toLocaleString()}
+              </p>
+            </div>
+          </div>
+        </div>
       </div>
-
-      <div className="relative flex min-h-24 w-full flex-col justify-center overflow-hidden rounded-2xl border border-gray-100 bg-white py-4 pl-8 pr-4 shadow-sm lg:w-64">
-        <div className="absolute left-[-4px] top-1/2 h-10 w-2 -translate-y-1/2 rounded-full bg-[#E74C3C] opacity-60" />
-
-        <div
-          className="absolute -right-[1.5px] -top-[1.5px] h-20 w-16 rounded-tr-2xl border-r-[3px] border-t-2 border-[#E74C3C]"
-          style={{
-            maskImage:
-              "radial-gradient(ellipse at top right, black 0%, transparent 70%)",
-            WebkitMaskImage:
-              "radial-gradient(ellipse at top right, black 0%, transparent 70%)",
-          }}
-        />
-
-        <p className="text-sm font-semibold text-[#202224] opacity-70">
-          Penalty Amount
-        </p>
-
-        <p className="mt-1 text-2xl font-bold leading-8 text-[#E74C3C]">
-          ₹{" "}
-          {maintenanceRecords
-            .reduce((sum, r) => {
-              const isPending = r.status?.toLowerCase() === "pending";
-              const penalty = r.penalty || 0;
-              return sum + (isPending ? Number(penalty) : 0);
-            }, 0)
-            .toLocaleString()}
-        </p>
-      </div>
-    </div>
-  </div>
-</div>
 
       {/* Pending Maintenance Section */}
       {maintenanceRecords.filter(r => r.status?.toLowerCase() === "pending").length > 0 ? (
@@ -366,10 +468,10 @@ export default function PersonalDetail() {
             {maintenanceRecords
               .filter(r => r.status?.toLowerCase() === "pending")
               .map((record) => (
-                <MaintenanceCard 
-                  key={record._id} 
-                  record={record} 
-                  status="Pending" 
+                <MaintenanceCard
+                  key={record._id}
+                  record={record}
+                  status="Pending"
                   onPay={(total) => handlePayment(total, record._id)}
                 />
               ))}
@@ -392,10 +494,10 @@ export default function PersonalDetail() {
             {maintenanceRecords
               .filter(r => r.status?.toLowerCase() === "due")
               .map((record) => (
-                <MaintenanceCard 
-                  key={record._id} 
-                  record={record} 
-                  status="Due" 
+                <MaintenanceCard
+                  key={record._id}
+                  record={record}
+                  status="Due"
                   onPay={(total) => handlePayment(total, record._id)}
                 />
               ))}
@@ -409,8 +511,8 @@ export default function PersonalDetail() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {announcements.length > 0 ? (
             announcements.map((announcement: any) => {
-              const isEvent = Array.isArray(announcement.announcementType) 
-                ? announcement.announcementType[0] === "Event" 
+              const isEvent = Array.isArray(announcement.announcementType)
+                ? announcement.announcementType[0] === "Event"
                 : announcement.announcementType === "Event";
               const hasAmount = announcement.amount > 0;
               const hasParticipated = eventPayments.some(p => p.event?._id === announcement._id || p.event === announcement._id);
@@ -444,7 +546,7 @@ export default function PersonalDetail() {
                       </p>
                     </div>
                   </div>
-                  
+
                   {isEvent && hasAmount && (
                     <div className="pt-2">
                       {hasParticipated ? (
@@ -452,7 +554,7 @@ export default function PersonalDetail() {
                           Already Participated
                         </div>
                       ) : (
-                        <button 
+                        <button
                           onClick={() => handleEventPayment(announcement.amount, announcement._id)}
                           className="w-full h-10 rounded-xl bg-gradient-to-r from-[#FE512E] to-[#F09619] text-white font-bold text-xs shadow-md shadow-orange-500/10 hover:opacity-90 transition-all active:scale-[0.98]"
                         >
@@ -477,9 +579,9 @@ export default function PersonalDetail() {
 
 function DetailItem({ label, value, isCapitalized }: { label: string; value: any; isCapitalized?: boolean }) {
   return (
-    <div className="space-y-0.5">
-      <p className="text-sm text-gray-400 font-medium">{label}</p>
-      <p className={`text-base font-bold text-gray-800 ${isCapitalized ? 'capitalize' : ''}`}>
+    <div className="space-y-0">
+      <p className="text-lg font-medium text-[#202224]">{label}</p>
+      <p className={`text-[#A7A7A7] text-lg font-normal break-all ${isCapitalized ? 'capitalize' : ''}`}>
         {value || "--"}
       </p>
     </div>
@@ -488,9 +590,9 @@ function DetailItem({ label, value, isCapitalized }: { label: string; value: any
 
 function MemberDetailItem({ label, value, isCapitalized }: { label: string; value: any; isCapitalized?: boolean }) {
   return (
-    <div className="flex justify-between items-center text-sm">
-      <span className="text-gray-400">{label}</span>
-      <span className={`font-bold text-gray-800 text-right ${isCapitalized ? 'capitalize' : ''}`}>
+    <div className="flex justify-between items-start gap-2 text-sm">
+      <span className="text-gray-400 shrink-0">{label}</span>
+      <span className={`font-bold text-gray-800 text-right break-all ${isCapitalized ? 'capitalize' : ''}`}>
         {value || "--"}
       </span>
     </div>
@@ -507,8 +609,8 @@ function DocumentCard({ label, size, url }: { label: string; size: string; url?:
         <p className="text-xs font-bold text-gray-800 truncate">{label}</p>
         <p className="text-[10px] text-gray-400 font-medium">{size}</p>
       </div>
-      <div className="h-8 w-8 rounded-full bg-gray-50 flex items-center justify-center text-gray-400">
-        <Clock size={14} />
+      <div className="h-8 w-8 rounded-full bg-gray-50 flex items-center justify-center text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors">
+        <Eye size={14} />
       </div>
     </div>
   );

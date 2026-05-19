@@ -301,7 +301,7 @@ button:hover svg path[fill]:not([fill="none"]) {
 }
 
 .bg-secondary {
-  background-color: var(--secondary);
+  background-color: var(--blue);
 }
 
 .bg-tertiary {
@@ -359,13 +359,13 @@ button:hover svg path[fill]:not([fill="none"]) {
 .gradient-border-primary {
   border: 1.5px solid transparent;
   background: linear-gradient(var(--bg-white), var(--bg-white)) padding-box,
-              linear-gradient(to right, #FE512E, #F09619) border-box;
+    linear-gradient(to right, #FE512E, #F09619) border-box;
 }
 
 .gradient-border-primary-light {
   border: 1.5px solid transparent;
   background: linear-gradient(#FFF8F5, #FFF8F5) padding-box,
-              linear-gradient(to right, #FE512E, #F09619) border-box;
+    linear-gradient(to right, #FE512E, #F09619) border-box;
 }
 
 .bg-primary-gradient {

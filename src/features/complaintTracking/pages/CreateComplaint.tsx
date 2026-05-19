@@ -198,7 +198,7 @@ export default function CreateComplaint() {
                             "min-h-12 shrink-0 px-4 py-3 text-xs font-semibold transition-all sm:min-h-14 sm:px-5 sm:py-4 sm:text-sm",
                             activeTab === "complaint"
                                 ? "rounded-t-xl bg-gradient-to-r from-[#FE512E] to-[#F09619] text-white"
-                                : "rounded-t-xl border border-b-2 border-[#D9DCE5] border-b-[#F09619] bg-white text-[#202224] hover:bg-gray-50"
+                                : "rounded-t-xl border border-[#D9DCE5] bg-white text-[#202224] hover:bg-gray-50"
                         )}
                     >
                         Complaint Submission
@@ -210,7 +210,7 @@ export default function CreateComplaint() {
                             "min-h-12 shrink-0 px-4 py-3 text-xs font-semibold transition-all sm:min-h-14 sm:px-5 sm:py-4 sm:text-sm",
                             activeTab === "request"
                                 ? "rounded-t-xl bg-gradient-to-r from-[#FE512E] to-[#F09619] text-white"
-                                : "rounded-t-xl border border-b-2 border-[#D9DCE5] border-b-[#F09619] bg-white text-[#202224] hover:bg-gray-50"
+                                : "rounded-t-xl border border-[#D9DCE5] bg-white text-[#202224] hover:bg-gray-50"
                         )}
                     >
                         Request Submission
