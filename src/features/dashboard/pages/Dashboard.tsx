@@ -119,13 +119,18 @@ export default function Dashboard() {
 
         // Map Pending Maintenances
         const mappedMaintenance = allMaintenance
-          .filter((m: any) => m && m.status?.toLowerCase() === "pending")
-          .map((m: any) => ({
-            id: m._id,
-            name: m.name || (m.resident?.name || "Resident"),
-            pending: "Pending",
-            amount: (m.amount || m.maintenanceSetup?.maintenanceAmount || 0).toString()
-          }));
+          .filter((m: any) => m && (m.status?.toLowerCase() === "pending" || m.status?.toLowerCase() === "due"))
+          .map((m: any) => {
+            const firstName = m.resident?.firstname || "";
+            const lastName = m.resident?.lastname || "";
+            const fullName = (firstName && lastName) ? `${firstName} ${lastName}` : (m.name || m.resident?.name || "Resident");
+            return {
+              id: m._id,
+              name: fullName,
+              pending: m.status || "Pending",
+              amount: (m.amount || m.maintenanceSetup?.maintenanceAmount || 0).toString()
+            };
+          });
 
 
         setData({

@@ -1,6 +1,6 @@
 import { ChevronDown, Menu, Search, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { BASE_URL } from "../services/api";
 import { NotificationBingIcon } from "../assets/icons/admin-dashboard-icons";
 import NotificationDropdown from "../components/NotificationDropdown";
@@ -8,6 +8,7 @@ import { useSocket } from "../context/SocketContext";
 import Button from "../ui/Button";
 import Input from "../ui/Input";
 import Avatar from "../components/Avatar";
+import { adminNavigation, residentNavigation, securityNavigation, type NavItem } from "../constants/navigation";
 
 import { useAuth } from "../context/AuthContext";
 
@@ -16,12 +17,81 @@ type HeaderProps = {
 };
 
 export default function Header({ onMenuClick }: HeaderProps) {
+  const navigate = useNavigate();
   const [notificationOpen, setNotificationOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResultsOpen, setSearchResultsOpen] = useState(false);
   const { user: profile } = useAuth();
   const location = useLocation();
 
   const isDashboard = location.pathname === "/dashboard";
+
+  const getNavigation = (): NavItem[] => {
+    switch (profile?.role?.toLowerCase()) {
+      case "resident":
+        return residentNavigation;
+      case "security":
+      case "guard":
+        return securityNavigation;
+      case "admin":
+      default:
+        return adminNavigation;
+    }
+  };
+
+  const getSearchableItems = () => {
+    const navItems = getNavigation();
+    const flatList: { label: string; path: string; parentLabel?: string }[] = [];
+
+    navItems.forEach((item) => {
+      if (item.children && item.children.length > 0) {
+        item.children.forEach((child) => {
+          flatList.push({
+            label: child.label,
+            path: child.path,
+            parentLabel: item.label,
+          });
+        });
+      } else {
+        flatList.push({
+          label: item.label,
+          path: item.path,
+        });
+      }
+    });
+    return flatList;
+  };
+
+  const searchableItems = getSearchableItems();
+  const filteredSearchItems = searchQuery.trim()
+    ? searchableItems.filter(
+        (item) =>
+          item.label.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          (item.parentLabel && item.parentLabel.toLowerCase().includes(searchQuery.toLowerCase()))
+      )
+    : [];
+
+  const searchContainerRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent | TouchEvent) {
+      if (
+        searchContainerRef.current &&
+        !searchContainerRef.current.contains(event.target as Node)
+      ) {
+        setSearchResultsOpen(false);
+      }
+    }
+
+    document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener("touchstart", handleClickOutside);
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("touchstart", handleClickOutside);
+    };
+  }, []);
 
   // Simple breadcrumb logic based on path
   const pathParts = location.pathname.split("/").filter(Boolean);
@@ -79,19 +149,53 @@ export default function Header({ onMenuClick }: HeaderProps) {
             <Menu size={20} />
           </button>
 
-          {isDashboard ? (
-            /* Desktop: Full search bar */
-            <div className="hidden sm:block w-full max-w-100">
-              <Input
-                type="text"
-                placeholder="Search Here"
-                leftIcon={<Search size={18} strokeWidth={2} />}
-                className="h-11 rounded-full border-border-light lg:h-12.5"
-              />
-            </div>
-          ) : (
-            /* Breadcrumbs */
-            <div className="hidden sm:flex items-center gap-2 text-sm font-medium">
+          {/* Desktop Search Bar - Works universally across overall panel */}
+          <div ref={searchContainerRef} className="hidden sm:block w-full max-w-80 lg:max-w-100 relative">
+            <Input
+              type="text"
+              placeholder="Search Here"
+              value={searchQuery}
+              onChange={(e) => {
+                setSearchQuery(e.target.value);
+                setSearchResultsOpen(true);
+              }}
+              onFocus={() => setSearchResultsOpen(true)}
+              leftIcon={<Search size={18} strokeWidth={2} />}
+              className="h-11 rounded-full border-border-light lg:h-12.5"
+            />
+            
+            {/* Search Results Dropdown */}
+            {searchResultsOpen && searchQuery.trim() && (
+              <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden z-50 p-2 max-h-[300px] overflow-y-auto custom-scrollbar">
+                {filteredSearchItems.length > 0 ? (
+                  filteredSearchItems.map((item) => (
+                    <button
+                      key={item.path + '-' + item.label}
+                      onClick={() => {
+                        navigate(item.path);
+                        setSearchQuery("");
+                        setSearchResultsOpen(false);
+                      }}
+                      className="w-full flex items-center justify-between text-left px-4 py-3 rounded-xl hover:bg-[#F6F8FB] transition-colors text-sm"
+                    >
+                      <span className="font-semibold text-gray-800">{item.label}</span>
+                      {item.parentLabel && (
+                        <span className="text-xs text-gray-400 font-medium capitalize">{item.parentLabel}</span>
+                      )}
+                    </button>
+                  ))
+                ) : (
+                  <div className="p-4 text-center text-xs text-gray-400 font-medium">
+                    No results matching "{searchQuery}"
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* Breadcrumbs - Only shown on other pages next to the search bar */}
+          {!isDashboard && (
+            <div className="hidden lg:flex items-center gap-2 text-sm font-medium shrink-0 ml-2">
               <Link
                 to="/dashboard"
                 className="text-[#A7A7A7] hover:text-primary transition-colors"
@@ -207,7 +311,10 @@ export default function Header({ onMenuClick }: HeaderProps) {
               type="button"
               aria-label="Close search"
               className="absolute inset-0 bg-black/20"
-              onClick={() => setSearchOpen(false)}
+              onClick={() => {
+                setSearchQuery("");
+                setSearchOpen(false);
+              }}
             />
 
             {/* Search bar */}
@@ -215,22 +322,57 @@ export default function Header({ onMenuClick }: HeaderProps) {
               className="absolute inset-x-0 top-16 z-50 bg-white p-4 shadow-lg"
               onClick={(e) => e.stopPropagation()}
             >
-              <Input
-                type="text"
-                placeholder="Search Here"
-                autoFocus
-                leftIcon={<Search size={18} strokeWidth={2} />}
-                rightIcon={
-                  <button
-                    type="button"
-                    onClick={() => setSearchOpen(false)}
-                    className="flex shrink-0"
-                  >
-                    <X size={18} strokeWidth={2} />
-                  </button>
-                }
-                className="h-11 rounded-full border-(--border)"
-              />
+              <div className="relative">
+                <Input
+                  type="text"
+                  placeholder="Search Here"
+                  autoFocus
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  leftIcon={<Search size={18} strokeWidth={2} />}
+                  rightIcon={
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSearchQuery("");
+                        setSearchOpen(false);
+                      }}
+                      className="flex shrink-0"
+                    >
+                      <X size={18} strokeWidth={2} />
+                    </button>
+                  }
+                  className="h-11 rounded-full border-(--border)"
+                />
+
+                {/* Mobile Search Results Dropdown */}
+                {searchQuery.trim() && (
+                  <div className="mt-2 bg-white rounded-2xl border border-gray-100 overflow-hidden p-2 max-h-[250px] overflow-y-auto custom-scrollbar">
+                    {filteredSearchItems.length > 0 ? (
+                      filteredSearchItems.map((item) => (
+                        <button
+                          key={item.path + '-' + item.label}
+                          onClick={() => {
+                            navigate(item.path);
+                            setSearchQuery("");
+                            setSearchOpen(false);
+                          }}
+                          className="w-full flex items-center justify-between text-left px-4 py-3 rounded-xl hover:bg-[#F6F8FB] transition-colors text-sm"
+                        >
+                          <span className="font-semibold text-gray-800">{item.label}</span>
+                          {item.parentLabel && (
+                            <span className="text-xs text-gray-400 font-medium capitalize">{item.parentLabel}</span>
+                          )}
+                        </button>
+                      ))
+                    ) : (
+                      <div className="p-4 text-center text-xs text-gray-400 font-medium">
+                        No results matching "{searchQuery}"
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         )}

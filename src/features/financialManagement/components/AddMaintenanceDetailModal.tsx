@@ -160,36 +160,7 @@ export default function AddMaintenanceDetailModal({
             </div>
           </div>
 
-          {/* Payment Method Selection */}
-          <div className="flex flex-col gap-2">
-            <label className="text-sm font-medium leading-5 text-[#202224]">
-              Payment Method<span className="text-[#FE512E]">*</span>
-            </label>
-            <div className="flex gap-4 p-3 border border-[#D9D9D9] rounded-xl">
-              <label className="flex items-center gap-2 cursor-pointer group">
-                <input
-                  type="radio"
-                  name="paymentMethod"
-                  value="Online"
-                  checked={formData.paymentMethod === "Online"}
-                  onChange={() => setFormData({ ...formData, paymentMethod: "Online" })}
-                  className="w-4 h-4 accent-[#FE512E]"
-                />
-                <span className={`text-sm font-medium ${formData.paymentMethod === "Online" ? "text-[#202224]" : "text-[#A7A7A7]"}`}>Online</span>
-              </label>
-              <label className="flex items-center gap-2 cursor-pointer group">
-                <input
-                  type="radio"
-                  name="paymentMethod"
-                  value="Cash"
-                  checked={formData.paymentMethod === "Cash"}
-                  onChange={() => setFormData({ ...formData, paymentMethod: "Cash" })}
-                  className="w-4 h-4 accent-[#FE512E]"
-                />
-                <span className={`text-sm font-medium ${formData.paymentMethod === "Cash" ? "text-[#202224]" : "text-[#A7A7A7]"}`}>Cash</span>
-              </label>
-            </div>
-          </div>
+
 
           {/* Action Buttons */}
           <div className="grid grid-cols-2 gap-5 pt-1">
