@@ -150,48 +150,50 @@ export default function Header({ onMenuClick }: HeaderProps) {
           </button>
 
           {/* Desktop Search Bar - Works universally across overall panel */}
-          <div ref={searchContainerRef} className="hidden sm:block w-full max-w-80 lg:max-w-100 relative">
-            <Input
-              type="text"
-              placeholder="Search Here"
-              value={searchQuery}
-              onChange={(e) => {
-                setSearchQuery(e.target.value);
-                setSearchResultsOpen(true);
-              }}
-              onFocus={() => setSearchResultsOpen(true)}
-              leftIcon={<Search size={18} strokeWidth={2} />}
-              className="h-11 rounded-full border-border-light lg:h-12.5"
-            />
-            
-            {/* Search Results Dropdown */}
-            {searchResultsOpen && searchQuery.trim() && (
-              <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden z-50 p-2 max-h-[300px] overflow-y-auto custom-scrollbar">
-                {filteredSearchItems.length > 0 ? (
-                  filteredSearchItems.map((item) => (
-                    <button
-                      key={item.path + '-' + item.label}
-                      onClick={() => {
-                        navigate(item.path);
-                        setSearchQuery("");
-                        setSearchResultsOpen(false);
-                      }}
-                      className="w-full flex items-center justify-between text-left px-4 py-3 rounded-xl hover:bg-[#F6F8FB] transition-colors text-sm"
-                    >
-                      <span className="font-semibold text-gray-800">{item.label}</span>
-                      {item.parentLabel && (
-                        <span className="text-xs text-gray-400 font-medium capitalize">{item.parentLabel}</span>
-                      )}
-                    </button>
-                  ))
-                ) : (
-                  <div className="p-4 text-center text-xs text-gray-400 font-medium">
-                    No results matching "{searchQuery}"
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
+          {isDashboard && (
+            <div ref={searchContainerRef} className="hidden sm:block w-full max-w-80 lg:max-w-100 relative">
+              <Input
+                type="text"
+                placeholder="Search Here"
+                value={searchQuery}
+                onChange={(e) => {
+                  setSearchQuery(e.target.value);
+                  setSearchResultsOpen(true);
+                }}
+                onFocus={() => setSearchResultsOpen(true)}
+                leftIcon={<Search size={18} strokeWidth={2} />}
+                className="h-11 rounded-full border-border-light lg:h-12.5"
+              />
+              
+              {/* Search Results Dropdown */}
+              {searchResultsOpen && searchQuery.trim() && (
+                <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden z-50 p-2 max-h-[300px] overflow-y-auto custom-scrollbar">
+                  {filteredSearchItems.length > 0 ? (
+                    filteredSearchItems.map((item) => (
+                      <button
+                        key={item.path + '-' + item.label}
+                        onClick={() => {
+                          navigate(item.path);
+                          setSearchQuery("");
+                          setSearchResultsOpen(false);
+                        }}
+                        className="w-full flex items-center justify-between text-left px-4 py-3 rounded-xl hover:bg-[#F6F8FB] transition-colors text-sm"
+                      >
+                        <span className="font-semibold text-gray-800">{item.label}</span>
+                        {item.parentLabel && (
+                          <span className="text-xs text-gray-400 font-medium capitalize">{item.parentLabel}</span>
+                        )}
+                      </button>
+                    ))
+                  ) : (
+                    <div className="p-4 text-center text-xs text-gray-400 font-medium">
+                      No results matching "{searchQuery}"
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Breadcrumbs - Only shown on other pages next to the search bar */}
           {!isDashboard && (
@@ -254,13 +256,15 @@ export default function Header({ onMenuClick }: HeaderProps) {
 
         <div className="flex items-center gap-2 lg:gap-4">
           {/* Mobile Search Button */}
-          <button
-            type="button"
-            onClick={() => setSearchOpen(!searchOpen)}
-            className="flex h-10 w-10 shrink-0 cursor-pointer items-center justify-center rounded-full border-none bg-[#F6F8FB] text-[#202224] sm:hidden"
-          >
-            <Search size={20} strokeWidth={2} />
-          </button>
+          {isDashboard && (
+            <button
+              type="button"
+              onClick={() => setSearchOpen(!searchOpen)}
+              className="flex h-10 w-10 shrink-0 cursor-pointer items-center justify-center rounded-full border-none bg-[#F6F8FB] text-[#202224] sm:hidden"
+            >
+              <Search size={20} strokeWidth={2} />
+            </button>
+          )}
 
           <div ref={notificationRef} className="relative">
             <button
@@ -304,7 +308,7 @@ export default function Header({ onMenuClick }: HeaderProps) {
         </div>
 
         {/* Mobile search overlay */}
-        {searchOpen && (
+        {isDashboard && searchOpen && (
           <div className="fixed inset-0 z-40 sm:hidden">
             {/* Backdrop */}
             <button
