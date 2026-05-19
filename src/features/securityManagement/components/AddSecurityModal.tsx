@@ -1,6 +1,9 @@
 import { X, Upload, Loader2, Image as ImageIcon, Trash2, Camera } from "lucide-react";
 import Button from "../../../ui/Button";
 import Input from "../../../ui/Input";
+import FormSelect from "../../../ui/FormSelect";
+import FormDatePicker from "../../../ui/FormDatePicker";
+import FormTimePicker from "../../../ui/FormTimePicker";
 import { useState, useRef, useEffect } from "react";
 import { securityGuardApi, authApi } from "../../../services/api";
 import toast from "react-hot-toast";
@@ -19,8 +22,8 @@ export default function AddSecurityModal({ open, onClose, onSuccess, initialData
     fullName: "",
     phoneNumber: "",
     email: "",
-    gender: "male",
-    shift: "Day",
+    gender: "",
+    shift: "",
     shiftDate: "",
     shiftTime: "",
   });
@@ -33,6 +36,17 @@ export default function AddSecurityModal({ open, onClose, onSuccess, initialData
     uploadAadhar: null,
   });
 
+  // Options for FormSelect components
+  const genderOptions = [
+    { label: "Male", value: "male" },
+    { label: "Female", value: "female" },
+  ];
+
+  const shiftOptions = [
+    { label: "Day", value: "Day" },
+    { label: "Night", value: "Night" },
+  ];
+
   const fileInputRef = useRef<HTMLInputElement>(null);
   const aadharInputRef = useRef<HTMLInputElement>(null);
 
@@ -42,8 +56,8 @@ export default function AddSecurityModal({ open, onClose, onSuccess, initialData
         fullName: initialData.name || initialData.fullName || "",
         phoneNumber: initialData.phoneNumber || "",
         email: initialData.email || "",
-        gender: initialData.gender?.toLowerCase() || "male",
-        shift: initialData.shift || "Day",
+        gender: initialData.gender?.toLowerCase() || "",
+        shift: initialData.shift || "",
         shiftDate: initialData.shiftDate ? new Date(initialData.shiftDate).toISOString().split('T')[0] : "",
         shiftTime: initialData.shiftTime || "",
       });
@@ -57,8 +71,8 @@ export default function AddSecurityModal({ open, onClose, onSuccess, initialData
         fullName: "",
         phoneNumber: "",
         email: "",
-        gender: "male",
-        shift: "Day",
+        gender: "",
+        shift: "",
         shiftDate: "",
         shiftTime: "",
       });
@@ -71,9 +85,21 @@ export default function AddSecurityModal({ open, onClose, onSuccess, initialData
 
   if (!open) return null;
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleSelectChange = (name: string, value: string) => {
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleDateChange = (value: string) => {
+    setFormData((prev) => ({ ...prev, shiftDate: value }));
+  };
+
+  const handleTimeChange = (value: string) => {
+    setFormData((prev) => ({ ...prev, shiftTime: value }));
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, type: "profileImage" | "uploadAadhar") => {
@@ -123,31 +149,34 @@ export default function AddSecurityModal({ open, onClose, onSuccess, initialData
   };
 
   return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 sm:p-6">
-      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
+    <div className="fixed inset-0 z-[60] flex items-center justify-center px-4 py-6">
+      <div className="absolute inset-0 bg-black/55" onClick={onClose} />
 
-      <div className="relative w-full max-w-lg bg-white rounded-[15px] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
-        <div className="p-6 border-b border-gray-100 flex justify-between items-center">
-          <h2 className="text-xl font-bold text-gray-900">
+      <div className="relative flex w-full max-w-sm flex-col rounded-2xl bg-white shadow-2xl overflow-visible">
+        <div className="flex items-center justify-between border-b border-[#F4F4F4] px-4 py-3">
+          <h2 className="text-base font-semibold text-[#202224]">
             {mode === "edit" ? "Edit Security" : mode === "view" ? "View Security" : "Add Security"}
           </h2>
-          <button onClick={onClose} className="p-1 hover:bg-gray-100 rounded-full transition-colors">
-            <X size={20} className="text-gray-400" />
+          <button onClick={onClose} className="rounded-full p-1 text-[#A7A7A7] hover:bg-gray-100">
+            <X className="size-5" />
           </button>
         </div>
 
-        <form className="p-6 space-y-5 max-h-[85vh] overflow-y-auto" onSubmit={handleSubmit}>
+        <form
+          className="px-4 py-4 space-y-3 max-h-[calc(100vh-7rem)] overflow-y-auto lg:max-h-none lg:overflow-visible"
+          onSubmit={handleSubmit}
+        >
           {/* Photo Section */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-5">
             <div
               onClick={() => mode !== "view" && fileInputRef.current?.click()}
-              className={`h-12 w-12 rounded-full bg-gray-100 flex items-center justify-center text-gray-400 ${mode !== "view" ? 'cursor-pointer hover:bg-gray-200' : ''} transition-colors overflow-hidden border border-gray-200`}
+              className="flex size-16 shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded-full bg-[#D9D9D9] text-white"
             >
               {files.profileImage ? (
                 <img
                   src={files.profileImage instanceof File ? URL.createObjectURL(files.profileImage) : files.profileImage}
                   alt="Preview"
-                  className="h-full w-full object-cover"
+                  className="size-full object-cover"
                 />
               ) : (
                 <ImageIcon size={20} />
@@ -173,123 +202,113 @@ export default function AddSecurityModal({ open, onClose, onSuccess, initialData
           </div>
 
           <div className="space-y-4">
-            <div className="space-y-1.5">
-              <label className="text-sm font-semibold text-gray-800">Full Name<span className="text-red-500">*</span></label>
+            <div className="flex flex-col gap-2">
+              <label className="text-sm font-medium leading-5 text-[#202224]">
+                Full Name<span className="text-[#FE512E]">*</span>
+              </label>
               <Input
                 name="fullName"
                 value={formData.fullName}
                 onChange={handleChange}
                 placeholder="Enter Full Name"
-                className="h-11 rounded-lg border-gray-200"
+                className="h-11 rounded-xl border-[#D9D9D9] text-sm font-medium text-[#202224] placeholder:text-[#A7A7A7] focus:border-[#202224]"
                 required
                 disabled={mode === "view"}
               />
             </div>
 
-            <div className="space-y-1.5">
-              <label className="text-sm font-semibold text-gray-800">Phone Number<span className="text-red-500">*</span></label>
+            <div className="flex flex-col gap-2">
+              <label className="text-sm font-medium leading-5 text-[#202224]">
+                Phone Number<span className="text-[#FE512E]">*</span>
+              </label>
               <Input
                 name="phoneNumber"
                 value={formData.phoneNumber}
                 onChange={handleChange}
                 placeholder="+91"
-                className="h-11 rounded-lg border-gray-200"
+                className="h-11 rounded-xl border-[#D9D9D9] text-sm font-medium text-[#202224] placeholder:text-[#A7A7A7] focus:border-[#202224]"
                 required
                 disabled={mode === "view"}
               />
             </div>
 
-            <div className="space-y-1.5">
-              <label className="text-sm font-semibold text-gray-800">Email Address<span className="text-red-500">*</span></label>
+            <div className="flex flex-col gap-2">
+              <label className="text-sm font-medium leading-5 text-[#202224]">
+                Email Address<span className="text-[#FE512E]">*</span>
+              </label>
               <Input
                 name="email"
                 type="email"
                 value={formData.email}
                 onChange={handleChange}
                 placeholder="guard@example.com"
-                className="h-11 rounded-lg border-gray-200"
+                className="h-11 rounded-xl border-[#D9D9D9] text-sm font-medium text-[#202224] placeholder:text-[#A7A7A7] focus:border-[#202224]"
                 required
                 disabled={mode === "view"}
               />
             </div>
 
             <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-1.5">
-                <label className="text-sm font-semibold text-gray-800">Gender<span className="text-red-500">*</span></label>
-                <div className="relative">
-                  <select
-                    name="gender"
-                    value={formData.gender}
-                    onChange={handleChange}
-                    disabled={mode === "view"}
-                    className="w-full h-11 px-4 rounded-lg border border-gray-200 outline-none focus:border-[#FE512E] appearance-none bg-white text-sm font-medium transition-all"
-                    required
-                  >
-                    <option value="" disabled>Select Gender</option>
-                    <option value="male">Male</option>
-                    <option value="female">Female</option>
-                  </select>
-                  <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none">
-                    <svg width="10" height="6" viewBox="0 0 10 6" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <path d="M1 1L5 5L9 1" stroke="#202224" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                    </svg>
-                  </div>
-                </div>
+              <div className="flex flex-col gap-2">
+                <label className="text-sm font-medium leading-5 text-[#202224]">
+                  Gender<span className="text-[#FE512E]">*</span>
+                </label>
+                <FormSelect
+                  value={formData.gender}
+                  onChange={(value) => handleSelectChange("gender", value)}
+                  options={genderOptions}
+                  placeholder="Select Gender"
+                  disabled={mode === "view"}
+                  className="w-full"
+                />
               </div>
-              <div className="space-y-1.5">
-                <label className="text-sm font-semibold text-gray-800">Shift<span className="text-red-500">*</span></label>
-                <div className="relative">
-                  <select
-                    name="shift"
-                    value={formData.shift}
-                    onChange={handleChange}
-                    disabled={mode === "view"}
-                    className="w-full h-11 px-4 rounded-lg border border-gray-200 outline-none focus:border-[#FE512E] appearance-none bg-white text-sm font-medium transition-all"
-                    required
-                  >
-                    <option value="" disabled>Select Shift</option>
-                    <option value="Day">Day</option>
-                    <option value="Night">Night</option>
-                  </select>
-                  <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none">
-                    <svg width="10" height="6" viewBox="0 0 10 6" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <path d="M1 1L5 5L9 1" stroke="#202224" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                    </svg>
-                  </div>
-                </div>
+              <div className="flex flex-col gap-2">
+                <label className="text-sm font-medium leading-5 text-[#202224]">
+                  Shift<span className="text-[#FE512E]">*</span>
+                </label>
+                <FormSelect
+                  value={formData.shift}
+                  onChange={(value) => handleSelectChange("shift", value)}
+                  options={shiftOptions}
+                  placeholder="Select Shift"
+                  disabled={mode === "view"}
+                  className="w-full"
+                />
               </div>
             </div>
 
             <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-1.5">
-                <label className="text-sm font-semibold text-gray-800">Shift Date<span className="text-red-500">*</span></label>
-                <Input
-                  name="shiftDate"
-                  type="date"
+              <div className="flex flex-col gap-2">
+                <label className="text-sm font-medium leading-5 text-[#202224]">
+                  Shift Date<span className="text-[#FE512E]">*</span>
+                </label>
+                <FormDatePicker
                   value={formData.shiftDate}
-                  onChange={handleChange}
-                  className="h-11 rounded-lg border-gray-200"
-                  required
+                  onChange={handleDateChange}
+                  placeholder="Select date"
                   disabled={mode === "view"}
+                  className="w-full"
                 />
               </div>
-              <div className="space-y-1.5">
-                <label className="text-sm font-semibold text-gray-800">Shift Time<span className="text-red-500">*</span></label>
-                <Input
-                  name="shiftTime"
-                  type="time"
+              <div className="flex flex-col gap-2">
+                <label className="text-sm font-medium leading-5 text-[#202224]">
+                  Shift Time<span className="text-[#FE512E]">*</span>
+                </label>
+                <FormTimePicker
                   value={formData.shiftTime}
-                  onChange={handleChange}
-                  className="h-11 rounded-lg border-gray-200"
-                  required
+                  onChange={handleTimeChange}
+                  placeholder="Select time"
                   disabled={mode === "view"}
+                  className="w-full"
                 />
               </div>
             </div>
 
             {/* Aadhar Upload Section */}
-            <div className="space-y-1.5">
-              <label className="text-sm font-semibold text-gray-800">Upload Aadhar Card<span className="text-red-500">*</span></label>
+            <div className="flex flex-col gap-2">
+              <label className="text-sm font-medium leading-5 text-[#202224]">
+                Upload Aadhar Card<span className="text-[#FE512E]">*</span>
+              </label>
               {files.uploadAadhar ? (
                 <div className="flex items-center gap-3 p-4 border border-gray-200 rounded-xl bg-gray-50">
                   <div className="h-10 w-10 flex items-center justify-center bg-blue-50 text-blue-500 rounded-lg">
@@ -328,11 +347,11 @@ export default function AddSecurityModal({ open, onClose, onSuccess, initialData
                   onClick={() => mode !== "view" && aadharInputRef.current?.click()}
                   className={`border-2 border-dashed border-gray-200 rounded-xl p-6 flex flex-col items-center justify-center gap-2 bg-white ${mode !== "view" ? 'hover:bg-gray-50 cursor-pointer' : ''} transition-colors`}
                 >
-                  <ImageIcon className="text-gray-300 h-8 w-8" />
-                  <div className="text-[13px] text-gray-500">
-                    <span className="text-[#5678E9] font-bold">Upload a file</span> or drag and drop
+                  <ImageIcon className="size-7 text-[#A7A7A7]" />
+                  <div className="mt-2 text-xs font-semibold text-[#202224]">
+                    <span className="text-[#5678E9]">Upload a file</span> or drag and drop
                   </div>
-                  <div className="text-[11px] text-gray-400 font-medium">PNG, JPG, GIF up to 10MB</div>
+                  <div className="mt-1 text-[0.65rem] font-medium text-[#A7A7A7]">PNG, JPG, GIF up to 10MB</div>
                   <input
                     type="file"
                     ref={aadharInputRef}
@@ -345,11 +364,11 @@ export default function AddSecurityModal({ open, onClose, onSuccess, initialData
             </div>
           </div>
 
-          <div className="flex gap-4 pt-2">
+          <div className="grid grid-cols-2 gap-4 pt-1">
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 h-12 rounded-lg border border-gray-200 text-gray-700 font-bold hover:bg-gray-50 transition-all"
+              className="h-12 rounded-xl border border-[#D9D9D9] bg-white text-sm font-semibold text-[#202224] hover:bg-gray-50 transition-colors"
             >
               {mode === "view" ? "Close" : "Cancel"}
             </button>
@@ -357,9 +376,9 @@ export default function AddSecurityModal({ open, onClose, onSuccess, initialData
               <button
                 type="submit"
                 disabled={loading}
-                className="flex-1 h-12 rounded-lg bg-[#FE512E] text-white font-bold hover:opacity-90 transition-all active:scale-[0.98] disabled:opacity-50 flex items-center justify-center"
+                className="h-12 rounded-xl bg-gradient-to-r from-[#FE512E] to-[#F09619] text-sm font-semibold text-white disabled:opacity-50 transition-opacity"
               >
-                {loading ? <Loader2 className="animate-spin" /> : mode === "edit" ? "Save" : "Create"}
+                {loading ? <Loader2 className="animate-spin mx-auto" size={20} /> : mode === "edit" ? "Save" : "Create"}
               </button>
             )}
           </div>
