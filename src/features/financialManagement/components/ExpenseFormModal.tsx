@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { ImagePlus, Trash2, X } from "lucide-react";
+import { ImagePlus, Trash2, X, Loader2 } from "lucide-react";
 import Button from "../../../ui/Button";
 import FormDatePicker from "../../../ui/FormDatePicker";
 
@@ -16,7 +16,7 @@ export interface ExpenseFormData {
 interface ExpenseFormModalProps {
     open: boolean;
     onClose: () => void;
-    onSubmit: (data: ExpenseFormData) => void;
+    onSubmit: (data: ExpenseFormData) => void | Promise<void>;
     initialData?: ExpenseFormData | null;
     isEdit?: boolean;
 }
@@ -41,6 +41,9 @@ export default function ExpenseFormModal({
     const fileInputRef = useRef<HTMLInputElement | null>(null);
 
     const [formData, setFormData] = useState<ExpenseFormData>(emptyForm);
+
+
+    const [loader, setLoader] = useState(false);
 
     useEffect(() => {
         if (!open) return;
@@ -95,8 +98,16 @@ export default function ExpenseFormModal({
         formData.amount.trim() &&
         formData.billName;
 
-    const handleSubmit = () => {
-        onSubmit(formData);
+    const handleSubmit = async () => {
+        if (!isFormValid) return;
+        setLoader(true);
+        try {
+            await onSubmit(formData);
+        } catch (error) {
+            console.error("Error submitting expense:", error);
+        } finally {
+            setLoader(false);
+        }
     };
 
     if (!open) return null;
@@ -114,7 +125,9 @@ export default function ExpenseFormModal({
                         <button
                             type="button"
                             onClick={onClose}
-                            className="flex size-8 shrink-0 items-center justify-center rounded-full bg-[#F6F8FB] text-[#6F7786] transition hover:bg-[#FFEDE6] hover:text-[#FE512E] sm:hidden"
+                            disabled={loader}
+                            className={`flex size-8 shrink-0 items-center justify-center rounded-full bg-[#F6F8FB] text-[#6F7786] transition hover:bg-[#FFEDE6] hover:text-[#FE512E] sm:hidden ${loader ? "opacity-50 cursor-not-allowed" : ""
+                                }`}
                             aria-label="Close modal"
                         >
                             <X size={17} />
@@ -258,7 +271,9 @@ export default function ExpenseFormModal({
                             type="button"
                             variant="outline"
                             onClick={onClose}
-                            className="h-[51px] rounded-[10px] border border-[#D9D9D9] bg-white text-base font-semibold text-[#202224] hover:bg-gray-50"
+                            disabled={loader}
+                            className={`h-[51px] rounded-[10px] border border-[#D9D9D9] bg-white text-base font-semibold text-[#202224] hover:bg-gray-50 ${loader ? "opacity-50 cursor-not-allowed" : ""
+                                }`}
                         >
                             Cancel
                         </Button>
@@ -266,13 +281,20 @@ export default function ExpenseFormModal({
                         <Button
                             type="button"
                             onClick={handleSubmit}
-                            disabled={!isFormValid}
-                            className={`h-[51px] rounded-[10px] text-base font-semibold shadow-none ${isFormValid
-                                    ? "bg-gradient-to-r from-[#FE512E] to-[#F09619] text-white"
-                                    : "!bg-[#F6F8FB] text-[#202224]"
+                            disabled={!isFormValid || loader}
+                            className={`h-[51px] rounded-[10px] text-base font-semibold shadow-none flex items-center justify-center gap-2 ${isFormValid && !loader
+                                    ? "bg-gradient-to-r from-[#FE512E] to-[#F09619] text-white cursor-pointer"
+                                    : "!bg-[#F6F8FB] text-[#202224] cursor-not-allowed opacity-70"
                                 }`}
                         >
-                            Save
+                            {loader ? (
+                                <>
+                                    <Loader2 className="animate-spin" size={18} />
+                                    <span>Saving...</span>
+                                </>
+                            ) : (
+                                "Save"
+                            )}
                         </Button>
                     </div>
                 </div>
