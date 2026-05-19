@@ -135,6 +135,8 @@ function App() {
             </Route>
 
             <Route path="/create-password/:token" element={<CreatePassword />} />
+                            <Route path="/security-guard/create-password/:token" element={<CreatePassword />} />
+
 
             {/* Protected Routes */}
             <Route element={<AppLayout />}>

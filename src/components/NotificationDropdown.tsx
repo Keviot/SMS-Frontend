@@ -178,7 +178,7 @@ export default function NotificationDropdown({ onClose }: NotificationDropdownPr
                           e.stopPropagation();
                           markAsRead(item.id as string);
                         }}
-                        className="h-[36px] px-8 rounded-[10px] border border-[#D3D3D3] bg-white text-[14px] font-bold text-[#202224] hover:bg-gray-50 transition-all"
+                        className="h-[36px] px-2 rounded-[10px] text-sm border border-[#D3D3D3] bg-white text-[14px] font-bold text-[#202224] hover:bg-gray-50 transition-all"
                       >
                         {item.status === 'read' ? 'Read' : 'Mark as Read'}
                       </button>
