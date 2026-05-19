@@ -98,7 +98,10 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
           const isActive = location.pathname === item.path || (hasChildren && item.children.some(child => location.pathname === child.path));
 
           return (
-            <div key={item.label} className="mb-1">
+            <div key={item.label} className="mb-1 relative">
+              {isActive && (
+                <div className="absolute -left-[15px] top-[3px] bottom-[3px] w-[6px] rounded-r-[10px] bg-gradient-to-b from-[#FE512E] to-[#F09633]" />
+              )}
               <button
                 type="button"
                 onClick={() => handleNavClick(item.path, hasChildren, item.label)}

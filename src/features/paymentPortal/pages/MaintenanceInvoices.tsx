@@ -71,6 +71,30 @@ export default function MaintenanceInvoices() {
     return date.toLocaleDateString("en-GB");
   };
 
+  const getFilteredRecords = () => {
+    const currentDate = new Date();
+    const currentMonth = currentDate.getMonth(); // 0-11
+    const currentYear = currentDate.getFullYear();
+
+    return invoices.filter((invoice) => {
+      if (!invoice.date) return false;
+      const date = new Date(invoice.date);
+      if (isNaN(date.getTime())) return false;
+
+      const month = date.getMonth(); // 0-11
+      const year = date.getFullYear();
+
+      if (selectedMonth === "Month") {
+        return month === currentMonth && year === currentYear;
+      } else if (selectedMonth === "Year") {
+        return year === currentYear;
+      }
+      return true;
+    });
+  };
+
+  const filteredInvoices = getFilteredRecords();
+
   return (
     <div className="flex flex-col">
       <div className="rounded-[15px] bg-white p-4 sm:p-5">
@@ -124,7 +148,7 @@ export default function MaintenanceInvoices() {
           <div className="flex h-[400px] items-center justify-center">
             <Loader2 className="h-10 w-10 animate-spin text-[#5678E9]" />
           </div>
-        ) : invoices.length === 0 ? (
+        ) : filteredInvoices.length === 0 ? (
           <div className="flex h-[400px] items-center justify-center">
             <p className="text-[14px] text-[#6F7786]">No maintenance invoices found</p>
           </div>
@@ -140,7 +164,7 @@ export default function MaintenanceInvoices() {
                 <div className="text-center">Action</div>
               </div>
 
-              {invoices.map((invoice) => (
+              {filteredInvoices.map((invoice) => (
                 <div
                   key={invoice._id}
                   className="grid h-[68px] grid-cols-[1fr_1.25fr_1.25fr_1.35fr_1.25fr_0.55fr] items-center border-b border-[#F4F4F4] px-4 text-[14px] font-medium leading-[100%] text-[#202224] last:border-b-0"

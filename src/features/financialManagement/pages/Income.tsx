@@ -783,6 +783,31 @@ export default function Income() {
         );
     }
 
+    const getFilteredRecords = () => {
+        const currentDate = new Date();
+        const currentMonth = currentDate.getMonth(); // 0-11
+        const currentYear = currentDate.getFullYear();
+
+        return maintenanceRecords.map(normalizeMaintenanceRecord).filter((record) => {
+            if (record.date === "Invalid Date") return false;
+            
+            const parts = record.date.split("/");
+            if (parts.length < 3) return false;
+            
+            const month = parseInt(parts[1], 10) - 1; // 0-11
+            const year = parseInt(parts[2], 10);
+            
+            if (selectedMonth === "Month") {
+                return month === currentMonth && year === currentYear;
+            } else {
+                return year === currentYear;
+            }
+        });
+    };
+
+    const filteredRecords = getFilteredRecords();
+    const dynamicSummary = calculateSummary(filteredRecords);
+
     return (
         <div className="flex flex-col gap-0">
             {selectedTab === "Maintenance" && (
@@ -800,7 +825,7 @@ export default function Income() {
 
                             <div className="text-sm font-semibold text-[#202224] opacity-70">Maintenance Amount</div>
                             <div className="mt-1 text-2xl font-bold text-[#39973D]">
-                                {loading ? <Loader2 className="size-6 animate-spin" /> : `₹ ${summary.maintenanceAmount.toLocaleString()}`}
+                                {loading ? <Loader2 className="size-6 animate-spin" /> : `₹ ${dynamicSummary.maintenanceAmount.toLocaleString()}`}
                             </div>
                         </div>
 
@@ -816,7 +841,7 @@ export default function Income() {
 
                             <div className="text-sm font-semibold text-[#202224] opacity-70">Penalty Amount</div>
                             <div className="mt-1 text-2xl font-bold text-[#E74C3C]">
-                                {loading ? <Loader2 className="size-6 animate-spin" /> : `₹ ${summary.penaltyAmount.toLocaleString()}`}
+                                {loading ? <Loader2 className="size-6 animate-spin" /> : `₹ ${dynamicSummary.penaltyAmount.toLocaleString()}`}
                             </div>
                         </div>
                     </div>
@@ -888,7 +913,7 @@ export default function Income() {
                     <>
                         <div className="mb-5 flex flex-col gap-3 pt-3 sm:flex-row sm:items-center sm:justify-between">
                             <h2 className="text-xl font-bold text-[#202224]">Maintenance Details</h2>
-                            <div className="relative">
+                            <div className="relative w-fit">
                                 <button
                                     type="button"
                                     onClick={() => setShowMonthDropdown((prev) => !prev)}
@@ -925,7 +950,7 @@ export default function Income() {
                         </div>
                         <DataTable
                             columns={maintenanceColumns}
-                            data={maintenanceRecords.map(normalizeMaintenanceRecord).sort((a, b) => b.date.localeCompare(a.date))}
+                            data={filteredRecords.sort((a, b) => b.date.localeCompare(a.date))}
                             isLoading={loading}
                         />
                     </>

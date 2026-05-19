@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Loader2 } from "lucide-react";
+import { cn } from "../../../lib/cn";
 import Button from "../../../ui/Button";
 import PaymentMethodModal from "../components/PaymentMethodModal";
 import CardPaymentModal from "../components/CardPaymentModal";
@@ -22,10 +23,11 @@ interface MaintenanceRecord {
 
 interface MaintenanceCard {
   id: string;
-  type: "pending" | "due";
+  type: "pending" | "due" | "paid";
   billDate?: string;
   pendingDate?: string;
   date?: string;
+  paymentDate?: string;
   maintenanceAmount: number;
   penaltyAmount: number;
   grandTotal: number;
@@ -64,18 +66,20 @@ export default function ShowMaintenanceDetails() {
     return date.toLocaleDateString("en-GB");
   };
 
-  const convertToCard = (record: MaintenanceRecord, type: "pending" | "due"): MaintenanceCard => {
+  const convertToCard = (record: MaintenanceRecord, type: "pending" | "due" | "paid"): MaintenanceCard => {
     const amount = record.maintenanceSetup?.maintenanceAmount || record.amount || 0;
     const penalty = record.penalty || 0;
     const date = formatDate(record.date);
+    const paymentDate = record.paymentDate ? formatDate(record.paymentDate) : "N/A";
 
     return {
       id: record._id,
       recordId: record._id,
       type,
-      billDate: type === "pending" ? date : undefined,
+      billDate: type === "pending" || type === "paid" ? date : undefined,
       pendingDate: type === "pending" ? date : undefined,
       date: type === "due" ? date : undefined,
+      paymentDate: type === "paid" ? paymentDate : undefined,
       maintenanceAmount: amount,
       penaltyAmount: penalty,
       grandTotal: amount + penalty,
@@ -89,6 +93,10 @@ export default function ShowMaintenanceDetails() {
   const dueMaintenance = maintenanceRecords
     .filter(r => r.status?.toLowerCase() === "due")
     .map(r => convertToCard(r, "due"));
+
+  const paidMaintenance = maintenanceRecords
+    .filter(r => r.status?.toLowerCase() === "paid")
+    .map(r => convertToCard(r, "paid"));
 
   const totalMaintenanceAmount = maintenanceRecords
     .filter(r => r.status?.toLowerCase() === "pending")
@@ -168,13 +176,50 @@ export default function ShowMaintenanceDetails() {
           Maintenance
         </span>
         <span className="rounded-full bg-white/15 px-[15px] py-[4px] text-[11px] font-semibold leading-[14px] text-white">
-          Pending
+          {card.type === "paid" ? "Paid" : "Pending"}
         </span>
       </div>
 
       <div className="px-[12px] pt-[12px]">
         <div className="space-y-[10px]">
-          {card.type === "pending" ? (
+          {card.type === "paid" ? (
+            <>
+              <div className="flex justify-between gap-[10px] text-[12px] leading-[16px]">
+                <span className="font-medium text-[#6F7786]">Bill Date</span>
+                <span className="font-medium text-[#202224]">{card.billDate}</span>
+              </div>
+
+              <div className="flex justify-between gap-[10px] text-[12px] leading-[16px]">
+                <span className="font-medium text-[#6F7786]">Payment Date</span>
+                <span className="font-medium text-[#202224]">{card.paymentDate}</span>
+              </div>
+
+              <div className="flex justify-between gap-[10px] text-[12px] leading-[16px]">
+                <span className="font-medium text-[#6F7786]">
+                  Maintanance Amount
+                </span>
+                <span className="font-semibold text-[#E74C3C]">
+                  {card.maintenanceAmount.toFixed(2)}
+                </span>
+              </div>
+
+              <div className="flex justify-between gap-[10px] text-[12px] leading-[16px]">
+                <span className="font-medium text-[#6F7786]">
+                  Penalty Amount
+                </span>
+                <span className="font-semibold text-[#E74C3C]">
+                  {card.penaltyAmount.toFixed(2)}
+                </span>
+              </div>
+
+              <div className="flex justify-between gap-[10px] border-t border-[#E8ECEF] pt-[10px] text-[12px] leading-[16px]">
+                <span className="font-semibold text-[#202224]">Grand Total</span>
+                <span className="font-bold text-[#39973D]">
+                  ₹ {card.grandTotal.toLocaleString()}
+                </span>
+              </div>
+            </>
+          ) : card.type === "pending" ? (
             <>
               <div className="flex justify-between gap-[10px] text-[12px] leading-[16px]">
                 <span className="font-medium text-[#6F7786]">Bill Date</span>
@@ -188,9 +233,9 @@ export default function ShowMaintenanceDetails() {
 
               <div className="flex justify-between gap-[10px] text-[12px] leading-[16px]">
                 <span className="font-medium text-[#6F7786]">
-                  Maintenance Amount
+                  Maintanance Amount
                 </span>
-                <span className="font-semibold text-[#FF3B30]">
+                <span className="font-semibold text-[#E74C3C]">
                   {card.maintenanceAmount.toFixed(2)}
                 </span>
               </div>
@@ -199,14 +244,14 @@ export default function ShowMaintenanceDetails() {
                 <span className="font-medium text-[#6F7786]">
                   Maintenance Penalty Amount
                 </span>
-                <span className="font-semibold text-[#FF3B30]">
+                <span className="font-semibold text-[#E74C3C]">
                   {card.penaltyAmount.toFixed(2)}
                 </span>
               </div>
 
               <div className="flex justify-between gap-[10px] border-t border-[#E8ECEF] pt-[10px] text-[12px] leading-[16px]">
                 <span className="font-semibold text-[#202224]">Grand Total</span>
-                <span className="font-bold text-[#202224]">
+                <span className="font-bold text-[#39973D]">
                   ₹ {card.grandTotal.toLocaleString()}
                 </span>
               </div>
@@ -220,7 +265,7 @@ export default function ShowMaintenanceDetails() {
 
               <div className="flex justify-between gap-[10px] text-[12px] leading-[16px]">
                 <span className="font-medium text-[#6F7786]">Amount</span>
-                <span className="font-semibold text-[#FF3B30]">
+                <span className="font-semibold text-[#E74C3C]">
                   {card.maintenanceAmount.toFixed(2)}
                 </span>
               </div>
@@ -229,7 +274,7 @@ export default function ShowMaintenanceDetails() {
                 <span className="font-medium text-[#6F7786]">
                   Due Maintenance Amount
                 </span>
-                <span className="font-semibold text-[#FF3B30]">
+                <span className="font-semibold text-[#E74C3C]">
                   {card.penaltyAmount.toFixed(2)}
                 </span>
               </div>
@@ -239,12 +284,21 @@ export default function ShowMaintenanceDetails() {
       </div>
 
       <div className="px-[12px] pb-[12px] pt-[10px]">
-        <Button
-          onClick={() => handlePayNow(card)}
-          className="h-[40px] w-full rounded-[8px] bg-gradient-to-r from-[#FE512E] to-[#F09619] text-[13px] font-semibold leading-[18px] text-white shadow-none"
-        >
-          Pay Now
-        </Button>
+        {card.type === "paid" ? (
+          <Button
+            onClick={handleViewInvoice}
+            className="h-[40px] w-full rounded-[8px] bg-gradient-to-r from-[#FE512E] to-[#F09619] text-[13px] font-semibold leading-[18px] text-white shadow-none"
+          >
+            View Invoice
+          </Button>
+        ) : (
+          <Button
+            onClick={() => handlePayNow(card)}
+            className="h-[40px] w-full rounded-[8px] bg-gradient-to-r from-[#FE512E] to-[#F09619] text-[13px] font-semibold leading-[18px] text-white shadow-none"
+          >
+            Pay Now
+          </Button>
+        )}
       </div>
     </div>
   );
@@ -259,9 +313,11 @@ export default function ShowMaintenanceDetails() {
         <>
           <div className="rounded-[15px] bg-white px-[16px] py-[16px]">
             <div className="flex min-h-[84px] flex-col gap-[16px] lg:flex-row lg:items-center lg:justify-between">
-              <h1 className="text-[18px] font-semibold leading-[24px] text-[#202224]">
-                Show Maintenance Details
-              </h1>
+              <div className="flex items-center gap-4">
+                <h1 className="text-[18px] font-semibold leading-[24px] text-[#202224]">
+                  Show Maintenance Details
+                </h1>
+              </div>
 
               <div className="grid w-full grid-cols-1 gap-4 sm:grid-cols-2 lg:w-auto lg:flex lg:items-center lg:gap-4">
                 <div className="relative flex min-h-24 w-full flex-col justify-center overflow-hidden rounded-2xl border border-gray-100 bg-white py-4 pl-8 pr-4 shadow-sm lg:w-64">
@@ -282,7 +338,7 @@ export default function ShowMaintenanceDetails() {
                   </p>
 
                   <p className="mt-1 text-2xl font-bold leading-8 text-[#39973D]">
-                    ₹ {totalMaintenanceAmount.toLocaleString()}
+                    ₹ {(maintenanceRecords.reduce((sum, r) => sum + (r.maintenanceSetup?.maintenanceAmount || r.amount || 0), 0)).toLocaleString()}
                   </p>
                 </div>
 
@@ -304,27 +360,76 @@ export default function ShowMaintenanceDetails() {
                   </p>
 
                   <p className="mt-1 text-2xl font-bold leading-8 text-[#E74C3C]">
-                    ₹ {totalPenaltyAmount.toLocaleString()}
+                    ₹ {(maintenanceRecords.reduce((sum, r) => sum + (r.penalty || 0), 0)).toLocaleString()}
                   </p>
                 </div>
               </div>
             </div>
           </div>
 
+          {paidMaintenance.length > 0 && (
+            <div className="rounded-[15px] bg-white px-[16px] py-[16px]">
+              <div className="mb-[18px] flex items-center justify-between gap-[12px]">
+                <h2 className="text-[16px] font-semibold leading-[22px] text-[#202224]">
+                  Paid Maintanance
+                </h2>
+                <button
+                  type="button"
+                  onClick={handleViewInvoice}
+                  className="h-[40px] rounded-[9px] bg-gradient-to-r from-[#FE512E] to-[#F09619] px-[20px] text-[13px] font-semibold text-white shadow-[0_4px_12px_rgba(254,81,46,0.15)] hover:opacity-90 transition-opacity"
+                >
+                  View Invoice
+                </button>
+              </div>
+
+              <div className="grid grid-cols-1 gap-[14px] sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
+                {paidMaintenance.map((card) => (
+                  <MaintenancePaymentCard key={card.id} card={card} />
+                ))}
+              </div>
+            </div>
+          )}
+
+          {dueMaintenance.length > 0 && (
+            <div className="rounded-[15px] bg-white px-[16px] py-[16px]">
+              <div className="mb-[18px] flex items-center justify-between gap-[12px]">
+                <h2 className="text-[16px] font-semibold leading-[22px] text-[#202224]">
+                  Due Maintanance
+                </h2>
+                {paidMaintenance.length === 0 && (
+                  <button
+                    type="button"
+                    onClick={handleViewInvoice}
+                    className="h-[40px] rounded-[9px] bg-gradient-to-r from-[#FE512E] to-[#F09619] px-[20px] text-[13px] font-semibold text-white shadow-[0_4px_12px_rgba(254,81,46,0.15)] hover:opacity-90 transition-opacity"
+                  >
+                    View Invoice
+                  </button>
+                )}
+              </div>
+
+              <div className="grid grid-cols-1 gap-[14px] sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
+                {dueMaintenance.map((card) => (
+                  <MaintenancePaymentCard key={card.id} card={card} />
+                ))}
+              </div>
+            </div>
+          )}
+
           {pendingMaintenance.length > 0 && (
             <div className="rounded-[15px] bg-white px-[16px] py-[16px]">
               <div className="mb-[18px] flex items-center justify-between gap-[12px]">
                 <h2 className="text-[16px] font-semibold leading-[22px] text-[#202224]">
-                  Pending Maintenance
+                  Pending Maintanance
                 </h2>
-
-                <button
-                  type="button"
-                  onClick={handleViewInvoice}
-                  className="h-[40px] rounded-[9px] bg-gradient-to-r from-[#FE512E] to-[#F09619] px-[20px] text-[13px] font-semibold text-white"
-                >
-                  View Invoice
-                </button>
+                {paidMaintenance.length === 0 && dueMaintenance.length === 0 && (
+                  <button
+                    type="button"
+                    onClick={handleViewInvoice}
+                    className="h-[40px] rounded-[9px] bg-gradient-to-r from-[#FE512E] to-[#F09619] px-[20px] text-[13px] font-semibold text-white shadow-[0_4px_12px_rgba(254,81,46,0.15)] hover:opacity-90 transition-opacity"
+                  >
+                    View Invoice
+                  </button>
+                )}
               </div>
 
               <div className="grid grid-cols-1 gap-[14px] sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
@@ -335,21 +440,7 @@ export default function ShowMaintenanceDetails() {
             </div>
           )}
 
-          {dueMaintenance.length > 0 && (
-            <div className="rounded-[15px] bg-white px-[16px] py-[16px]">
-              <h2 className="mb-[18px] text-[16px] font-semibold leading-[22px] text-[#202224]">
-                Due Maintenance
-              </h2>
-
-              <div className="grid grid-cols-1 gap-[14px] sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
-                {dueMaintenance.map((card) => (
-                  <MaintenancePaymentCard key={card.id} card={card} />
-                ))}
-              </div>
-            </div>
-          )}
-
-          {pendingMaintenance.length === 0 && dueMaintenance.length === 0 && (
+          {pendingMaintenance.length === 0 && dueMaintenance.length === 0 && paidMaintenance.length === 0 && (
             <div className="rounded-[15px] bg-white px-[16px] py-[16px]">
               <div className="flex h-[300px] items-center justify-center">
                 <p className="text-[14px] text-[#6F7786]">No maintenance records found</p>
