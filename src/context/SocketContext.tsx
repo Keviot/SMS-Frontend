@@ -101,17 +101,8 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     socketInstance.on('notification', (data: { title: string; message: string; type: string }) => {
       console.log('Received notification:', data);
 
-      const newNotification: Notification = {
-        id: Date.now().toString(),
-        title: data.title,
-        message: data.message,
-        type: data.type,
-        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        ago: 'Just now',
-        status: 'unread',
-      };
-
-      setNotifications(prev => [newNotification, ...prev]);
+      // Re-fetch from DB to get the persisted notification with its correct MongoDB ID
+      fetchInitialNotifications();
 
       // Show toast notification
       if (data.type === 'success') {
@@ -136,17 +127,40 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       // Don't notify if message is from me or for the currently active chat
       if (isFromMe || String(contactId) === String(activeChatIdRef.current)) return;
 
+      const title = isCommunity 
+        ? "Community Forum" 
+        : `New Message from ${msg.sender.firstname}`;
+
+      const messageContent = isCommunity
+        ? `${msg.sender.firstname}: ${msg.message}`
+        : msg.message;
+
       const newNotification: Notification = {
         id: msg._id || Date.now().toString(),
-        title: `New Message from ${msg.sender.firstname}`,
-        message: msg.message,
+        title: title,
+        message: messageContent,
         type: 'chat',
         time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         ago: 'Just now',
         status: 'unread',
       };
 
-      setNotifications(prev => [newNotification, ...prev]);
+      setNotifications(prev => {
+        // Look for an existing unread notification for the same chat/sender title
+        const existingIdx = prev.findIndex(
+          n => n.type === 'chat' && n.status === 'unread' && n.title === title
+        );
+
+        if (existingIdx > -1) {
+          const updated = [...prev];
+          // Remove the existing one
+          updated.splice(existingIdx, 1);
+          // Prepend the new one at the top of the list
+          return [newNotification, ...updated];
+        } else {
+          return [newNotification, ...prev];
+        }
+      });
 
       // Show toast notification
       toast(`${msg.sender.firstname}: ${msg.message}`, {

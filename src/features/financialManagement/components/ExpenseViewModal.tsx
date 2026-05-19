@@ -10,7 +10,7 @@ type ExpenseViewData = {
   billSize?: string;
   billUrl?: string;
 };
-
+  
 interface ExpenseViewModalProps {
   open: boolean;
   onClose: () => void;
