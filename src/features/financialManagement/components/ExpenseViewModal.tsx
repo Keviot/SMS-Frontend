@@ -8,6 +8,7 @@ type ExpenseViewData = {
   amount: number | string;
   billName?: string;
   billSize?: string;
+  billUrl?: string;
 };
 
 interface ExpenseViewModalProps {
@@ -91,30 +92,60 @@ export default function ExpenseViewModal({
               Bill
             </p>
 
-            <div className="flex min-h-[86px] items-center justify-between gap-3 rounded-[10px] border border-[#E5E7EB] bg-white px-4 py-3">
-              <div className="flex min-w-0 items-center gap-4">
-                <div className="flex size-11 shrink-0 items-center justify-center rounded-[10px] bg-[#F1F6FF] text-[#5678E9]">
-                  <FileImage size={25} />
-                </div>
-
-                <div className="min-w-0">
-                  <p className="truncate text-base font-medium leading-6 text-[#202224]">
-                    {data.billName || "Adharcard Front Side.JPG"}
-                  </p>
-                  <p className="mt-1 text-base font-medium leading-5 text-[#A7A7A7]">
-                    {data.billSize || "3.5 MB"}
-                  </p>
-                </div>
-              </div>
-
-              <button
-                type="button"
-                className="flex size-8 shrink-0 items-center justify-center rounded-full bg-[#A7A7A7] text-white"
-                aria-label="View bill"
+            {data.billUrl ? (
+              <a
+                href={data.billUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex min-h-[86px] items-center justify-between gap-3 rounded-[10px] border border-[#E5E7EB] bg-white px-4 py-3 hover:border-[#5678E9] transition-all no-underline cursor-pointer group"
               >
-                <Eye size={18} />
-              </button>
-            </div>
+                <div className="flex min-w-0 items-center gap-4">
+                  <div className="flex size-11 shrink-0 items-center justify-center rounded-[10px] bg-[#F1F6FF] text-[#5678E9] group-hover:bg-[#5678E9] group-hover:text-white transition-colors">
+                    <FileImage size={25} />
+                  </div>
+
+                  <div className="min-w-0">
+                    <p className="truncate text-base font-medium leading-6 text-[#202224] group-hover:text-[#5678E9] transition-colors">
+                      {data.billName || "Uploaded Bill"}
+                    </p>
+                    <p className="mt-1 text-base font-medium leading-5 text-[#A7A7A7]">
+                      {data.billSize || "3.5 MB"}
+                    </p>
+                  </div>
+                </div>
+
+                <div
+                  className="flex size-8 shrink-0 items-center justify-center rounded-full bg-[#A7A7A7] text-white group-hover:bg-[#5678E9] transition-colors"
+                >
+                  <Eye size={18} />
+                </div>
+              </a>
+            ) : (
+              <div className="flex min-h-[86px] items-center justify-between gap-3 rounded-[10px] border border-[#E5E7EB] bg-[#F9FAFB] px-4 py-3 opacity-60">
+                <div className="flex min-w-0 items-center gap-4">
+                  <div className="flex size-11 shrink-0 items-center justify-center rounded-[10px] bg-gray-200 text-gray-400">
+                    <FileImage size={25} />
+                  </div>
+
+                  <div className="min-w-0">
+                    <p className="truncate text-base font-medium leading-6 text-[#202224]">
+                      {data.billName || "No Bill Uploaded"}
+                    </p>
+                    <p className="mt-1 text-base font-medium leading-5 text-[#A7A7A7]">
+                      -
+                    </p>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  className="flex size-8 shrink-0 items-center justify-center rounded-full bg-[#A7A7A7] text-white opacity-50 cursor-not-allowed"
+                  disabled
+                >
+                  <Eye size={18} />
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </div>

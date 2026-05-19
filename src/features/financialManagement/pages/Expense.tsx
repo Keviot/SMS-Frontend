@@ -5,7 +5,7 @@ import ExpenseFormModal, { type ExpenseFormData } from "../components/ExpenseFor
 import DeleteConfirmModal from "../components/DeleteConfirmModal";
 import ExpenseViewModal from "../components/ExpenseViewModal";
 import { EditIcon, EyeIcon, TrashIcon } from "../../../assets/icons/admin-dashboard-icons";
-import { financialApi, authApi } from "../../../services/api";
+import { financialApi, authApi, BASE_URL } from "../../../services/api";
 import toast from "react-hot-toast";
 
 type BillFormat = "JPG" | "PDF" | "PNG" | "GIF";
@@ -101,22 +101,26 @@ export default function Expense() {
                 return;
             }
 
-            const payload = {
-                title: data.title,
-                description: data.description,
-                date: new Date(data.date).toISOString(),
-                amount: parseFloat(data.amount),
-                uploadBill: data.billName || "", // TODO: Handle file upload properly
-                society: societyId,
-            };
+            const formDataToSend = new FormData();
+            formDataToSend.append("title", data.title);
+            formDataToSend.append("description", data.description);
+            formDataToSend.append("date", new Date(data.date).toISOString());
+            formDataToSend.append("amount", data.amount);
+            formDataToSend.append("society", societyId);
+
+            if (data.billFile) {
+                formDataToSend.append("uploadBill", data.billFile);
+            } else if (data.billName) {
+                formDataToSend.append("uploadBill", data.billName);
+            }
 
             if (selectedExpense) {
                 // Edit existing expense
-                await financialApi.editExpense(selectedExpense.id, payload);
+                await financialApi.editExpense(selectedExpense.id, formDataToSend);
                 toast.success("Expense updated successfully!");
             } else {
                 // Add new expense
-                await financialApi.addExpense(payload);
+                await financialApi.addExpense(formDataToSend);
                 toast.success("Expense added successfully!");
             }
 
@@ -236,24 +240,50 @@ export default function Expense() {
                                                 </td>
 
                                                 <td className="px-5 py-4">
-                                                    <div className="flex items-center gap-2">
-                                                        <span
-                                                            className={`flex size-8 items-center justify-center rounded-lg ${expense.billFormat === "PDF"
-                                                                ? "bg-[#FFF1F1] text-[#E74C3C]"
-                                                                : "bg-[#EEF3FF] text-[#5678E9]"
-                                                                }`}
+                                                    {expense.uploadBill ? (
+                                                        <a
+                                                            href={expense.uploadBill.startsWith("http") ? expense.uploadBill : `${BASE_URL}/${expense.uploadBill}`}
+                                                            target="_blank"
+                                                            rel="noopener noreferrer"
+                                                            className="flex items-center gap-2 hover:opacity-85 transition cursor-pointer"
                                                         >
-                                                            {expense.billFormat === "PDF" ? (
-                                                                <FileText size={17} />
-                                                            ) : (
-                                                                <FileImage size={17} />
-                                                            )}
-                                                        </span>
+                                                            <span
+                                                                className={`flex size-8 items-center justify-center rounded-lg ${expense.billFormat === "PDF"
+                                                                    ? "bg-[#FFF1F1] text-[#E74C3C]"
+                                                                    : "bg-[#EEF3FF] text-[#5678E9]"
+                                                                    }`}
+                                                            >
+                                                                {expense.billFormat === "PDF" ? (
+                                                                    <FileText size={17} />
+                                                                ) : (
+                                                                    <FileImage size={17} />
+                                                                )}
+                                                            </span>
 
-                                                        <span className="text-sm font-medium text-[#434A57]">
-                                                            {expense.billFormat}
-                                                        </span>
-                                                    </div>
+                                                            <span className="text-sm font-medium text-[#434A57] hover:underline">
+                                                                {expense.billFormat}
+                                                            </span>
+                                                        </a>
+                                                    ) : (
+                                                        <div className="flex items-center gap-2 opacity-50">
+                                                            <span
+                                                                className={`flex size-8 items-center justify-center rounded-lg ${expense.billFormat === "PDF"
+                                                                    ? "bg-[#FFF1F1] text-[#E74C3C]"
+                                                                    : "bg-[#EEF3FF] text-[#5678E9]"
+                                                                    }`}
+                                                            >
+                                                                {expense.billFormat === "PDF" ? (
+                                                                    <FileText size={17} />
+                                                                ) : (
+                                                                    <FileImage size={17} />
+                                                                )}
+                                                            </span>
+
+                                                            <span className="text-sm font-medium text-[#434A57]">
+                                                                {expense.billFormat}
+                                                            </span>
+                                                        </div>
+                                                    )}
                                                 </td>
 
                                                 <td className="px-5 py-4">
@@ -338,8 +368,15 @@ export default function Expense() {
                             description: selectedExpense.description,
                             date: new Date(selectedExpense.date).toLocaleDateString("en-GB"),
                             amount: selectedExpense.amount,
-                            billName: selectedExpense.uploadBill || "Uploaded Bill",
+                            billName: selectedExpense.uploadBill
+                                ? (selectedExpense.uploadBill.split(/[/\\]/).pop() || "Uploaded Bill")
+                                : "Uploaded Bill",
                             billSize: "3.5 MB",
+                            billUrl: selectedExpense.uploadBill
+                                ? (selectedExpense.uploadBill.startsWith("http")
+                                    ? selectedExpense.uploadBill
+                                    : `${BASE_URL}/${selectedExpense.uploadBill}`)
+                                : undefined,
                         }
                         : null
                 }
