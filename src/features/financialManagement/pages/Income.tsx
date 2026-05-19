@@ -852,7 +852,7 @@ export default function Income() {
                         "min-h-14 min-w-32 shrink-0 px-8 py-4 text-sm font-bold transition-all",
                         selectedTab === "Maintenance"
                             ? "rounded-t-xl bg-gradient-to-r from-[#FE512E] to-[#F09619] text-white shadow-md"
-                            : "rounded-t-xl border border-b-2 border-[#D9DCE5] border-b-[#FF512E] bg-white text-[#202224] hover:bg-gray-50"
+                            : "rounded-t-xl border border-[#D9DCE5] bg-white text-[#202224] hover:bg-gray-50"
                     )}
                 >
                     Maintenance
@@ -864,7 +864,7 @@ export default function Income() {
                         "min-h-14 min-w-32 shrink-0 px-8 py-4 text-sm font-bold transition-all",
                         selectedTab === "Other Income"
                             ? "rounded-t-xl bg-gradient-to-r from-[#FE512E] to-[#F09619] text-white shadow-md"
-                            : "rounded-t-xl border border-b-2 border-[#D9DCE5] border-b-[#FF512E] bg-white text-[#202224] hover:bg-gray-50"
+                            : "rounded-t-xl border border-[#D9DCE5] bg-white text-[#202224] hover:bg-gray-50"
                     )}
                 >
                     Other Income
@@ -876,7 +876,7 @@ export default function Income() {
                         "min-h-14 min-w-32 shrink-0 px-8 py-4 text-sm font-bold transition-all",
                         selectedTab === "Event Participation"
                             ? "rounded-t-xl bg-gradient-to-r from-[#FE512E] to-[#F09619] text-white shadow-md"
-                            : "rounded-t-xl border border-b-2 border-[#D9DCE5] border-b-[#FF512E] bg-white text-[#202224] hover:bg-gray-50"
+                            : "rounded-t-xl border border-[#D9DCE5] bg-white text-[#202224] hover:bg-gray-50"
                     )}
                 >
                     Event Participation

@@ -108,7 +108,7 @@ export default function EventsParticipation() {
                         "min-h-14 min-w-32 shrink-0 px-5 py-4 text-sm font-semibold transition-all",
                         activeTab === "events"
                             ? "rounded-t-xl bg-gradient-to-r from-[#FE512E] to-[#F09619] text-white"
-                            : "rounded-t-xl border border-b-2 border-[#D9DCE5] border-b-[#F09619] bg-white text-[#202224] hover:bg-gray-50"
+                            : "rounded-t-xl border border-[#D9DCE5] bg-white text-[#202224] hover:bg-gray-50"
                     )}
                 >
                     Events Participation
@@ -120,7 +120,7 @@ export default function EventsParticipation() {
                         "min-h-14 min-w-32 shrink-0 px-5 py-4 text-sm font-semibold transition-all",
                         activeTab === "activities"
                             ? "rounded-t-xl bg-gradient-to-r from-[#FE512E] to-[#F09619] text-white"
-                            : "rounded-t-xl border border-b-2 border-[#D9DCE5] border-b-[#F09619] bg-white text-[#202224] hover:bg-gray-50"
+                            : "rounded-t-xl border border-[#D9DCE5] bg-white text-[#202224] hover:bg-gray-50"
                     )}
                 >
                     Activity Participate

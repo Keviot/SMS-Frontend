@@ -69,39 +69,26 @@ export default function Header({ onMenuClick }: HeaderProps) {
 
   return (
     <>
-      <header className="fixed left-0 right-0 top-0 z-40 flex h-25 items-center justify-between gap-3 border-b border-(--border-light) bg-white px-[15px] sm:px-5 lg:left-70 lg:h-25 lg:px-6">
+      <header className="fixed left-0 right-0 top-0 z-40 flex h-16 items-center justify-between gap-3 border-b border-(--border-light) bg-white px-[15px] sm:px-5 lg:left-70 lg:h-25 lg:px-6">
         <div className="flex flex-1 items-center gap-3 min-w-0">
-          <Button
-            variant="outline"
-            size="md"
+          <button
+            type="button"
             onClick={onMenuClick}
-            className="h-11 w-11 flex shrink-0 rounded-xl p-0 lg:hidden"
+            className="flex h-10 w-10 shrink-0 cursor-pointer items-center justify-center rounded-full border-none bg-[#F6F8FB] text-[#202224] lg:hidden"
           >
-            <Menu size={21} />
-          </Button>
+            <Menu size={20} />
+          </button>
 
           {isDashboard ? (
-            <>
-              {/* Desktop: Full search bar */}
-              <div className="hidden sm:block w-full max-w-100">
-                <Input
-                  type="text"
-                  placeholder="Search Here"
-                  leftIcon={<Search size={18} strokeWidth={2} />}
-                  className="h-11 rounded-full border-border-light lg:h-12.5"
-                />
-              </div>
-
-              {/* Mobile: Search icon button */}
-              <Button
-                variant="outline"
-                size="md"
-                onClick={() => setSearchOpen(!searchOpen)}
-                className="h-11 w-11 flex shrink-0 rounded-full p-0 sm:hidden"
-              >
-                <Search size={20} strokeWidth={2} />
-              </Button>
-            </>
+            /* Desktop: Full search bar */
+            <div className="hidden sm:block w-full max-w-100">
+              <Input
+                type="text"
+                placeholder="Search Here"
+                leftIcon={<Search size={18} strokeWidth={2} />}
+                className="h-11 rounded-full border-border-light lg:h-12.5"
+              />
+            </div>
           ) : (
             /* Breadcrumbs */
             <div className="hidden sm:flex items-center gap-2 text-sm font-medium">
@@ -162,16 +149,25 @@ export default function Header({ onMenuClick }: HeaderProps) {
         </div>
 
         <div className="flex items-center gap-2 lg:gap-4">
+          {/* Mobile Search Button */}
+          <button
+            type="button"
+            onClick={() => setSearchOpen(!searchOpen)}
+            className="flex h-10 w-10 shrink-0 cursor-pointer items-center justify-center rounded-full border-none bg-[#F6F8FB] text-[#202224] sm:hidden"
+          >
+            <Search size={20} strokeWidth={2} />
+          </button>
+
           <div ref={notificationRef} className="relative">
             <button
               type="button"
               onClick={() => setNotificationOpen((value) => !value)}
-              className="relative grid h-11 w-11 place-items-center rounded-xl border border-[#D8D8D8] bg-white transition hover:border-[#FE512E]/50"
+              className="relative flex h-10 w-10 cursor-pointer items-center justify-center rounded-full border-none bg-[#F6F8FB] text-[#202224] transition sm:grid sm:h-11 sm:w-11 sm:place-items-center sm:rounded-xl sm:border sm:border-[#D8D8D8] sm:bg-white hover:border-[#FE512E]/50"
               aria-label="Open notifications"
             >
               <NotificationBingIcon className="h-6 w-6" />
               {hasUnread && (
-                <span className="absolute right-3 top-2 h-2 w-2 rounded-full bg-[#E74C3C] ring-2 ring-white" />
+                <span className="absolute right-2.5 top-2.5 h-2 w-2 rounded-full bg-[#E74C3C] ring-2 ring-white sm:right-3 sm:top-2" />
               )}
             </button>
 
@@ -180,29 +176,26 @@ export default function Header({ onMenuClick }: HeaderProps) {
             )}
           </div>
 
-          <Link to="/profile">
-            <Button
-              variant="ghost"
-              size="md"
-              className="h-11 gap-2 rounded-xl p-0 hover:bg-transparent lg:h-12.5 lg:gap-3"
-            >
-              <Avatar
-                src={profileImageUrl || ""}
-                name={userName}
-                className="lg:h-12.5 lg:w-12.5"
-              />
+          <Link
+            to="/profile"
+            className="flex items-center justify-center h-10 w-10 shrink-0 rounded-full border-none bg-transparent hover:bg-transparent sm:h-11 sm:w-auto sm:px-4 sm:rounded-xl transition-colors gap-2 lg:h-12.5 lg:gap-3"
+          >
+            <Avatar
+              src={profileImageUrl || ""}
+              name={userName}
+              className="h-10 w-10 lg:h-12.5 lg:w-12.5"
+            />
 
-              <div className="hidden text-left sm:block">
-                <h4 className="text-sm font-bold leading-tight text-(--text-primary) lg:text-sm">
-                  {userName}
-                </h4>
-                <p className="mt-0.5 text-xs font-medium text-(--text-light) lg:text-[12px] capitalize">
-                  {profile?.role || "Admin"}
-                </p>
-              </div>
+            <div className="hidden text-left sm:block">
+              <h4 className="text-sm font-bold leading-tight text-(--text-primary) lg:text-sm">
+                {userName}
+              </h4>
+              <p className="mt-0.5 text-xs font-medium text-(--text-light) lg:text-[12px] capitalize">
+                {profile?.role || "Admin"}
+              </p>
+            </div>
 
-              <ChevronDown size={16} className="hidden text-(--text-light) sm:block lg:w-[18px] lg:h-[18px]" strokeWidth={2} />
-            </Button>
+            <ChevronDown size={16} className="hidden text-(--text-light) sm:block lg:w-[18px] lg:h-[18px]" strokeWidth={2} />
           </Link>
         </div>
 
@@ -219,7 +212,7 @@ export default function Header({ onMenuClick }: HeaderProps) {
 
             {/* Search bar */}
             <div
-              className="absolute inset-x-0 top-20 z-50 bg-white p-4 shadow-lg"
+              className="absolute inset-x-0 top-16 z-50 bg-white p-4 shadow-lg"
               onClick={(e) => e.stopPropagation()}
             >
               <Input
@@ -243,7 +236,7 @@ export default function Header({ onMenuClick }: HeaderProps) {
         )}
       </header>
 
-      <div className="h-20 lg:h-25" />
+      <div className="h-16 lg:h-25" />
     </>
   );
 }

@@ -67,7 +67,7 @@ export default function CreatePassword() {
           />
           <button
             type="button"
-            className="absolute right-4 top-[41px] text-gray-400 hover:text-gray-600"
+            className="absolute right-4 top-7 text-gray-400 hover:text-gray-600"
             onClick={() => setShowPassword(!showPassword)}
           >
             {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
@@ -85,7 +85,7 @@ export default function CreatePassword() {
           />
           <button
             type="button"
-            className="absolute right-4 top-[41px] text-gray-400 hover:text-gray-600"
+            className="absolute right-4 top-7 text-gray-400 hover:text-gray-600"
             onClick={() => setShowConfirmPassword(!showConfirmPassword)}
           >
             {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}

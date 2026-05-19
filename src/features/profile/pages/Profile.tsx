@@ -154,7 +154,7 @@ export default function Profile() {
           </div>
 
           <div className="bg-white rounded-3xl shadow-[0_10px_40px_rgba(0,0,0,0.03)] overflow-hidden">
-            <div className="px-10 py-12 flex flex-col lg:flex-row gap-16">
+            <div className="px-10 py-9 flex flex-col lg:flex-row gap-16">
               {/* Left Side: Avatar Section */}
               <div className="flex flex-col items-center lg:w-1/4 xl:w-1/5 p-0">
                 <div className="relative group">
@@ -191,7 +191,7 @@ export default function Profile() {
 
               {/* Right Side: Form Fields */}
               <div className="flex-1">
-                <form onSubmit={handleUpdate} className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-8">
+                <form onSubmit={handleUpdate} className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-7.5">
                   {[
                     { label: "First Name", key: "firstName", required: true },
                     { label: "Last Name", key: "lastName", required: true },
@@ -203,7 +203,7 @@ export default function Profile() {
                     { label: "City", key: "city", required: true },
                   ].map((field) => (
                     <div key={field.key} className="space-y-2">
-                      <label className="text-sm font-bold text-[#202224]">
+                      <label className="text-sm font-medium text-[#202224]">
                         {field.label}{field.required && <span className="text-[#E74C3C] ml-1">*</span>}
                       </label>
                       <input
@@ -211,18 +211,18 @@ export default function Profile() {
                         value={(formData as any)[field.key]}
                         onChange={(e) => setFormData({ ...formData, [field.key]: e.target.value })}
                         disabled={!isEditing}
-                        className="w-full h-[52px] px-5 py-3 rounded-xl border border-gray-300 focus:border-[#5678E9] focus:ring-1 focus:ring-[#5678E9] outline-none transition-all text-gray-700 font-medium disabled:bg-[#F8F9FB] disabled:text-gray-500 disabled:cursor-not-allowed placeholder:text-gray-400"
+                        className="w-full h-10.5 px-5 py-3 rounded-xl border border-gray-900 focus:border-secondary focus:ring-1 focus:ring-secondary outline-none transition-all text-gray-700 font-medium disabled:bg-[#F8F9FB] disabled:text-gray-500 disabled:cursor-not-allowed placeholder:text-gray-400"
                         placeholder={`Enter ${field.label}`}
                       />
                     </div>
                   ))}
 
                   {isEditing && (
-                    <div className="md:col-span-2 mt-8 flex justify-end">
+                    <div className="md:col-span-2 mt-3.5 flex justify-end">
                       <button
                         type="submit"
                         disabled={isSubmitting}
-                        className="bg-gradient-to-r from-[#FE512E] to-[#F09619] text-white px-12 py-3.5 rounded-xl font-bold shadow-lg hover:opacity-90 transition-all active:scale-[0.98] disabled:opacity-70 flex items-center gap-2"
+                        className="bg-linear-to-r from-[#FE512E] to-[#F09619] text-white px-12 py-3.5 rounded-xl font-semibold text-lg shadow-lg hover:opacity-90 transition-all active:scale-[0.98] disabled:opacity-70 flex items-center gap-2"
                       >
                         {isSubmitting && <Loader2 size={18} className="animate-spin" />}
                         {isSubmitting ? "Updating..." : "Update Profile"}
