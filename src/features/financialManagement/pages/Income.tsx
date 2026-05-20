@@ -382,18 +382,8 @@ export default function Income() {
             setShowDeleteModal(false);
             setSelectedIncome(null);
 
-            // Refresh other income data
-            const response = await financialApi.getOtherIncome();
-            const transformedIncome = response.data.map((item: any) => ({
-                id: item._id,
-                title: item.title,
-                amountPerMember: item.amount,
-                totalMember: 12, // TODO: Calculate from actual participants
-                date: new Date(item.date).toLocaleDateString("en-GB"),
-                dueDate: new Date(item.dueDate).toLocaleDateString("en-GB"),
-                description: item.description,
-            }));
-            setOtherIncomeData(transformedIncome);
+            // Refresh all data
+            await fetchData();
         } catch (error: any) {
             toast.error(error.message || "Failed to delete income");
             console.error("Delete income error:", error);
@@ -448,18 +438,8 @@ export default function Income() {
             toast.success("Income created successfully!");
             setShowCreateIncomeModal(false);
 
-            // Refresh other income data
-            const response = await financialApi.getOtherIncome();
-            const transformedIncome = response.data.map((item: any) => ({
-                id: item._id,
-                title: item.title,
-                amountPerMember: item.amount,
-                totalMember: 12, // TODO: Calculate from actual participants
-                date: new Date(item.date).toLocaleDateString("en-GB"),
-                dueDate: new Date(item.dueDate).toLocaleDateString("en-GB"),
-                description: item.description,
-            }));
-            setOtherIncomeData(transformedIncome);
+            // Refresh all data
+            await fetchData();
         } catch (error: any) {
             toast.error(error.message || "Failed to create income");
             console.error("Create income error:", error);
@@ -541,18 +521,8 @@ export default function Income() {
             setShowEditIncomeModal(false);
             setSelectedIncome(null);
 
-            // Refresh other income data
-            const response = await financialApi.getOtherIncome();
-            const transformedIncome = response.data.map((item: any) => ({
-                id: item._id,
-                title: item.title,
-                amountPerMember: item.amount,
-                totalMember: 12, // TODO: Calculate from actual participants
-                date: new Date(item.date).toLocaleDateString("en-GB"),
-                dueDate: new Date(item.dueDate).toLocaleDateString("en-GB"),
-                description: item.description,
-            }));
-            setOtherIncomeData(transformedIncome);
+            // Refresh all data
+            await fetchData();
         } catch (error: any) {
             toast.error(error.message || "Failed to update income");
             console.error("Edit income error:", error);
@@ -790,13 +760,13 @@ export default function Income() {
 
         return maintenanceRecords.map(normalizeMaintenanceRecord).filter((record) => {
             if (record.date === "Invalid Date") return false;
-            
+
             const parts = record.date.split("/");
             if (parts.length < 3) return false;
-            
+
             const month = parseInt(parts[1], 10) - 1; // 0-11
             const year = parseInt(parts[2], 10);
-            
+
             if (selectedMonth === "Month") {
                 return month === currentMonth && year === currentYear;
             } else {
