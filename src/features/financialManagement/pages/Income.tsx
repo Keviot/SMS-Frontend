@@ -318,22 +318,7 @@ export default function Income() {
                 });
             }
 
-            const transformedData = response.data.map(normalizeMaintenanceRecord);
-
-            // Sort by Unit Number (Wing first, then Unit)
-            transformedData.sort((a: MaintenanceRecord, b: MaintenanceRecord) => {
-                const wingA = a.unitNumber.split(" ")[0];
-                const wingB = b.unitNumber.split(" ")[0];
-                if (wingA !== wingB) return wingA.localeCompare(wingB);
-
-                const unitA = parseInt(a.unitNumber.split(" ")[1]);
-                const unitB = parseInt(b.unitNumber.split(" ")[1]);
-                return unitA - unitB;
-            });
-
-            setMaintenanceRecords(transformedData);
-            setSummary(calculateSummary(transformedData));
-            setLoading(false);
+            await fetchData();
         } catch (error: any) {
             toast.error(error.message || "Failed to create maintenance setup");
             console.error("Maintenance setup error:", error);
