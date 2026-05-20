@@ -30,6 +30,9 @@ export const authApi = {
   },
 
   login: async (credentials: any) => {
+    console.log("api url:", API_URL);
+    console.log('vite api url:', import.meta.env.VITE_API_URL);
+
     const response = await fetch(`${API_URL}/auth/login`, {
       method: "POST",
       credentials: "include",
