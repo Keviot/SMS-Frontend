@@ -829,9 +829,9 @@ export default function Income() {
                     type="button"
                     onClick={() => setSelectedTab("Maintenance")}
                     className={cn(
-                        "relative flex-1 min-h-12 px-2 sm:px-6 py-3 text-xs sm:text-sm font-bold transition-all flex items-center justify-center text-center leading-tight",
+                        "relative flex-1 sm:flex-none min-h-12 px-1 sm:px-10 py-3 text-[11px] sm:text-sm font-bold transition-all flex items-center justify-center text-center leading-tight shrink-0",
                         selectedTab === "Maintenance"
-                            ? "z-10 rounded-t-xl bg-gradient-to-r from-[#FE512E] to-[#F09619] text-white shadow-md border-0"
+                            ? "z-10 rounded-t-xl bg-gradient-to-r from-[#FE512E] to-[#F09619] text-white border-0"
                             : "z-0 rounded-t-xl border border-[#D9DCE5] border-b-0 bg-[#F6F8FB] text-[#6F7786] hover:bg-gray-50 hover:text-[#202224]"
                     )}
                 >
@@ -841,9 +841,9 @@ export default function Income() {
                     type="button"
                     onClick={() => setSelectedTab("Other Income")}
                     className={cn(
-                        "relative flex-1 -ml-[1px] min-h-12 px-2 sm:px-6 py-3 text-xs sm:text-sm font-bold transition-all flex items-center justify-center text-center leading-tight",
+                        "relative flex-1 sm:flex-none -ml-[1px] min-h-12 px-1 sm:px-10 py-3 text-[11px] sm:text-sm font-bold transition-all flex items-center justify-center text-center leading-tight shrink-0",
                         selectedTab === "Other Income"
-                            ? "z-10 rounded-t-xl bg-gradient-to-r from-[#FE512E] to-[#F09619] text-white shadow-md border-0"
+                            ? "z-10 rounded-t-xl bg-gradient-to-r from-[#FE512E] to-[#F09619] text-white border-0"
                             : "z-0 rounded-t-xl border border-[#D9DCE5] border-b-0 bg-[#F6F8FB] text-[#6F7786] hover:bg-gray-50 hover:text-[#202224]"
                     )}
                 >
@@ -853,9 +853,9 @@ export default function Income() {
                     type="button"
                     onClick={() => setSelectedTab("Event Participation")}
                     className={cn(
-                        "relative flex-1 -ml-[1px] min-h-12 px-1 sm:px-6 py-3 text-[11px] sm:text-sm font-bold transition-all flex items-center justify-center text-center leading-tight",
+                        "relative flex-1 sm:flex-none -ml-[1px] min-h-12 px-1 sm:px-10 py-3 text-[10px] sm:text-sm font-bold transition-all flex items-center justify-center text-center leading-tight shrink-0",
                         selectedTab === "Event Participation"
-                            ? "z-10 rounded-t-xl bg-gradient-to-r from-[#FE512E] to-[#F09619] text-white shadow-md border-0"
+                            ? "z-10 rounded-t-xl bg-gradient-to-r from-[#FE512E] to-[#F09619] text-white border-0"
                             : "z-0 rounded-t-xl border border-[#D9DCE5] border-b-0 bg-[#F6F8FB] text-[#6F7786] hover:bg-gray-50 hover:text-[#202224]"
                     )}
                 >
@@ -864,7 +864,7 @@ export default function Income() {
             </div>
 
             <div className={cn(
-                "-mt-px rounded-2xl border border-[#D9DCE5] bg-white p-4 sm:p-5",
+                "-mt-px rounded-2xl rounded-tl-none rounded-tr-2xl border border-[#D9DCE5] bg-white p-4 sm:p-5",
                 selectedTab === "Maintenance" ? "rounded-tl-none" : ""
             )}>
                 {selectedTab === "Maintenance" && (
