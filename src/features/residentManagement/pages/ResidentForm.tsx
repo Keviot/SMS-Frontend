@@ -339,23 +339,23 @@ export default function ResidentForm() {
 
       {/* Member Counting Card */}
       <div className="mt-4 rounded-2xl bg-white p-6 shadow-sm">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <h3 className="text-lg font-bold text-[#202224]">Member Counting :</h3>
-            <span className="text-sm font-semibold text-[#A7A7A7]">(Other Members)</span>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="flex items-center gap-2 flex-wrap">
+            <h3 className="text-lg font-bold text-[#202224] whitespace-nowrap">Member Counting :</h3>
+            <span className="text-sm font-semibold text-[#A7A7A7] whitespace-nowrap">(Other Members)</span>
           </div>
-          <div className="flex items-center gap-4">
+          <div className="flex items-center justify-between sm:justify-end gap-4 w-full sm:w-auto">
             <div className="flex items-center gap-2">
-              <span className="text-sm font-semibold text-[#202224]">Select Member</span>
+              <span className="text-sm font-semibold text-[#202224] whitespace-nowrap">Select Member</span>
               <Select
                 value={memberCount.toString()}
                 onChange={(e) => setMemberCount(parseInt(e.target.value))}
                 options={memberOptions}
-                className="w-16"
+                className="w-16 shrink-0"
                 showRadio={false}
               />
             </div>
-            <button onClick={() => setIsMembersOpen(!isMembersOpen)}>
+            <button onClick={() => setIsMembersOpen(!isMembersOpen)} className="shrink-0 p-1">
               {isMembersOpen ? <ChevronUp size={20} className="text-[#202224]" /> : <ChevronDown size={20} className="text-[#202224]" />}
             </button>
           </div>
@@ -389,20 +389,20 @@ export default function ResidentForm() {
 
       {/* Vehicle Counting Card */}
       <div className="mt-4 rounded-2xl bg-white p-6 shadow-sm">
-        <div className="flex items-center justify-between">
-          <h3 className="text-lg font-bold text-[#202224]">Vehicle Counting :</h3>
-          <div className="flex items-center gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <h3 className="text-lg font-bold text-[#202224] whitespace-nowrap">Vehicle Counting :</h3>
+          <div className="flex items-center justify-between sm:justify-end gap-4 w-full sm:w-auto">
             <div className="flex items-center gap-2">
-              <span className="text-sm font-semibold text-[#202224]">Select Vehicle</span>
+              <span className="text-sm font-semibold text-[#202224] whitespace-nowrap">Select Vehicle</span>
               <Select
                 value={vehicleCount.toString()}
                 onChange={(e) => setVehicleCount(parseInt(e.target.value))}
                 options={vehicleOptions}
-                className="w-16"
+                className="w-16 shrink-0"
                 showRadio={false}
               />
             </div>
-            <button onClick={() => setIsVehiclesOpen(!isVehiclesOpen)}>
+            <button onClick={() => setIsVehiclesOpen(!isVehiclesOpen)} className="shrink-0 p-1">
               {isVehiclesOpen ? <ChevronUp size={20} className="text-[#202224]" /> : <ChevronDown size={20} className="text-[#202224]" />}
             </button>
           </div>
@@ -432,17 +432,17 @@ export default function ResidentForm() {
       </div>
 
       {/* Footer Buttons */}
-      <div className="mt-5 flex justify-end gap-4 pb-8">
+      <div className="mt-5 grid grid-cols-2 sm:flex sm:justify-end gap-4 pb-8">
         <Button
           variant="outline"
-          className="h-12 w-32 rounded-xl text-base font-bold text-[#202224] border-[#D3D3D3]"
+          className="h-12 w-full sm:w-32 rounded-xl text-base font-bold text-[#202224] border-[#D3D3D3]"
           onClick={() => navigate("/resident-management")}
         >
           Cancel
         </Button>
         <Button
           className={cn(
-            "h-12 w-32 rounded-xl text-base font-bold transition-all duration-200",
+            "h-12 w-full sm:w-32 rounded-xl text-base font-bold transition-all duration-200",
             !isFormValid() 
               ? "bg-[#F6F8FB] text-[#A7A7A7] cursor-not-allowed border-none shadow-none" 
               : "bg-primary-gradient text-white border-none"

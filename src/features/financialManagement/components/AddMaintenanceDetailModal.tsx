@@ -62,7 +62,7 @@ export default function AddMaintenanceDetailModal({
           {/* Maintenance Amount and Penalty Amount Row */}
           <div className="grid grid-cols-2 gap-4">
             {/* Maintenance Amount */}
-            <div className="flex flex-col gap-2">
+            <div className="flex flex-col justify-between gap-2">
               <label className="text-sm font-medium leading-5 text-[#202224]">
                 Maintenance Amount<span className="text-[#FE512E]">*</span>
               </label>
@@ -88,7 +88,7 @@ export default function AddMaintenanceDetailModal({
             </div>
 
             {/* Penalty Amount */}
-            <div className="flex flex-col gap-2">
+            <div className="flex flex-col justify-between gap-2">
               <label className="text-sm font-medium leading-5 text-[#202224]">
                 Penalty Amount<span className="text-[#FE512E]">*</span>
               </label>

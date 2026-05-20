@@ -181,14 +181,14 @@ export default function SecurityGuard() {
   return (
     <div className="flex flex-col gap-6">
       <div className="rounded-2xl bg-white p-6">
-        <div className="mb-4 flex items-center justify-between gap-4">
+        <div className="mb-4 flex flex-col items-start gap-4 sm:flex-row sm:items-center sm:justify-between">
           <h1 className="text-[20px] font-semibold leading-[28px] text-[#202224]">Security Guard Details</h1>
 
           {userRole === "admin" && (
             <Button
               variant="primary"
               onClick={handleAdd}
-              className="h-[51px] rounded-[10px] px-[14px] text-[14px] font-semibold shadow-[0_8px_20px_rgba(254,81,46,0.22)]"
+              className="flex h-[51px] w-full items-center justify-center rounded-[10px] px-[14px] text-[14px] font-semibold shadow-[0_8px_20px_rgba(254,81,46,0.22)] whitespace-nowrap sm:w-auto"
               leftIcon={<Plus size={20} />}
             >
               Add Security

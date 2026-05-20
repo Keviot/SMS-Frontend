@@ -4,6 +4,7 @@ import toast from "react-hot-toast";
 import { Loader2, Plus, ChevronDown } from "lucide-react";
 import Button from "../../../ui/Button";
 import AddVisitorModal from "../../../components/security panel/AddVisitorModal";
+import { useAuth } from "../../../context/AuthContext";
 
 
 type VisitorLog = {
@@ -23,6 +24,7 @@ type unitOption = {
 type FilterType = "Today" | "Week" | "Month" | "All";
 
 export default function VisitorLogs() {
+    const { role } = useAuth();
     const [logs, setLogs] = useState<VisitorLog[]>([]);
     const [loading, setLoading] = useState(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -168,17 +170,17 @@ export default function VisitorLogs() {
     return (
         <div className="w-full">
             <section className="rounded-2xl bg-white p-6 shadow-sm border border-[#F4F4F4]">
-                <div className="mb-6 flex items-center justify-between gap-4">
+                <div className="mb-6 flex flex-col items-start gap-4 sm:flex-row sm:items-center sm:justify-between">
                     <h1 className="text-xl font-bold text-[#202224]">
                         Visitor Tracking
                     </h1>
 
-                    <div className="flex items-center gap-4">
+                    <div className="flex w-full flex-col items-stretch gap-4 sm:w-auto sm:flex-row sm:items-center">
                         <div className="relative">
                             <button
                                 type="button"
                                 onClick={() => setIsFilterOpen((prev) => !prev)}
-                                className="flex items-center gap-2 rounded-xl border border-[#D3D3D3] bg-white px-4 py-2.5 text-sm font-semibold text-[#202224] transition-all hover:bg-gray-50"
+                                className="flex w-full items-center justify-between gap-2 rounded-xl border border-[#D3D3D3] bg-white px-4 py-2.5 text-sm font-semibold text-[#202224] transition-all hover:bg-gray-50 sm:w-auto sm:justify-start"
                             >
                                 {selectedFilter}
                                 <ChevronDown
@@ -189,7 +191,7 @@ export default function VisitorLogs() {
                             </button>
 
                             {isFilterOpen && (
-                                <div className="absolute right-0 z-20 mt-2 w-36 overflow-hidden rounded-xl border border-[#E5E7EB] bg-white shadow-lg">
+                                <div className="absolute right-0 z-20 mt-2 w-full sm:w-36 overflow-hidden rounded-xl border border-[#E5E7EB] bg-white shadow-lg">
                                     {filterOptions.map((option) => (
                                         <button
                                             key={option}
@@ -210,13 +212,15 @@ export default function VisitorLogs() {
                             )}
                         </div>
 
-                        <Button
-                            onClick={() => setIsModalOpen(true)}
-                            className="flex items-center gap-2 rounded-xl border-none bg-gradient-to-r from-[#FE512E] to-[#F09633] px-5 py-2.5 text-sm font-bold text-white shadow-[0_4px_15px_rgba(255,107,53,0.2)] transition-all hover:shadow-[0_6px_20px_rgba(255,107,53,0.3)]"
-                        >
-                            <Plus size={18} />
-                            Add Visitor details
-                        </Button>
+                        {role !== "admin" && (
+                            <Button
+                                onClick={() => setIsModalOpen(true)}
+                                className="flex w-full sm:w-auto items-center justify-center gap-2 rounded-xl border-none bg-gradient-to-r from-[#FE512E] to-[#F09633] px-5 py-2.5 text-sm font-bold text-white shadow-[0_4px_15px_rgba(255,107,53,0.2)] transition-all hover:shadow-[0_6px_20px_rgba(255,107,53,0.3)] whitespace-nowrap"
+                            >
+                                <Plus size={18} />
+                                Add Visitor details
+                            </Button>
+                        )}
                     </div>
                 </div>
 

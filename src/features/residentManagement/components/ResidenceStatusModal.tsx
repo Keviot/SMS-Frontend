@@ -94,21 +94,21 @@ export default function ResidenceStatusModal({ isOpen, onClose, onSuccess, resid
       {modalStep === 1 ? (
 
         <div className="flex flex-col gap-5">
-          <div className="grid grid-cols-2 gap-5">
+          <div className="grid grid-cols-2 gap-3 sm:gap-5">
             <div
               onClick={() => setSelectedStatus("occupied")}
               className={cn(
-                "flex items-center h-16 gap-3 p-4 border rounded-xl cursor-pointer transition-all",
+                "flex items-center h-14 sm:h-16 gap-2 sm:gap-3 px-3 py-2 sm:p-4 border rounded-xl cursor-pointer transition-all",
                 selectedStatus === "occupied" ? "gradient-border-primary-light" : "border-[#F1F1F1] bg-white"
               )}
             >
               <div className={cn(
-                "w-6 h-6 rounded-full flex items-center justify-center shrink-0 transition-all duration-300",
+                "w-5 h-5 sm:w-6 sm:h-6 rounded-full flex items-center justify-center shrink-0 transition-all duration-300",
                 selectedStatus === "occupied" ? "gradient-border-primary" : "border-2 border-[#D9D9D9]"
               )}>
-                {selectedStatus === "occupied" && <div className="w-3 h-3 rounded-full bg-primary-gradient" />}
+                {selectedStatus === "occupied" && <div className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full bg-primary-gradient" />}
               </div>
-              <span className={cn("font-semibold text-sm whitespace-nowrap", selectedStatus === "occupied" ? "text-black" : "text-[#A7A7A7]")}>
+              <span className={cn("font-semibold text-xs sm:text-sm truncate", selectedStatus === "occupied" ? "text-black" : "text-[#A7A7A7]")}>
                 Occupied
               </span>
             </div>
@@ -116,17 +116,17 @@ export default function ResidenceStatusModal({ isOpen, onClose, onSuccess, resid
             <div
               onClick={() => setSelectedStatus("vacate")}
               className={cn(
-                "flex items-center h-16 gap-3 p-4 border rounded-xl cursor-pointer transition-all",
+                "flex items-center h-14 sm:h-16 gap-2 sm:gap-3 px-3 py-2 sm:p-4 border rounded-xl cursor-pointer transition-all",
                 selectedStatus === "vacate" ? "gradient-border-primary-light" : "border-[#F1F1F1] bg-white"
               )}
             >
               <div className={cn(
-                "w-6 h-6 rounded-full flex items-center justify-center shrink-0 transition-all duration-300",
+                "w-5 h-5 sm:w-6 sm:h-6 rounded-full flex items-center justify-center shrink-0 transition-all duration-300",
                 selectedStatus === "vacate" ? "gradient-border-primary" : "border-2 border-[#D9D9D9]"
               )}>
-                {selectedStatus === "vacate" && <div className="w-3 h-3 rounded-full bg-primary-gradient" />}
+                {selectedStatus === "vacate" && <div className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full bg-primary-gradient" />}
               </div>
-              <span className={cn("font-semibold text-sm whitespace-nowrap", selectedStatus === "vacate" ? "text-black" : "text-[#A7A7A7]")}>
+              <span className={cn("font-semibold text-xs sm:text-sm truncate", selectedStatus === "vacate" ? "text-black" : "text-[#A7A7A7]")}>
                 Vacate
               </span>
             </div>

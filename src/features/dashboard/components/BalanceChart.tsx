@@ -234,14 +234,15 @@ export default function BalanceChart({ data = [], total = "0" }: BalanceChartPro
               </div>
             </div>
 
-            <div className="relative mt-4   text-xs font-normal text-[#4F4F4F] sm:text-sm">
+            <div className="relative mt-6 h-8 text-[10px] sm:mt-4 sm:h-6 sm:text-xs lg:text-sm font-normal text-[#4F4F4F]">
               {labels.map((label, index) => {
                 const x = 4 + (index / (labels.length - 1)) * 92;
+                
                 return (
                   <span
                     key={index}
-                    className="absolute -translate-x-1/2 whitespace-nowrap"
-                    style={{ left: `${x}%` }}
+                    className="absolute -translate-x-1/2 -translate-y-1/2 -rotate-90 whitespace-nowrap sm:translate-y-0 sm:rotate-0"
+                    style={{ left: `${x}%`, top: '10px' }}
                   >
                     {label}
                   </span>

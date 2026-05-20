@@ -824,15 +824,15 @@ export default function Income() {
             )} */}
 
 
-            <div className="relative z-10 flex w-full items-end overflow-x-auto">
+            <div className="relative z-10 flex w-full items-end">
                 <button
                     type="button"
                     onClick={() => setSelectedTab("Maintenance")}
                     className={cn(
-                        "min-h-14 min-w-32 shrink-0 px-8 py-4 text-sm font-bold transition-all",
+                        "relative flex-1 min-h-12 px-2 sm:px-6 py-3 text-xs sm:text-sm font-bold transition-all flex items-center justify-center text-center leading-tight",
                         selectedTab === "Maintenance"
-                            ? "rounded-t-xl bg-gradient-to-r from-[#FE512E] to-[#F09619] text-white shadow-md"
-                            : "rounded-t-xl border border-[#D9DCE5] bg-white text-[#202224] hover:bg-gray-50"
+                            ? "z-10 rounded-t-xl bg-gradient-to-r from-[#FE512E] to-[#F09619] text-white shadow-md border-0"
+                            : "z-0 rounded-t-xl border border-[#D9DCE5] border-b-0 bg-[#F6F8FB] text-[#6F7786] hover:bg-gray-50 hover:text-[#202224]"
                     )}
                 >
                     Maintenance
@@ -841,10 +841,10 @@ export default function Income() {
                     type="button"
                     onClick={() => setSelectedTab("Other Income")}
                     className={cn(
-                        "min-h-14 min-w-32 shrink-0 px-8 py-4 text-sm font-bold transition-all",
+                        "relative flex-1 -ml-[1px] min-h-12 px-2 sm:px-6 py-3 text-xs sm:text-sm font-bold transition-all flex items-center justify-center text-center leading-tight",
                         selectedTab === "Other Income"
-                            ? "rounded-t-xl bg-gradient-to-r from-[#FE512E] to-[#F09619] text-white shadow-md"
-                            : "rounded-t-xl border border-[#D9DCE5] bg-white text-[#202224] hover:bg-gray-50"
+                            ? "z-10 rounded-t-xl bg-gradient-to-r from-[#FE512E] to-[#F09619] text-white shadow-md border-0"
+                            : "z-0 rounded-t-xl border border-[#D9DCE5] border-b-0 bg-[#F6F8FB] text-[#6F7786] hover:bg-gray-50 hover:text-[#202224]"
                     )}
                 >
                     Other Income
@@ -853,17 +853,20 @@ export default function Income() {
                     type="button"
                     onClick={() => setSelectedTab("Event Participation")}
                     className={cn(
-                        "min-h-14 min-w-32 shrink-0 px-8 py-4 text-sm font-bold transition-all",
+                        "relative flex-1 -ml-[1px] min-h-12 px-1 sm:px-6 py-3 text-[11px] sm:text-sm font-bold transition-all flex items-center justify-center text-center leading-tight",
                         selectedTab === "Event Participation"
-                            ? "rounded-t-xl bg-gradient-to-r from-[#FE512E] to-[#F09619] text-white shadow-md"
-                            : "rounded-t-xl border border-[#D9DCE5] bg-white text-[#202224] hover:bg-gray-50"
+                            ? "z-10 rounded-t-xl bg-gradient-to-r from-[#FE512E] to-[#F09619] text-white shadow-md border-0"
+                            : "z-0 rounded-t-xl border border-[#D9DCE5] border-b-0 bg-[#F6F8FB] text-[#6F7786] hover:bg-gray-50 hover:text-[#202224]"
                     )}
                 >
                     Event Participation
                 </button>
             </div>
 
-            <div className="-mt-px rounded-2xl rounded-tl-none border border-[#D9DCE5] bg-white p-4 sm:p-5">
+            <div className={cn(
+                "-mt-px rounded-2xl border border-[#D9DCE5] bg-white p-4 sm:p-5",
+                selectedTab === "Maintenance" ? "rounded-tl-none" : ""
+            )}>
                 {selectedTab === "Maintenance" && (
                     <>
                         <div className="mb-5 flex flex-col gap-3 pt-3 sm:flex-row sm:items-center sm:justify-between">

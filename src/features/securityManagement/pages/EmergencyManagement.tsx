@@ -23,12 +23,12 @@ export default function EmergencyManagement() {
 
     return (
         <div className="w-full">
-            <div className="mb-6 flex items-center gap-2 text-sm text-[#A7A7A7]">
+            {/* <div className="mb-6 flex items-center gap-2 text-sm text-[#A7A7A7]">
                 <span className="font-semibold text-[#202224]">Home</span>
                 <span>&gt;</span>
                 <span className="font-semibold text-[#5678E9]">Emergency Management</span>
-            </div>
-            
+            </div> */}
+
             <div className="flex min-h-[calc(100vh-200px)] items-center justify-center">
                 <EmergencyAlertForm societyId={societyId} />
             </div>

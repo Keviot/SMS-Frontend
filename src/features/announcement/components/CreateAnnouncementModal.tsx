@@ -129,9 +129,7 @@ export default function CreateAnnouncementModal({ open, onClose, announcement, o
       <div className="relative w-full max-w-sm rounded-2xl bg-white shadow-2xl animate-in zoom-in-95 duration-200">
         <div className="flex items-center justify-between border-b border-[#F4F4F4] px-4 py-3">
           <h2 className="text-base font-semibold text-[#202224]">{isEdit ? "Edit Announcement" : "Add Announcement"}</h2>
-          <button onClick={onClose} className="p-1 hover:bg-gray-100 rounded-full transition-colors">
-            <X size={20} className="text-gray-400" />
-          </button>
+
         </div>
 
         <div className="max-h-[calc(100vh-7rem)] overflow-y-auto sm:overflow-visible sm:max-h-none">
@@ -229,8 +227,8 @@ export default function CreateAnnouncementModal({ open, onClose, announcement, o
                 type="submit"
                 disabled={loading}
                 className={`flex-1 h-12 rounded-lg font-bold transition-all disabled:opacity-50 ${isFormFilled
-                    ? "bg-linear-to-r from-[#FE512E] to-[#F09619] text-white shadow-lg hover:opacity-90 active:scale-[0.98]"
-                    : "bg-[#F6F8FB] text-[#202224] shadow-none"
+                  ? "bg-linear-to-r from-[#FE512E] to-[#F09619] text-white shadow-lg hover:opacity-90 active:scale-[0.98]"
+                  : "bg-[#F6F8FB] text-[#202224] shadow-none"
                   }`}
               >
                 {loading ? "Processing..." : (isEdit ? "Save" : "Create")}

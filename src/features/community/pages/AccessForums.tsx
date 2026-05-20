@@ -406,66 +406,66 @@ function VideoCallUI({ onLeave, onMinimize }: { onLeave: () => void, onMinimize:
             </div>
 
             {/* Bottom Control Bar (Google Meet Style) */}
-            <div className="h-24 bg-[#202124] flex items-center justify-between px-12 border-t border-white/5">
+            <div className="h-20 sm:h-24 bg-[#202124] flex items-center justify-center lg:justify-between px-4 sm:px-12 border-t border-white/5 w-full">
                 {/* Left side: Time/Code */}
                 <div className="hidden lg:flex items-center text-white/80 text-sm font-medium tracking-wide">
                     {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} | Community Meeting
                 </div>
 
                 {/* Center: Controls */}
-                <div className="flex items-center gap-5">
+                <div className="flex items-center gap-2 sm:gap-5">
                     {/* Mute */}
                     <button
                         onClick={toggleMute}
                         className={cn(
-                            "group flex h-14 w-14 items-center justify-center rounded-full transition-all duration-300 shadow-xl",
+                            "group flex h-11 w-11 sm:h-14 sm:w-14 items-center justify-center rounded-full transition-all duration-300 shadow-xl shrink-0",
                             isMicMuted ? "bg-[#EA4335] hover:bg-[#D93025] scale-110" : "bg-[#3C4043] hover:bg-[#4c4f52]"
                         )}
                         title={isMicMuted ? "Unmute" : "Mute"}
                     >
-                        {isMicMuted ? <MicOff size={22} className="text-white" /> : <Mic size={22} className="text-white" />}
+                        {isMicMuted ? <MicOff className="w-5 h-5 sm:w-[22px] sm:h-[22px] text-white" /> : <Mic className="w-5 h-5 sm:w-[22px] sm:h-[22px] text-white" />}
                     </button>
 
                     {/* Camera */}
                     <button
                         onClick={toggleCamera}
                         className={cn(
-                            "group flex h-14 w-14 items-center justify-center rounded-full transition-all duration-300 shadow-xl",
+                            "group flex h-11 w-11 sm:h-14 sm:w-14 items-center justify-center rounded-full transition-all duration-300 shadow-xl shrink-0",
                             isCamMuted ? "bg-[#EA4335] hover:bg-[#D93025] scale-110" : "bg-[#3C4043] hover:bg-[#4c4f52]"
                         )}
                         title={isCamMuted ? "Turn on camera" : "Turn off camera"}
                     >
-                        {isCamMuted ? <VideoOff size={22} className="text-white" /> : <Video size={22} className="text-white" />}
+                        {isCamMuted ? <VideoOff className="w-5 h-5 sm:w-[22px] sm:h-[22px] text-white" /> : <Video className="w-5 h-5 sm:w-[22px] sm:h-[22px] text-white" />}
                     </button>
 
                     {/* Hand Raise */}
                     <button
                         onClick={toggleHandRaise}
                         className={cn(
-                            "flex h-14 w-14 items-center justify-center rounded-full transition-all duration-300 bg-[#3C4043] hover:bg-[#4c4f52] shadow-xl",
+                            "flex h-11 w-11 sm:h-14 sm:w-14 items-center justify-center rounded-full transition-all duration-300 bg-[#3C4043] hover:bg-[#4c4f52] shadow-xl shrink-0",
                             isHandRaised && "bg-white hover:bg-white text-black"
                         )}
                         title="Raise hand"
                     >
-                        <Hand size={22} className={cn(isHandRaised ? "text-yellow-500" : "text-white")} />
+                        <Hand className={cn("w-5 h-5 sm:w-[22px] sm:h-[22px]", isHandRaised ? "text-yellow-500" : "text-white")} />
                     </button>
 
                     {/* Screen Share */}
                     <button
                         onClick={toggleScreenShare}
-                        className="flex h-14 w-14 items-center justify-center rounded-full transition-all duration-300 bg-[#3C4043] hover:bg-[#4c4f52] shadow-xl"
+                        className="flex h-11 w-11 sm:h-14 sm:w-14 items-center justify-center rounded-full transition-all duration-300 bg-[#3C4043] hover:bg-[#4c4f52] shadow-xl shrink-0"
                         title="Present now"
                     >
-                        <MonitorUp size={22} className="text-white" />
+                        <MonitorUp className="w-5 h-5 sm:w-[22px] sm:h-[22px] text-white" />
                     </button>
 
                     {/* End Call */}
                     <button
                         onClick={onLeave}
-                        className="flex h-14 w-20 items-center justify-center rounded-[28px] bg-[#EA4335] hover:bg-[#D93025] transition-all duration-300 ml-4 shadow-[0_10px_25px_rgba(234,67,53,0.4)]"
+                        className="flex h-11 w-16 sm:h-14 sm:w-20 items-center justify-center rounded-[28px] bg-[#EA4335] hover:bg-[#D93025] transition-all duration-300 ml-2 sm:ml-4 shadow-[0_10px_25px_rgba(234,67,53,0.4)] shrink-0"
                         title="Leave call"
                     >
-                        <Phone size={26} className="text-white rotate-[135deg]" />
+                        <Phone className="w-6 h-6 sm:w-[26px] sm:h-[26px] text-white rotate-[135deg]" />
                     </button>
                 </div>
 
@@ -876,11 +876,11 @@ export default function AccessForums() {
 
                 const allContacts = [communityForum, ...fetchedContacts];
                 setContacts(allContacts);
-                
+
                 // Determine which contact to auto-select (persistent across refreshes)
                 const isDesktop = window.matchMedia("(min-width: 768px)").matches;
                 const savedContactId = localStorage.getItem("active_chat_contact_id");
-                
+
                 if (savedContactId) {
                     const savedContact = allContacts.find(c => String(c.id) === String(savedContactId));
                     if (savedContact) {
@@ -1410,14 +1410,14 @@ export default function AccessForums() {
             .filter(m => selectedMessageIds.includes(String(m.id)) && m.text)
             .map(m => m.text)
             .join("\n");
-            
+
         if (textToCopy) {
             navigator.clipboard.writeText(textToCopy);
             toast.success("Messages copied to clipboard!");
         } else {
             toast.error("No text messages selected to copy");
         }
-        
+
         setIsCopyMode(false);
         setSelectedMessageIds([]);
     };
@@ -1426,7 +1426,7 @@ export default function AccessForums() {
         if (!currentUser || !socket) return;
         const societyId = currentUser.society?._id || currentUser.society || currentUser.societies?.[0]?._id;
         const selectedMsgs = messages.filter(m => selectedMessageIds.includes(m.id));
-        
+
         for (const msg of selectedMsgs) {
             const tempId = `forward_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
             const messageData = {
@@ -1438,10 +1438,10 @@ export default function AccessForums() {
                 receiverId: targetContact.id === "community" ? null : targetContact.id,
                 tempId
             };
-            
+
             // Emit socket message
             socket.emit("chat-message", messageData);
-            
+
             // If forwarding to current active chat, add to messages list locally
             if (activeContact && activeContact.id === targetContact.id) {
                 setMessages(prev => [...prev, {
@@ -1458,7 +1458,7 @@ export default function AccessForums() {
                 }]);
             }
         }
-        
+
         toast.success(`Messages forwarded to ${targetContact.name}`);
         setIsForwardModalOpen(false);
         setIsForwardMode(false);
@@ -1652,373 +1652,373 @@ export default function AccessForums() {
             {/* Chat Area wrapper - hide entirely on mobile if NO contact is active */}
             <div className={cn("h-full flex-1 w-full", activeContact ? "block" : "hidden md:block")}>
                 <div className="relative flex h-full w-full flex-col bg-white">
-                {activeContact ? (
-                    <>
-                        {/* Header */}
-                        {isCopyMode || isForwardMode ? (
-                            <div className="flex items-center justify-between border-b border-[#F4F4F4] px-4 md:px-6 py-3 md:py-4 bg-[#F1F4FF] z-10 animate-in fade-in duration-200">
-                                <div className="flex items-center gap-3">
-                                    <button
-                                        type="button"
-                                        onClick={() => {
-                                            setIsCopyMode(false);
-                                            setIsForwardMode(false);
-                                            setSelectedMessageIds([]);
-                                        }}
-                                        className="text-[#202224] hover:bg-gray-200 p-2 rounded-full cursor-pointer"
-                                    >
-                                        <X size={20} />
-                                    </button>
-                                    <span className="text-sm font-bold text-[#5678E9]">
-                                        {selectedMessageIds.length} message{selectedMessageIds.length !== 1 && 's'} selected
-                                    </span>
-                                </div>
-                                <div className="flex items-center gap-2">
-                                    <button
-                                        onClick={() => {
-                                            setIsCopyMode(false);
-                                            setIsForwardMode(false);
-                                            setSelectedMessageIds([]);
-                                        }}
-                                        className="px-4 py-1.5 rounded-lg border border-gray-300 text-gray-700 text-xs font-bold hover:bg-gray-50 transition-colors"
-                                    >
-                                        Cancel
-                                    </button>
-                                    {isCopyMode ? (
+                    {activeContact ? (
+                        <>
+                            {/* Header */}
+                            {isCopyMode || isForwardMode ? (
+                                <div className="flex items-center justify-between border-b border-[#F4F4F4] px-4 md:px-6 py-3 md:py-4 bg-[#F1F4FF] z-10 animate-in fade-in duration-200">
+                                    <div className="flex items-center gap-3">
                                         <button
-                                            onClick={handleCopySelected}
-                                            disabled={selectedMessageIds.length === 0}
-                                            className="px-4 py-1.5 rounded-lg bg-[#5678E9] text-white text-xs font-bold hover:bg-[#4361CD] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                                        >
-                                            Copy Selected
-                                        </button>
-                                    ) : (
-                                        <button
-                                            onClick={() => setIsForwardModalOpen(true)}
-                                            disabled={selectedMessageIds.length === 0}
-                                            className="px-4 py-1.5 rounded-lg bg-[#5678E9] text-white text-xs font-bold hover:bg-[#4361CD] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                                        >
-                                            Forward Selected
-                                        </button>
-                                    )}
-                                </div>
-                            </div>
-                        ) : (
-                            <div className="flex items-center justify-between border-b border-[#F4F4F4] px-4 md:px-6 py-3 md:py-4 bg-white z-10">
-                                <div className="flex items-center gap-2 md:gap-3 flex-1 min-w-0">
-                                    <button
-                                        type="button"
-                                        onClick={(e) => {
-                                            e.preventDefault();
-                                            e.stopPropagation();
-                                            setActiveContact(null);
-                                        }}
-                                        className="md:hidden text-[#202224] hover:bg-gray-100 p-2 -ml-2 shrink-0 rounded-full cursor-pointer"
-                                    >
-                                        <ChevronLeft size={24} />
-                                    </button>
-                                    <div className="shrink-0">
-                                        <Avatar
-                                            src={activeContact.avatar}
-                                            name={activeContact.name}
-                                        />
-                                    </div>
-                                    <div className="flex-1 min-w-0">
-                                        <h3 className="text-sm md:text-md font-bold text-[#202224] truncate">
-                                            {activeContact.name} {activeContact.unit}
-                                        </h3>
-                                        <p className={cn("text-xs md:text-sm truncate", activeContact.typing ? "text-[#5678E9] font-bold" : "text-[#A7A7A7]")}>
-                                            {activeContact.typing 
-                                                ? "Typing..." 
-                                                : activeContact.id === "community" 
-                                                    ? "Active Now" 
-                                                    : activeContact.status === "online" 
-                                                        ? "Active Now" 
-                                                        : "Offline"}
-                                        </p>
-                                    </div>
-                                </div>
-
-                                {/* Minimised call pill (show when call is active but minimised) */}
-                                {activeCall && isCallMinimized && (
-                                    <div
-                                        onClick={() => setIsCallMinimized(false)}
-                                        className="flex items-center gap-3 px-4 py-2 bg-[#1a1b1e] rounded-2xl border border-white/10 shadow-2xl cursor-pointer hover:scale-105 transition-all animate-in slide-in-from-top-2"
-                                    >
-                                        <div className="relative">
-                                            <div className="h-2 w-2 rounded-full bg-[#34A853] animate-pulse" />
-                                        </div>
-                                        <span className="text-xs font-semibold text-white/90">Call in progress · Tap to return</span>
-                                        <button
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                activeCall.leave().catch(console.warn);
-                                                setActiveCall(null);
-                                                setIsCallMinimized(false);
+                                            type="button"
+                                            onClick={() => {
+                                                setIsCopyMode(false);
+                                                setIsForwardMode(false);
+                                                setSelectedMessageIds([]);
                                             }}
-                                            className="h-7 w-7 rounded-full bg-[#EA4335] flex items-center justify-center hover:bg-[#D93025] transition-all shadow-lg"
+                                            className="text-[#202224] hover:bg-gray-200 p-2 rounded-full cursor-pointer"
                                         >
-                                            <Phone size={12} className="text-white rotate-[135deg]" />
+                                            <X size={20} />
                                         </button>
+                                        <span className="text-sm font-bold text-[#5678E9]">
+                                            {selectedMessageIds.length} message{selectedMessageIds.length !== 1 && 's'} selected
+                                        </span>
                                     </div>
-                                )}
-
-                                <div className="flex items-center gap-2 sm:gap-4 shrink-0 ml-2">
-                                    <button
-                                        onClick={startCall}
-                                        disabled={!videoClient}
-                                        className="rounded-full flex justify-center items-center shrink-0 h-9 w-9 sm:h-10 sm:w-10 text-[#202224] bg-[#F6F8FB] transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-                                        title="Video call"
-                                    >
-                                        <img src="/chaticons/video.svg" alt="Video call" className="w-4 h-4 sm:w-5 sm:h-5" />
-                                    </button>
-                                    <button
-                                        onClick={startAudioCall}
-                                        disabled={!videoClient}
-                                        className="rounded-full flex justify-center items-center shrink-0 h-9 w-9 sm:h-10 sm:w-10 text-[#202224] bg-[#F6F8FB] transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-                                        title="Voice call"
-                                    >
-                                        <img src="/chaticons/call.svg" alt="Voice call" className="w-4 h-4 sm:w-5 sm:h-5" />
-                                    </button>
-                                    <div className="relative">
+                                    <div className="flex items-center gap-2">
                                         <button
-                                            onClick={() => setIsMenuOpen(!isMenuOpen)}
-                                            className="rounded-full flex justify-center items-center shrink-0 h-9 w-9 sm:h-10 sm:w-10 text-[#202224] bg-[#F6F8FB] transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                                            onClick={() => {
+                                                setIsCopyMode(false);
+                                                setIsForwardMode(false);
+                                                setSelectedMessageIds([]);
+                                            }}
+                                            className="px-4 py-1.5 rounded-lg border border-gray-300 text-gray-700 text-xs font-bold hover:bg-gray-50 transition-colors"
                                         >
-                                            <img src="/chaticons/more.svg" alt="More" className="w-4 h-4 sm:w-5 sm:h-5" />
+                                            Cancel
                                         </button>
-                                        
-                                        {isMenuOpen && (
-                                            <>
-                                                {/* Backdrop to close menu */}
-                                                <div className="fixed inset-0 z-40" onClick={() => setIsMenuOpen(false)} />
-                                                <div className="absolute right-0 top-full mt-2 w-32 bg-white rounded-lg shadow-[0_4px_20px_rgba(0,0,0,0.08)] border border-[#F4F4F4] py-1 z-50 overflow-hidden">
-                                                    <button 
-                                                        className="w-full text-left px-4 py-2 hover:bg-[#F6F8FB] text-[#202224] font-medium text-sm transition-colors"
-                                                        onClick={() => {
-                                                            setIsMenuOpen(false);
-                                                            setIsCopyMode(true);
-                                                            setIsForwardMode(false);
-                                                            setSelectedMessageIds([]);
-                                                        }}
-                                                    >
-                                                        Copy
-                                                    </button>
-                                                    <button 
-                                                        className="w-full text-left px-4 py-2 hover:bg-[#F6F8FB] text-[#202224] font-medium text-sm transition-colors"
-                                                        onClick={() => {
-                                                            setIsMenuOpen(false);
-                                                            setIsForwardMode(true);
-                                                            setIsCopyMode(false);
-                                                            setSelectedMessageIds([]);
-                                                        }}
-                                                    >
-                                                        Forward
-                                                    </button>
-                                                </div>
-                                            </>
+                                        {isCopyMode ? (
+                                            <button
+                                                onClick={handleCopySelected}
+                                                disabled={selectedMessageIds.length === 0}
+                                                className="px-4 py-1.5 rounded-lg bg-[#5678E9] text-white text-xs font-bold hover:bg-[#4361CD] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                            >
+                                                Copy Selected
+                                            </button>
+                                        ) : (
+                                            <button
+                                                onClick={() => setIsForwardModalOpen(true)}
+                                                disabled={selectedMessageIds.length === 0}
+                                                className="px-4 py-1.5 rounded-lg bg-[#5678E9] text-white text-xs font-bold hover:bg-[#4361CD] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                            >
+                                                Forward Selected
+                                            </button>
                                         )}
                                     </div>
                                 </div>
-                            </div>
-                        )}
-
-                        {/* Messages List */}
-                        <div className="flex-1 overflow-y-auto p-6 space-y-6 custom-scrollbar bg-[#F9FBFF]/30">
-                            {messages.map((msg) => {
-                                const isSelected = selectedMessageIds.includes(String(msg.id));
-                                const isSelecting = isCopyMode || isForwardMode;
-                                return (
-                                    <div
-                                        key={msg.id}
-                                        onClick={() => {
-                                            if (isSelecting && msg.id) {
-                                                const msgIdStr = String(msg.id);
-                                                setSelectedMessageIds(prev => 
-                                                    prev.includes(msgIdStr) 
-                                                        ? prev.filter(id => id !== msgIdStr) 
-                                                        : [...prev, msgIdStr]
-                                                );
-                                            }
-                                        }}
-                                        className={cn(
-                                            "flex w-full items-center gap-4 p-1.5 rounded-2xl transition-all",
-                                            isSelecting && "cursor-pointer hover:bg-gray-50/50",
-                                            isSelected && "bg-[#F1F4FF]/70 shadow-sm",
-                                            msg.sender === "me" ? "justify-end" : "justify-start"
-                                        )}
-                                    >
-                                        {isSelecting && msg.sender !== "me" && (
-                                            <input 
-                                                type="checkbox" 
-                                                checked={isSelected}
-                                                readOnly
-                                                className="h-4.5 w-4.5 rounded border-gray-300 text-[#5678E9] focus:ring-[#5678E9] shrink-0 pointer-events-none"
+                            ) : (
+                                <div className="flex items-center justify-between border-b border-[#F4F4F4] px-4 md:px-6 py-3 md:py-4 bg-white z-10">
+                                    <div className="flex items-center gap-2 md:gap-3 flex-1 min-w-0">
+                                        <button
+                                            type="button"
+                                            onClick={(e) => {
+                                                e.preventDefault();
+                                                e.stopPropagation();
+                                                setActiveContact(null);
+                                            }}
+                                            className="md:hidden text-[#202224] hover:bg-gray-100 p-2 -ml-2 shrink-0 rounded-full cursor-pointer"
+                                        >
+                                            <ChevronLeft size={24} />
+                                        </button>
+                                        <div className="shrink-0">
+                                            <Avatar
+                                                src={activeContact.avatar}
+                                                name={activeContact.name}
                                             />
-                                        )}
+                                        </div>
+                                        <div className="flex-1 min-w-0">
+                                            <h3 className="text-sm md:text-md font-bold text-[#202224] truncate">
+                                                {activeContact.name} {activeContact.unit}
+                                            </h3>
+                                            <p className={cn("text-xs md:text-sm truncate", activeContact.typing ? "text-[#5678E9] font-bold" : "text-[#A7A7A7]")}>
+                                                {activeContact.typing
+                                                    ? "Typing..."
+                                                    : activeContact.id === "community"
+                                                        ? "Active Now"
+                                                        : activeContact.status === "online"
+                                                            ? "Active Now"
+                                                            : "Offline"}
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                    {/* Minimised call pill (show when call is active but minimised) */}
+                                    {activeCall && isCallMinimized && (
                                         <div
+                                            onClick={() => setIsCallMinimized(false)}
+                                            className="flex items-center gap-3 px-4 py-2 bg-[#1a1b1e] rounded-2xl border border-white/10 shadow-2xl cursor-pointer hover:scale-105 transition-all animate-in slide-in-from-top-2"
+                                        >
+                                            <div className="relative">
+                                                <div className="h-2 w-2 rounded-full bg-[#34A853] animate-pulse" />
+                                            </div>
+                                            <span className="text-xs font-semibold text-white/90">Call in progress · Tap to return</span>
+                                            <button
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    activeCall.leave().catch(console.warn);
+                                                    setActiveCall(null);
+                                                    setIsCallMinimized(false);
+                                                }}
+                                                className="h-7 w-7 rounded-full bg-[#EA4335] flex items-center justify-center hover:bg-[#D93025] transition-all shadow-lg"
+                                            >
+                                                <Phone size={12} className="text-white rotate-[135deg]" />
+                                            </button>
+                                        </div>
+                                    )}
+
+                                    <div className="flex items-center gap-2 sm:gap-4 shrink-0 ml-2">
+                                        <button
+                                            onClick={startCall}
+                                            disabled={!videoClient}
+                                            className="rounded-full flex justify-center items-center shrink-0 h-9 w-9 sm:h-10 sm:w-10 text-[#202224] bg-[#F6F8FB] transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                                            title="Video call"
+                                        >
+                                            <img src="/chaticons/video.svg" alt="Video call" className="w-4 h-4 sm:w-5 sm:h-5" />
+                                        </button>
+                                        <button
+                                            onClick={startAudioCall}
+                                            disabled={!videoClient}
+                                            className="rounded-full flex justify-center items-center shrink-0 h-9 w-9 sm:h-10 sm:w-10 text-[#202224] bg-[#F6F8FB] transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                                            title="Voice call"
+                                        >
+                                            <img src="/chaticons/call.svg" alt="Voice call" className="w-4 h-4 sm:w-5 sm:h-5" />
+                                        </button>
+                                        <div className="relative">
+                                            <button
+                                                onClick={() => setIsMenuOpen(!isMenuOpen)}
+                                                className="rounded-full flex justify-center items-center shrink-0 h-9 w-9 sm:h-10 sm:w-10 text-[#202224] bg-[#F6F8FB] transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                                            >
+                                                <img src="/chaticons/more.svg" alt="More" className="w-4 h-4 sm:w-5 sm:h-5" />
+                                            </button>
+
+                                            {isMenuOpen && (
+                                                <>
+                                                    {/* Backdrop to close menu */}
+                                                    <div className="fixed inset-0 z-40" onClick={() => setIsMenuOpen(false)} />
+                                                    <div className="absolute right-0 top-full mt-2 w-32 bg-white rounded-lg shadow-[0_4px_20px_rgba(0,0,0,0.08)] border border-[#F4F4F4] py-1 z-50 overflow-hidden">
+                                                        <button
+                                                            className="w-full text-left px-4 py-2 hover:bg-[#F6F8FB] text-[#202224] font-medium text-sm transition-colors"
+                                                            onClick={() => {
+                                                                setIsMenuOpen(false);
+                                                                setIsCopyMode(true);
+                                                                setIsForwardMode(false);
+                                                                setSelectedMessageIds([]);
+                                                            }}
+                                                        >
+                                                            Copy
+                                                        </button>
+                                                        <button
+                                                            className="w-full text-left px-4 py-2 hover:bg-[#F6F8FB] text-[#202224] font-medium text-sm transition-colors"
+                                                            onClick={() => {
+                                                                setIsMenuOpen(false);
+                                                                setIsForwardMode(true);
+                                                                setIsCopyMode(false);
+                                                                setSelectedMessageIds([]);
+                                                            }}
+                                                        >
+                                                            Forward
+                                                        </button>
+                                                    </div>
+                                                </>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Messages List */}
+                            <div className="flex-1 overflow-y-auto p-6 space-y-6 custom-scrollbar bg-[#F9FBFF]/30">
+                                {messages.map((msg) => {
+                                    const isSelected = selectedMessageIds.includes(String(msg.id));
+                                    const isSelecting = isCopyMode || isForwardMode;
+                                    return (
+                                        <div
+                                            key={msg.id}
+                                            onClick={() => {
+                                                if (isSelecting && msg.id) {
+                                                    const msgIdStr = String(msg.id);
+                                                    setSelectedMessageIds(prev =>
+                                                        prev.includes(msgIdStr)
+                                                            ? prev.filter(id => id !== msgIdStr)
+                                                            : [...prev, msgIdStr]
+                                                    );
+                                                }
+                                            }}
                                             className={cn(
-                                                "flex flex-col max-w-[70%]",
-                                                isSelecting && "pointer-events-none",
-                                                msg.sender === "me" ? "items-end" : "items-start"
+                                                "flex w-full items-center gap-4 p-1.5 rounded-2xl transition-all",
+                                                isSelecting && "cursor-pointer hover:bg-gray-50/50",
+                                                isSelected && "bg-[#F1F4FF]/70 shadow-sm",
+                                                msg.sender === "me" ? "justify-end" : "justify-start"
                                             )}
                                         >
-                                            {activeContact.id === "community" && msg.sender !== "me" && (
-                                                <span className="mb-1 text-[10px] font-bold text-[#5678E9] px-2">{msg.senderName}</span>
+                                            {isSelecting && msg.sender !== "me" && (
+                                                <input
+                                                    type="checkbox"
+                                                    checked={isSelected}
+                                                    readOnly
+                                                    className="h-4.5 w-4.5 rounded border-gray-300 text-[#5678E9] focus:ring-[#5678E9] shrink-0 pointer-events-none"
+                                                />
                                             )}
                                             <div
                                                 className={cn(
-                                                    "rounded-xl px-4 py-2.5 text-sm shadow-sm",
-                                                    msg.sender === "me"
-                                                        ? "bg-[#5678E9] text-white "
-                                                        : "bg-[#ECEEF3] text-[#202224]"
+                                                    "flex flex-col max-w-[70%]",
+                                                    isSelecting && "pointer-events-none",
+                                                    msg.sender === "me" ? "items-end" : "items-start"
                                                 )}
                                             >
-                                                {msg.type === "text" && <p>{msg.text}</p>}
-                                                {msg.type === "audio" && (
-                                                    <div className="flex flex-col gap-2 min-w-[200px]">
-                                                        <p className="text-xs font-bold opacity-80">Voice Message</p>
-                                                        <audio controls src={msg.fileUrl} className="h-10 w-full" />
-                                                    </div>
+                                                {activeContact.id === "community" && msg.sender !== "me" && (
+                                                    <span className="mb-1 text-[10px] font-bold text-[#5678E9] px-2">{msg.senderName}</span>
                                                 )}
-                                                {msg.type === "image" && (
-                                                    <div className="overflow-hidden rounded-xl border border-[#F1F1F1] bg-white p-1">
-                                                        <a href={msg.fileUrl} target="_blank" rel="noopener noreferrer">
-                                                            <img src={msg.fileUrl} alt="Sent" className="max-h-60 w-full rounded-lg object-cover cursor-pointer" />
+                                                <div
+                                                    className={cn(
+                                                        "rounded-xl px-4 py-2.5 text-sm shadow-sm",
+                                                        msg.sender === "me"
+                                                            ? "bg-[#5678E9] text-white "
+                                                            : "bg-[#ECEEF3] text-[#202224]"
+                                                    )}
+                                                >
+                                                    {msg.type === "text" && <p>{msg.text}</p>}
+                                                    {msg.type === "audio" && (
+                                                        <div className="flex flex-col gap-2 min-w-[200px]">
+                                                            <p className="text-xs font-bold opacity-80">Voice Message</p>
+                                                            <audio controls src={msg.fileUrl} className="h-10 w-full" />
+                                                        </div>
+                                                    )}
+                                                    {msg.type === "image" && (
+                                                        <div className="overflow-hidden rounded-xl border border-[#F1F1F1] bg-white p-1">
+                                                            <a href={msg.fileUrl} target="_blank" rel="noopener noreferrer">
+                                                                <img src={msg.fileUrl} alt="Sent" className="max-h-60 w-full rounded-lg object-cover cursor-pointer" />
+                                                            </a>
+                                                        </div>
+                                                    )}
+                                                    {(msg.type === "pdf" || msg.type === "file") && (
+                                                        <a
+                                                            href={msg.fileUrl}
+                                                            target="_blank"
+                                                            rel="noopener noreferrer"
+                                                            className={cn(
+                                                                "flex items-center gap-3 rounded-xl p-2 hover:opacity-80 transition-opacity",
+                                                                msg.sender === "me" ? "bg-white/10" : "bg-white"
+                                                            )}
+                                                        >
+                                                            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#FEECEC] text-[#E74C3C]">
+                                                                <FileText size={20} />
+                                                            </div>
+                                                            <div className="flex-1 overflow-hidden pr-4">
+                                                                <p className={cn("truncate font-bold text-sm", msg.sender === "me" ? "text-white" : "text-[#202224]")}>{msg.text || "Document"}</p>
+                                                                <p className={cn("text-[10px]", msg.sender === "me" ? "text-white/70" : "text-[#A7A7A7]")}>Click to view</p>
+                                                            </div>
                                                         </a>
-                                                    </div>
-                                                )}
-                                                {(msg.type === "pdf" || msg.type === "file") && (
-                                                    <a
-                                                        href={msg.fileUrl}
-                                                        target="_blank"
-                                                        rel="noopener noreferrer"
-                                                        className={cn(
-                                                            "flex items-center gap-3 rounded-xl p-2 hover:opacity-80 transition-opacity",
-                                                            msg.sender === "me" ? "bg-white/10" : "bg-white"
-                                                        )}
-                                                    >
-                                                        <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#FEECEC] text-[#E74C3C]">
-                                                            <FileText size={20} />
-                                                        </div>
-                                                        <div className="flex-1 overflow-hidden pr-4">
-                                                            <p className={cn("truncate font-bold text-sm", msg.sender === "me" ? "text-white" : "text-[#202224]")}>{msg.text || "Document"}</p>
-                                                            <p className={cn("text-[10px]", msg.sender === "me" ? "text-white/70" : "text-[#A7A7A7]")}>Click to view</p>
-                                                        </div>
-                                                    </a>
-                                                )}
+                                                    )}
+                                                </div>
+                                                <div className={cn("mt-1 flex items-center gap-1", msg.sender === "me" ? "justify-end" : "justify-start")}>
+                                                    <span className="text-xs text-[#A7A7A7]">{msg.time}</span>
+                                                    {msg.sender === "me" && (
+                                                        <span className="flex items-center">
+                                                            {msg.status === "sending" && <Clock size={12} className="text-[#A7A7A7]" />}
+                                                            {msg.status === "sent" && <Check size={14} className="text-[#A7A7A7]" />}
+                                                            {msg.status === "delivered" && <CheckCheck size={14} className="text-[#A7A7A7]" />}
+                                                            {msg.status === "read" && <CheckCheck size={14} className="text-[#34B7F1]" />}
+                                                        </span>
+                                                    )}
+                                                </div>
                                             </div>
-                                            <div className={cn("mt-1 flex items-center gap-1", msg.sender === "me" ? "justify-end" : "justify-start")}>
-                                                <span className="text-xs text-[#A7A7A7]">{msg.time}</span>
-                                                {msg.sender === "me" && (
-                                                    <span className="flex items-center">
-                                                        {msg.status === "sending" && <Clock size={12} className="text-[#A7A7A7]" />}
-                                                        {msg.status === "sent" && <Check size={14} className="text-[#A7A7A7]" />}
-                                                        {msg.status === "delivered" && <CheckCheck size={14} className="text-[#A7A7A7]" />}
-                                                        {msg.status === "read" && <CheckCheck size={14} className="text-[#34B7F1]" />}
-                                                    </span>
-                                                )}
-                                            </div>
+                                            {isSelecting && msg.sender === "me" && (
+                                                <input
+                                                    type="checkbox"
+                                                    checked={isSelected}
+                                                    readOnly
+                                                    className="h-4.5 w-4.5 rounded border-gray-300 text-[#5678E9] focus:ring-[#5678E9] shrink-0"
+                                                />
+                                            )}
                                         </div>
-                                        {isSelecting && msg.sender === "me" && (
-                                            <input 
-                                                type="checkbox" 
-                                                checked={isSelected}
-                                                readOnly
-                                                className="h-4.5 w-4.5 rounded border-gray-300 text-[#5678E9] focus:ring-[#5678E9] shrink-0"
+                                    );
+                                })}
+                                <div ref={messagesEndRef} />
+                            </div>
+
+                            {/* Footer Input */}
+                            <div className="bg-white p-2 sm:p-3 md:p-4 z-10 border-t border-[#F4F4F4]">
+                                <form onSubmit={handleSendMessage} className="flex items-center gap-2 sm:gap-3">
+                                    {/* The Pill Container */}
+                                    <div className="flex-1 flex items-center gap-2 sm:gap-3 bg-[#F6F8FB] rounded-full px-3 sm:px-4 py-2 sm:py-3">
+                                        <div className="relative shrink-0">
+                                            <button type="button" onClick={() => setShowEmojiPicker(prev => !prev)} className="text-[#4E4E4E] hover:text-[#5678E9] transition-colors flex items-center justify-center">
+                                                <Smile size={22} className="sm:w-6 sm:h-6" />
+                                            </button>
+                                            {showEmojiPicker && (
+                                                <div className="absolute bottom-12 -left-2 sm:left-0 z-50 shadow-2xl rounded-lg w-[280px] sm:w-[320px] md:w-[350px]">
+                                                    <EmojiPicker
+                                                        width="100%"
+                                                        onEmojiClick={(emojiData) => {
+                                                            setNewMessage(prev => prev + emojiData.emoji);
+                                                            setShowEmojiPicker(false);
+                                                        }}
+                                                    />
+                                                </div>
+                                            )}
+                                        </div>
+                                        {isRecording ? (
+                                            <div className="flex-1 bg-transparent text-xs sm:text-sm text-[#E74C3C] font-bold flex items-center animate-pulse">
+                                                Recording: {formatTime(recordingTime)}
+                                            </div>
+                                        ) : (
+                                            <input
+                                                type="text"
+                                                value={newMessage}
+                                                onChange={handleInputChange}
+                                                placeholder="Type a message"
+                                                className="flex-1 bg-transparent text-sm sm:text-base outline-none text-[#202224] placeholder:text-[#4E4E4E] min-w-0"
                                             />
                                         )}
-                                    </div>
-                                );
-                            })}
-                            <div ref={messagesEndRef} />
-                        </div>
-
-                        {/* Footer Input */}
-                        <div className="bg-white p-2 sm:p-3 md:p-4 z-10 border-t border-[#F4F4F4]">
-                            <form onSubmit={handleSendMessage} className="flex items-center gap-2 sm:gap-3">
-                                {/* The Pill Container */}
-                                <div className="flex-1 flex items-center gap-2 sm:gap-3 bg-[#F6F8FB] rounded-full px-3 sm:px-4 py-2 sm:py-3">
-                                    <div className="relative shrink-0">
-                                        <button type="button" onClick={() => setShowEmojiPicker(prev => !prev)} className="text-[#4E4E4E] hover:text-[#5678E9] transition-colors flex items-center justify-center">
-                                            <Smile size={22} className="sm:w-6 sm:h-6" />
-                                        </button>
-                                        {showEmojiPicker && (
-                                            <div className="absolute bottom-12 -left-2 sm:left-0 z-50 shadow-2xl rounded-lg w-[280px] sm:w-[320px] md:w-[350px]">
-                                                <EmojiPicker 
-                                                    width="100%"
-                                                    onEmojiClick={(emojiData) => {
-                                                        setNewMessage(prev => prev + emojiData.emoji);
-                                                        setShowEmojiPicker(false);
-                                                    }} 
-                                                />
-                                            </div>
-                                        )}
-                                    </div>
-                                    {isRecording ? (
-                                        <div className="flex-1 bg-transparent text-xs sm:text-sm text-[#E74C3C] font-bold flex items-center animate-pulse">
-                                            Recording: {formatTime(recordingTime)}
+                                        <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+                                            <input
+                                                type="file"
+                                                ref={fileInputRef}
+                                                onChange={handleFileUpload}
+                                                className="hidden"
+                                            />
+                                            <input
+                                                type="file"
+                                                accept="image/*,video/*"
+                                                capture="environment"
+                                                ref={cameraInputRef}
+                                                onChange={handleFileUpload}
+                                                className="hidden"
+                                            />
+                                            <button type="button" onClick={() => handleIconClick('Attach File')} className="text-[#4E4E4E] hover:text-[#5678E9] transition-colors flex items-center justify-center">
+                                                <img src="/chaticons/attech.svg" alt="Attach File" className="h-4 w-4 sm:h-5 sm:w-5 opacity-70" />
+                                            </button>
+                                            <button type="button" onClick={() => handleIconClick('Camera')} className="text-[#4E4E4E] hover:text-[#5678E9] transition-colors flex items-center justify-center">
+                                                <img src="/chaticons/camera.svg" alt="Camera" className="h-4 w-4 sm:h-5 sm:w-5 opacity-70" />
+                                            </button>
                                         </div>
-                                    ) : (
-                                        <input
-                                            type="text"
-                                            value={newMessage}
-                                            onChange={handleInputChange}
-                                            placeholder="Type a message"
-                                            className="flex-1 bg-transparent text-sm sm:text-base outline-none text-[#202224] placeholder:text-[#4E4E4E] min-w-0"
-                                        />
-                                    )}
-                                    <div className="flex items-center gap-2 sm:gap-3 shrink-0">
-                                        <input
-                                            type="file"
-                                            ref={fileInputRef}
-                                            onChange={handleFileUpload}
-                                            className="hidden"
-                                        />
-                                        <input
-                                            type="file"
-                                            accept="image/*,video/*"
-                                            capture="environment"
-                                            ref={cameraInputRef}
-                                            onChange={handleFileUpload}
-                                            className="hidden"
-                                        />
-                                        <button type="button" onClick={() => handleIconClick('Attach File')} className="text-[#4E4E4E] hover:text-[#5678E9] transition-colors flex items-center justify-center">
-                                            <img src="/chaticons/attech.svg" alt="Attach File" className="h-4 w-4 sm:h-5 sm:w-5 opacity-70" />
-                                        </button>
-                                        <button type="button" onClick={() => handleIconClick('Camera')} className="text-[#4E4E4E] hover:text-[#5678E9] transition-colors flex items-center justify-center">
-                                            <img src="/chaticons/camera.svg" alt="Camera" className="h-4 w-4 sm:h-5 sm:w-5 opacity-70" />
-                                        </button>
                                     </div>
-                                </div>
-                                {/* Mic / Send Button outside */}
-                                {newMessage.trim() ? (
-                                    <button
-                                        type="submit"
-                                        className="flex h-10 w-10 sm:h-[46px] sm:w-[46px] shrink-0 items-center justify-center rounded-full bg-[#5678E9] text-white shadow-md transition-transform hover:scale-105 active:scale-95"
-                                    >
-                                        <Send size={18} className="sm:w-5 sm:h-5" />
-                                    </button>
-                                ) : (
-                                    <button
-                                        type="button"
-                                        onClick={isRecording ? stopRecording : startRecording}
-                                        className={cn(
-                                            "flex h-10 w-10 sm:h-[46px] sm:w-[46px] shrink-0 items-center justify-center rounded-full text-white shadow-md transition-transform active:scale-95",
-                                            isRecording ? "bg-[#E74C3C] animate-pulse" : "bg-[#5678E9] hover:scale-105"
-                                        )}
-                                    >
-                                        {isRecording ? <div className="h-3 w-3 sm:h-4 sm:w-4 bg-white rounded-sm" /> : <img src="/chaticons/microphone.svg" alt="Mic" className="h-4 w-4 sm:h-5 sm:w-5 brightness-0 invert" />}
-                                    </button>
-                                )}
-                            </form>
+                                    {/* Mic / Send Button outside */}
+                                    {newMessage.trim() ? (
+                                        <button
+                                            type="submit"
+                                            className="flex h-10 w-10 sm:h-[46px] sm:w-[46px] shrink-0 items-center justify-center rounded-full bg-[#5678E9] text-white shadow-md transition-transform hover:scale-105 active:scale-95"
+                                        >
+                                            <Send size={18} className="sm:w-5 sm:h-5" />
+                                        </button>
+                                    ) : (
+                                        <button
+                                            type="button"
+                                            onClick={isRecording ? stopRecording : startRecording}
+                                            className={cn(
+                                                "flex h-10 w-10 sm:h-[46px] sm:w-[46px] shrink-0 items-center justify-center rounded-full text-white shadow-md transition-transform active:scale-95",
+                                                isRecording ? "bg-[#E74C3C] animate-pulse" : "bg-[#5678E9] hover:scale-105"
+                                            )}
+                                        >
+                                            {isRecording ? <div className="h-3 w-3 sm:h-4 sm:w-4 bg-white rounded-sm" /> : <img src="/chaticons/microphone.svg" alt="Mic" className="h-4 w-4 sm:h-5 sm:w-5 brightness-0 invert" />}
+                                        </button>
+                                    )}
+                                </form>
+                            </div>
+                        </>
+                    ) : (
+                        <div className="flex flex-1 items-center justify-center text-gray-400">
+                            Select a contact to start chatting
                         </div>
-                    </>
-                ) : (
-                    <div className="flex flex-1 items-center justify-center text-gray-400">
-                        Select a contact to start chatting
-                    </div>
-                )}
+                    )}
                 </div>
             </div>
         </div>
@@ -2096,7 +2096,7 @@ export default function AccessForums() {
                                 <X size={20} />
                             </button>
                         </div>
-                        
+
                         {/* Search */}
                         <div className="p-4 border-b border-[#F4F4F4]">
                             <div className="relative">
@@ -2110,7 +2110,7 @@ export default function AccessForums() {
                                 />
                             </div>
                         </div>
-                        
+
                         {/* Contacts List */}
                         <div className="max-h-60 overflow-y-auto p-2 space-y-1 custom-scrollbar">
                             {contacts
