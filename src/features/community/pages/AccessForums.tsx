@@ -51,7 +51,7 @@ const apiKey = import.meta.env.VITE_STREAM_API_KEY || "YOUR_STREAM_API_KEY";
 // Dedicated Video Call UI Component (Google Meet Style)
 // Helper component for Responsive Layout (Moved outside to prevent infinite re-renders)
 const ResponsiveVideoLayout = ({
-    participants,
+    participants: rawParticipants,
     localParticipant,
     isMicMuted,
     pinnedParticipantId,
@@ -63,7 +63,44 @@ const ResponsiveVideoLayout = ({
     pinnedParticipantId: string | null,
     onParticipantClick: (id: string) => void
 }) => {
+    const isParticipantScreenSharing = (p: any) => p && (p.hasScreenShare || !!p.screenShareStream || (p.publishedTracks && (p.publishedTracks.includes('screenShareTrack') || p.publishedTracks.includes('screenShare'))));
+
+    // Deduplicate participants by userId to prevent "ghost" sessions or double-rendering of same user
+    const participants = (() => {
+        const sorted = [...rawParticipants].sort((a, b) => {
+            const aIsLocal = a.sessionId === localParticipant?.sessionId ? 1 : 0;
+            const bIsLocal = b.sessionId === localParticipant?.sessionId ? 1 : 0;
+            if (aIsLocal !== bIsLocal) return bIsLocal - aIsLocal;
+
+            const aIsScreen = isParticipantScreenSharing(a) ? 1 : 0;
+            const bIsScreen = isParticipantScreenSharing(b) ? 1 : 0;
+            if (aIsScreen !== bIsScreen) return bIsScreen - aIsScreen;
+
+            const aActive = (a.isSpeaking || !a.isMuted) ? 1 : 0;
+            const bActive = (b.isSpeaking || !b.isMuted) ? 1 : 0;
+            if (aActive !== bActive) return bActive - aActive;
+
+            return 0;
+        });
+
+        const seen = new Set<string>();
+        const filtered: any[] = [];
+        for (const p of sorted) {
+            if (!p.userId) {
+                filtered.push(p);
+                continue;
+            }
+            if (!seen.has(p.userId)) {
+                seen.add(p.userId);
+                filtered.push(p);
+            }
+        }
+        
+        return rawParticipants.filter(p => filtered.some(f => f.sessionId === p.sessionId));
+    })();
+
     const remoteParticipants = participants.filter(p => p.sessionId !== localParticipant?.sessionId);
+    const screenSharingParticipant = participants.find(isParticipantScreenSharing);
 
     // Determine the main participant for Spotlight mode
     const pinnedParticipant = participants.find(p => p.sessionId === pinnedParticipantId);
@@ -81,7 +118,7 @@ const ResponsiveVideoLayout = ({
                     <div className="h-full w-full">
                         <ParticipantView
                             participant={otherParticipant}
-                            className="h-full w-full [&_video]:object-cover [&_video]:w-full [&_video]:h-full"
+                            className={cn("h-full w-full [&_video]:w-full [&_video]:h-full", isParticipantScreenSharing(otherParticipant) ? "[&_video]:object-contain" : "[&_video]:object-cover")}
                         />
                         <div className="absolute bottom-8 left-8 bg-black/40 backdrop-blur-xl px-4 py-2 rounded-2xl text-white font-medium flex items-center gap-3 border border-white/10 shadow-xl">
                             {otherParticipant.isSpeaking && (
@@ -141,9 +178,9 @@ const ResponsiveVideoLayout = ({
     }
 
     // Spotlight/Pinned Layout
-    const mainParticipant = pinnedParticipant || handRaisedParticipant || speaker;
+    const mainParticipant = screenSharingParticipant || pinnedParticipant || handRaisedParticipant || speaker;
 
-    if (mainParticipant && (participants.length > 2 || pinnedParticipantId)) {
+    if (mainParticipant && (participants.length > 2 || pinnedParticipantId || screenSharingParticipant)) {
         const others = participants.filter(p => p.sessionId !== mainParticipant.sessionId);
         const isHandRaised = mainParticipant.reaction?.type === 'raised-hand';
 
@@ -153,7 +190,7 @@ const ResponsiveVideoLayout = ({
                 <div className="flex-[3] relative rounded-[40px] overflow-hidden bg-[#2d2e31] border-4 border-[#00A3FF] shadow-[0_0_40px_rgba(0,163,255,0.2)] transition-all duration-700">
                     <ParticipantView
                         participant={mainParticipant}
-                        className="h-full w-full [&_video]:object-cover [&_video]:w-full [&_video]:h-full"
+                        className={cn("h-full w-full [&_video]:w-full [&_video]:h-full bg-black/50", isParticipantScreenSharing(mainParticipant) ? "[&_video]:object-contain" : "[&_video]:object-cover")}
                     />
                     <div className={cn(
                         "absolute bottom-8 left-8 px-5 py-2.5 rounded-2xl text-white font-bold flex items-center gap-3 shadow-2xl animate-in slide-in-from-left-4",
@@ -169,7 +206,7 @@ const ResponsiveVideoLayout = ({
                             </div>
                         )}
                         <span className="text-sm tracking-wide">
-                            {mainParticipant.name} {isHandRaised ? "has raised hand" : pinnedParticipantId === mainParticipant.sessionId ? "is pinned" : "is speaking..."}
+                            {mainParticipant.name} {isHandRaised ? "has raised hand" : screenSharingParticipant?.sessionId === mainParticipant.sessionId ? "is sharing screen" : pinnedParticipantId === mainParticipant.sessionId ? "is pinned" : "is speaking..."}
                         </span>
                     </div>
                     {pinnedParticipantId === mainParticipant.sessionId && (
@@ -241,7 +278,7 @@ const ResponsiveVideoLayout = ({
                     >
                         <ParticipantView
                             participant={p}
-                            className="h-full w-full [&_video]:object-cover [&_video]:w-full [&_video]:h-full"
+                            className={cn("h-full w-full [&_video]:w-full [&_video]:h-full", isParticipantScreenSharing(p) ? "[&_video]:object-contain" : "[&_video]:object-cover")}
                         />
 
                         <div className="absolute bottom-5 left-5 bg-black/50 backdrop-blur-xl px-4 py-2 rounded-2xl text-white text-xs font-bold flex items-center gap-3 border border-white/10 shadow-2xl">
@@ -563,7 +600,7 @@ const IncomingCallNotification = ({ call, onAccept, onReject }: { call: Call, on
 };
 
 // Component to discover and manage incoming calls within the StreamVideo context
-const CallDiscovery = ({ client, currentUser, activeCall, onAccept, onReject }: any) => {
+const CallDiscovery = ({ client, currentUser, activeCall, onAccept, onReject, socket }: any) => {
     const calls = useCalls();
     const [incomingCall, setIncomingCall] = useState<Call | null>(null);
     const [manualCalls, setManualCalls] = useState<Call[]>([]);
@@ -607,6 +644,35 @@ const CallDiscovery = ({ client, currentUser, activeCall, onAccept, onReject }: 
         };
     }, [client, currentUser]);
 
+    const [communityIncoming, setCommunityIncoming] = useState<Call | null>(null);
+
+    // Custom socket listener for community calls
+    useEffect(() => {
+        if (!socket || !client || !currentUser) return;
+
+        const handleCommunitySignal = async (data: any) => {
+            const currentUserId = String(currentUser._id).trim();
+            if (data.from !== currentUserId) {
+                try {
+                    const { calls: queriedCalls } = await client.queryCalls({
+                        filter_conditions: { id: { $eq: data.callId } },
+                        watch: true
+                    });
+                    if (queriedCalls.length > 0) {
+                        setCommunityIncoming(queriedCalls[0]);
+                    }
+                } catch (err) {
+                    console.error("[CallDiscovery] Failed to query community call:", err);
+                }
+            }
+        };
+
+        socket.on("call:community-incoming", handleCommunitySignal);
+        return () => {
+            socket.off("call:community-incoming", handleCommunitySignal);
+        };
+    }, [socket, client, currentUser]);
+
     // 2. Monitor both useCalls() and manualCalls to find the one ringing for us
     useEffect(() => {
         const currentUserId = String(currentUser?._id || "").trim();
@@ -630,12 +696,14 @@ const CallDiscovery = ({ client, currentUser, activeCall, onAccept, onReject }: 
             return false;
         });
 
-        if (ringingCall) {
+        if (communityIncoming) {
+            setIncomingCall(communityIncoming);
+        } else if (ringingCall) {
             setIncomingCall(ringingCall);
         } else if (incomingCall && incomingCall.state.callingState !== CallingState.RINGING) {
             setIncomingCall(null);
         }
-    }, [calls, manualCalls, currentUser, incomingCall]);
+    }, [calls, manualCalls, currentUser, incomingCall, communityIncoming]);
 
     // If we are already in a call, don't show the incoming call popup
     if (!incomingCall || activeCall) return null;
@@ -645,10 +713,12 @@ const CallDiscovery = ({ client, currentUser, activeCall, onAccept, onReject }: 
             call={incomingCall}
             onAccept={() => {
                 console.log("[CallDiscovery] Accepting call:", incomingCall.id);
+                setCommunityIncoming(null);
                 onAccept(incomingCall);
             }}
             onReject={() => {
                 console.log("[CallDiscovery] Rejecting call:", incomingCall.id);
+                setCommunityIncoming(null);
                 onReject(incomingCall);
             }}
         />
@@ -699,12 +769,20 @@ export default function AccessForums() {
             console.log("[AccessForums] My ID:", myId);
 
             if (!memberIds.includes(myId)) {
-                console.warn("[AccessForums] My ID not found in members list! Attempting to join anyway...");
+                console.log("[AccessForums] Adding myself to call members dynamically:", myId);
+                await call.updateCallMembers({
+                    update_members: [{ user_id: myId, role: 'user' }]
+                });
+                await call.get();
             }
 
             // Accept and then explicitly JOIN to establish the media connection
             await call.accept();
             await call.join({ create: true });
+
+            if (call.state.custom?.type === 'audio') {
+                await call.camera.disable();
+            }
 
             setActiveCall(call);
             setIsCallMinimized(false);
@@ -1484,14 +1562,8 @@ export default function AccessForums() {
             if (isCommunity) {
                 const societyId = String(currentUser.society?._id || currentUser.society || currentUser.societies?.[0]?._id || "").trim();
                 callId = `society_${societyId}`;
-
-                // Ring all society members for community calls
-                societyMembers.forEach(member => {
-                    const memberId = String(member._id).trim();
-                    if (memberId !== currentUserId) {
-                        members.push({ user_id: memberId, role: 'user' });
-                    }
-                });
+                // We don't push societyMembers to `members` here anymore, because Stream throws an error
+                // if any of them haven't been upserted yet. The `call:community-incoming` socket event handles ringing.
             } else {
                 const ids = [currentUserId, contactId].sort();
                 callId = `personal_${ids[0]}_${ids[1]}`;
@@ -1521,10 +1593,13 @@ export default function AccessForums() {
                 });
             }
 
-            // Use getOrCreate with ring:true
+            // Use getOrCreate with ring for personal calls only
             await call.getOrCreate({
-                ring: true, // Always ring for both personal and community
-                data: { members },
+                ring: !isCommunity,
+                data: {
+                    members,
+                    custom: { type: 'video' }
+                },
             });
 
             if (!isCommunity) {
@@ -1564,14 +1639,7 @@ export default function AccessForums() {
             if (isCommunity) {
                 const societyId = String(currentUser.society?._id || currentUser.society || currentUser.societies?.[0]?._id || "").trim();
                 callId = `society_audio_${societyId}`;
-
-                // Ring all society members
-                societyMembers.forEach(member => {
-                    const memberId = String(member._id).trim();
-                    if (memberId !== currentUserId) {
-                        members.push({ user_id: memberId, role: 'user' });
-                    }
-                });
+                // We don't push societyMembers to `members` here anymore. The `call:community-incoming` socket event handles ringing.
             } else {
                 const ids = [currentUserId, contactId].sort();
                 callId = `personal_audio_${ids[0]}_${ids[1]}`;
@@ -1602,7 +1670,7 @@ export default function AccessForums() {
             }
 
             await call.getOrCreate({
-                ring: true,
+                ring: !isCommunity,
                 data: { members },
             });
 
@@ -2039,6 +2107,7 @@ export default function AccessForums() {
                 activeCall={activeCall}
                 onAccept={handleAcceptCall}
                 onReject={handleRejectCall}
+                socket={socket}
             />
 
             {/* ── Full-screen video call (Google Meet style) ── */}

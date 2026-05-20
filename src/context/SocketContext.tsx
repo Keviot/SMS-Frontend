@@ -103,20 +103,9 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
       // Re-fetch from DB to get the persisted notification with its correct MongoDB ID
       fetchInitialNotifications();
-
-      // Show toast notification
-      if (data.type === 'success') {
-        toast.success(`${data.title}: ${data.message}`);
-      } else if (data.type === 'error') {
-        toast.error(`${data.title}: ${data.message}`);
-      } else {
-        toast(`${data.title}: ${data.message}`, {
-          icon: '🔔',
-        });
-      }
     });
 
-    socketInstance.on('new-message', (msg: any) => {
+    socketInstance.on('new-message', (msg: any) => {  
       console.log('Received new-message:', msg);
       const currentU = currentUserRef.current;
 
@@ -127,8 +116,8 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       // Don't notify if message is from me or for the currently active chat
       if (isFromMe || String(contactId) === String(activeChatIdRef.current)) return;
 
-      const title = isCommunity 
-        ? "Community Forum" 
+      const title = isCommunity
+        ? "Community Forum"
         : `New Message from ${msg.sender.firstname}`;
 
       const messageContent = isCommunity
