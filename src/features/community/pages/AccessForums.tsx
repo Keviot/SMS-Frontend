@@ -51,7 +51,7 @@ const apiKey = import.meta.env.VITE_STREAM_API_KEY || "YOUR_STREAM_API_KEY";
 // Dedicated Video Call UI Component (Google Meet Style)
 // Helper component for Responsive Layout (Moved outside to prevent infinite re-renders)
 const ResponsiveVideoLayout = ({
-    participants,
+    participants: rawParticipants,
     localParticipant,
     isMicMuted,
     pinnedParticipantId,
@@ -63,9 +63,43 @@ const ResponsiveVideoLayout = ({
     pinnedParticipantId: string | null,
     onParticipantClick: (id: string) => void
 }) => {
-    const remoteParticipants = participants.filter(p => p.sessionId !== localParticipant?.sessionId);
-
     const isParticipantScreenSharing = (p: any) => p && (p.hasScreenShare || !!p.screenShareStream || (p.publishedTracks && (p.publishedTracks.includes('screenShareTrack') || p.publishedTracks.includes('screenShare'))));
+
+    // Deduplicate participants by userId to prevent "ghost" sessions or double-rendering of same user
+    const participants = (() => {
+        const sorted = [...rawParticipants].sort((a, b) => {
+            const aIsLocal = a.sessionId === localParticipant?.sessionId ? 1 : 0;
+            const bIsLocal = b.sessionId === localParticipant?.sessionId ? 1 : 0;
+            if (aIsLocal !== bIsLocal) return bIsLocal - aIsLocal;
+
+            const aIsScreen = isParticipantScreenSharing(a) ? 1 : 0;
+            const bIsScreen = isParticipantScreenSharing(b) ? 1 : 0;
+            if (aIsScreen !== bIsScreen) return bIsScreen - aIsScreen;
+
+            const aActive = (a.isSpeaking || !a.isMuted) ? 1 : 0;
+            const bActive = (b.isSpeaking || !b.isMuted) ? 1 : 0;
+            if (aActive !== bActive) return bActive - aActive;
+
+            return 0;
+        });
+
+        const seen = new Set<string>();
+        const filtered: any[] = [];
+        for (const p of sorted) {
+            if (!p.userId) {
+                filtered.push(p);
+                continue;
+            }
+            if (!seen.has(p.userId)) {
+                seen.add(p.userId);
+                filtered.push(p);
+            }
+        }
+        
+        return rawParticipants.filter(p => filtered.some(f => f.sessionId === p.sessionId));
+    })();
+
+    const remoteParticipants = participants.filter(p => p.sessionId !== localParticipant?.sessionId);
     const screenSharingParticipant = participants.find(isParticipantScreenSharing);
 
     // Determine the main participant for Spotlight mode
@@ -735,7 +769,11 @@ export default function AccessForums() {
             console.log("[AccessForums] My ID:", myId);
 
             if (!memberIds.includes(myId)) {
-                console.warn("[AccessForums] My ID not found in members list! Attempting to join anyway...");
+                console.log("[AccessForums] Adding myself to call members dynamically:", myId);
+                await call.updateCallMembers({
+                    update_members: [{ user_id: myId, role: 'user' }]
+                });
+                await call.get();
             }
 
             // Accept and then explicitly JOIN to establish the media connection
