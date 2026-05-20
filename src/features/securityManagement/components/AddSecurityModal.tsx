@@ -5,7 +5,7 @@ import FormSelect from "../../../ui/FormSelect";
 import FormDatePicker from "../../../ui/FormDatePicker";
 import FormTimePicker from "../../../ui/FormTimePicker";
 import { useState, useRef, useEffect } from "react";
-import { securityGuardApi, authApi } from "../../../services/api";
+import { securityGuardApi, authApi, BASE_URL } from "../../../services/api";
 import toast from "react-hot-toast";
 
 interface AddSecurityModalProps {
@@ -61,9 +61,16 @@ export default function AddSecurityModal({ open, onClose, onSuccess, initialData
         shiftDate: initialData.shiftDate ? new Date(initialData.shiftDate).toISOString().split('T')[0] : "",
         shiftTime: initialData.shiftTime || "",
       });
+
+      const getAbsoluteUrl = (path: string) => {
+        if (!path) return null;
+        if (path.startsWith("http")) return path;
+        return `${BASE_URL}/${path.replace(/\\/g, "/")}`;
+      };
+
       setFiles({
-        profileImage: initialData.profileImage || null,
-        uploadAadhar: initialData.uploadAadhar || null,
+        profileImage: getAbsoluteUrl(initialData.profileImage),
+        uploadAadhar: getAbsoluteUrl(initialData.uploadAadhar),
       });
     } else if (open) {
       // Reset for "Add" mode
@@ -128,8 +135,25 @@ export default function AddSecurityModal({ open, onClose, onSuccess, initialData
       Object.entries(formData).forEach(([key, value]) => data.append(key, value));
       data.append("society", societyId);
 
-      if (files.profileImage instanceof File) data.append("profileImage", files.profileImage);
-      if (files.uploadAadhar instanceof File) data.append("uploadAadhar", files.uploadAadhar);
+      const getRelativePath = (url: any) => {
+        if (!url || typeof url !== "string") return "";
+        if (url.startsWith(BASE_URL)) {
+          return url.replace(`${BASE_URL}/`, "");
+        }
+        return url;
+      };
+
+      if (files.profileImage instanceof File) {
+        data.append("profileImage", files.profileImage);
+      } else if (files.profileImage) {
+        data.append("profileImage", getRelativePath(files.profileImage));
+      }
+
+      if (files.uploadAadhar instanceof File) {
+        data.append("uploadAadhar", files.uploadAadhar);
+      } else if (files.uploadAadhar) {
+        data.append("uploadAadhar", getRelativePath(files.uploadAadhar));
+      }
 
       if (mode === "edit" && initialData?._id) {
         await securityGuardApi.edit(initialData._id, data);
@@ -316,7 +340,11 @@ export default function AddSecurityModal({ open, onClose, onSuccess, initialData
                   </div>
                   <div className="flex-1 overflow-hidden">
                     <p className="text-sm font-bold text-gray-900 truncate">
-                      {files.uploadAadhar instanceof File ? files.uploadAadhar.name : "Aadhar Card.pdf"}
+                      {files.uploadAadhar instanceof File
+                        ? files.uploadAadhar.name
+                        : typeof files.uploadAadhar === "string"
+                        ? files.uploadAadhar.split("/").pop()
+                        : "Aadhar Card.pdf"}
                     </p>
                     {files.uploadAadhar instanceof File && (
                       <p className="text-xs text-gray-500">{(files.uploadAadhar.size / 1024).toFixed(1)} KB</p>
@@ -331,7 +359,7 @@ export default function AddSecurityModal({ open, onClose, onSuccess, initialData
                       <Trash2 size={18} />
                     </button>
                   )}
-                  {mode === "view" && typeof files.uploadAadhar === "string" && (
+                  {typeof files.uploadAadhar === "string" && (
                     <a
                       href={files.uploadAadhar}
                       target="_blank"
