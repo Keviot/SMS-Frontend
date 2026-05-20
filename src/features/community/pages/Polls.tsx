@@ -155,7 +155,7 @@ export default function Polls() {
 
     const handleCreatePoll = async (e: React.FormEvent) => {
         e.preventDefault();
-        
+
         // Robust society ID extraction matching Dashboard logic
         let societyId = currentUser?.society?._id || currentUser?.society;
         if (!societyId && currentUser?.societies && currentUser?.societies.length > 0) {
@@ -264,35 +264,55 @@ export default function Polls() {
     };
 
     return (
-        <div className="flex flex-col gap-6">
-            <div className="flex items-center justify-between">
-                <div className="flex w-fit overflow-hidden rounded-xl bg-white shadow-sm border border-[#F4F4F4]">
-                    {getTabs().map((tab) => (
-                        <button
-                            key={tab}
-                            onClick={() => setActiveTab(tab)}
-                            className={cn(
-                                "h-12 px-8 text-sm font-bold transition-all",
-                                activeTab === tab
-                                    ? "bg-gradient-to-r from-[#FE512E] to-[#F09633] text-white"
-                                    : "text-[#202224] hover:bg-gray-50"
-                            )}
-                        >
-                            {tab}
-                        </button>
-                    ))}
-                </div>
+        <div className="flex flex-col gap-0">
+            {/* Mobile Create Poll Button */}
+            <div className="sm:hidden mb-4 flex justify-end">
                 <Button
                     onClick={() => setIsCreateModalOpen(true)}
-                    className="bg-[#FF6B35] hover:bg-[#E85D2A] text-white border-none rounded-xl font-bold h-11 px-6 flex items-center gap-2"
+                    className="w-full bg-[#FF6B35] hover:bg-[#E85D2A] text-white border-none rounded-xl font-bold h-11 flex items-center justify-center gap-2"
                 >
                     <Plus size={20} />
                     Create Polls
                 </Button>
             </div>
 
-            <div className="rounded-2xl bg-white p-8 shadow-sm border border-[#F4F4F4] min-h-[500px]">
-                <h2 className="text-xl font-bold text-[#202224] mb-8">Polls</h2>
+            <div className="relative z-10 flex w-full items-end">
+                <div className="flex items-end w-full sm:w-auto overflow-x-auto custom-scrollbar">
+                    {getTabs().map((tab, index) => (
+                        <button
+                            key={tab}
+                            onClick={() => setActiveTab(tab)}
+                            className={cn(
+                                "relative flex-1 sm:flex-none min-h-12 px-3 sm:px-8 py-3 text-xs sm:text-sm font-bold transition-all flex items-center justify-center text-center leading-tight shrink-0",
+                                index > 0 && "-ml-[1px]", // overlap borders
+                                activeTab === tab
+                                    ? "z-10 rounded-t-xl bg-gradient-to-r from-[#FE512E] to-[#F09619] text-white border-0"
+                                    : "z-0 rounded-t-xl border border-[#D9DCE5] border-b-0 bg-[#F6F8FB] text-[#6F7786] hover:bg-gray-50 hover:text-[#202224]"
+                            )}
+                        >
+                            {tab}
+                        </button>
+                    ))}
+                </div>
+            </div>
+
+            <div className={cn(
+                "-mt-px rounded-2xl rounded-tl-none border border-[#D9DCE5] bg-white p-4 sm:p-8 shadow-sm min-h-[500px]"
+            )}>
+                <div className="flex items-center justify-between mb-8">
+                    <h2 className="text-xl font-bold text-[#202224] hidden sm:block">Polls</h2>
+                    
+                    {/* Desktop Create Poll Button */}
+                    <div className="hidden sm:block">
+                        <Button
+                            onClick={() => setIsCreateModalOpen(true)}
+                            className="bg-[#FF6B35] hover:bg-[#E85D2A] text-white border-none rounded-xl font-bold h-11 px-6 flex items-center gap-2"
+                        >
+                            <Plus size={20} />
+                            Create Polls
+                        </Button>
+                    </div>
+                </div>
 
                 {loading ? (
                     <div className="flex h-64 items-center justify-center">
@@ -821,9 +841,9 @@ export default function Polls() {
                                                 <span className="text-[#FF6B35]">{opt.votes} votes ({opt.percentage}%)</span>
                                             </div>
                                             <div className="h-2.5 bg-gray-100 rounded-full overflow-hidden">
-                                                <div 
-                                                    className="h-full bg-gradient-to-r from-[#FE512E] to-[#F09633] rounded-full transition-all duration-1000 ease-out" 
-                                                    style={{ width: `${opt.percentage}%` }} 
+                                                <div
+                                                    className="h-full bg-gradient-to-r from-[#FE512E] to-[#F09633] rounded-full transition-all duration-1000 ease-out"
+                                                    style={{ width: `${opt.percentage}%` }}
                                                 />
                                             </div>
                                         </div>
@@ -855,9 +875,9 @@ export default function Polls() {
                                                     <Star size={14} className="fill-[#A7A7A7] text-[#A7A7A7]" />
                                                 </div>
                                                 <div className="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden">
-                                                    <div 
-                                                        className="h-full bg-[#FF6B35] rounded-full transition-all" 
-                                                        style={{ width: `${dist.percentage}%` }} 
+                                                    <div
+                                                        className="h-full bg-[#FF6B35] rounded-full transition-all"
+                                                        style={{ width: `${dist.percentage}%` }}
                                                     />
                                                 </div>
                                                 <span className="text-xs font-bold text-gray-400 w-16 text-right">
@@ -942,10 +962,10 @@ export default function Polls() {
                                                 )} />
                                                 <div className={cn(
                                                     "h-10 w-10 shrink-0 rounded-xl flex items-center justify-center font-black text-lg",
-                                                    i === 0 ? "bg-yellow-50 text-yellow-600" : 
-                                                    i === 1 ? "bg-gray-50 text-gray-600" : 
-                                                    i === 2 ? "bg-orange-50 text-orange-600" : 
-                                                    "bg-gray-50 text-gray-400"
+                                                    i === 0 ? "bg-yellow-50 text-yellow-600" :
+                                                        i === 1 ? "bg-gray-50 text-gray-600" :
+                                                            i === 2 ? "bg-orange-50 text-orange-600" :
+                                                                "bg-gray-50 text-gray-400"
                                                 )}>
                                                     #{i + 1}
                                                 </div>
@@ -965,8 +985,8 @@ export default function Polls() {
                             )}
                         </div>
 
-                        <Button 
-                            onClick={() => setIsResultsModalOpen(false)} 
+                        <Button
+                            onClick={() => setIsResultsModalOpen(false)}
                             className="w-full h-12 bg-[#202224] hover:bg-black text-white font-bold rounded-xl shadow-lg shadow-gray-200 transition-all active:scale-95"
                         >
                             Close Results
