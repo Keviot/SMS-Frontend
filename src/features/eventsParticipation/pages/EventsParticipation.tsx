@@ -100,15 +100,15 @@ export default function EventsParticipation() {
     return (
         <div className="flex flex-col gap-0">
             {/* Tabs */}
-            <div className="relative z-10 flex w-full items-end overflow-x-auto">
+            <div className="relative z-10 flex w-full items-end">
                 <button
                     type="button"
                     onClick={() => setActiveTab("events")}
                     className={cn(
-                        "min-h-14 min-w-32 shrink-0 px-5 py-4 text-sm font-semibold transition-all",
+                        "relative flex-1 sm:flex-none min-h-12 px-1 sm:px-10 py-3 text-[11px] sm:text-sm font-bold transition-all flex items-center justify-center text-center leading-tight shrink-0",
                         activeTab === "events"
-                            ? "rounded-t-xl bg-gradient-to-r from-[#FE512E] to-[#F09619] text-white"
-                            : "rounded-t-xl border border-[#D9DCE5] bg-white text-[#202224] hover:bg-gray-50"
+                            ? "z-10 rounded-t-xl bg-gradient-to-r from-[#FE512E] to-[#F09619] text-white border-0"
+                            : "z-0 rounded-t-xl border border-[#D9DCE5] border-b-0 bg-[#F6F8FB] text-[#6F7786] hover:bg-gray-50 hover:text-[#202224]"
                     )}
                 >
                     Events Participation
@@ -117,10 +117,10 @@ export default function EventsParticipation() {
                     type="button"
                     onClick={() => setActiveTab("activities")}
                     className={cn(
-                        "min-h-14 min-w-32 shrink-0 px-5 py-4 text-sm font-semibold transition-all",
+                        "relative flex-1 sm:flex-none -ml-[1px] min-h-12 px-1 sm:px-10 py-3 text-[11px] sm:text-sm font-bold transition-all flex items-center justify-center text-center leading-tight shrink-0",
                         activeTab === "activities"
-                            ? "rounded-t-xl bg-gradient-to-r from-[#FE512E] to-[#F09619] text-white"
-                            : "rounded-t-xl border border-[#D9DCE5] bg-white text-[#202224] hover:bg-gray-50"
+                            ? "z-10 rounded-t-xl bg-gradient-to-r from-[#FE512E] to-[#F09619] text-white border-0"
+                            : "z-0 rounded-t-xl border border-[#D9DCE5] border-b-0 bg-[#F6F8FB] text-[#6F7786] hover:bg-gray-50 hover:text-[#202224]"
                     )}
                 >
                     Activity Participate
@@ -128,7 +128,10 @@ export default function EventsParticipation() {
             </div>
 
             {/* Content */}
-            <div className="-mt-px rounded-2xl rounded-tl-none border border-[#D9DCE5] bg-white p-4 sm:p-5">
+            <div className={cn(
+                "-mt-px rounded-2xl rounded-tl-none rounded-tr-none border border-[#D9DCE5] bg-white p-4 sm:p-5",
+                activeTab === "events" ? "rounded-tl-none rounded-tr-none" : ""
+            )}>
                 <div className="overflow-x-auto">
                     <div className="min-w-[980px]">
                         {/* Table Header */}

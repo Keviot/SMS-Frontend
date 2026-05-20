@@ -190,15 +190,15 @@ export default function CreateComplaint() {
         <div className="flex flex-col gap-0">
             {/* Tabs - Only show for residents */}
             {currentUser?.role !== "admin" && (
-                <div className="relative z-10 flex w-full items-end overflow-x-auto px-0 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                <div className="relative z-10 flex w-full items-end">
                     <button
                         type="button"
                         onClick={() => setActiveTab("complaint")}
                         className={cn(
-                            "min-h-12 shrink-0 px-4 py-3 text-xs font-semibold transition-all sm:min-h-14 sm:px-5 sm:py-4 sm:text-sm",
+                            "relative flex-1 sm:flex-none min-h-12 px-1 sm:px-10 py-3 text-[11px] sm:text-sm font-bold transition-all flex items-center justify-center text-center leading-tight shrink-0",
                             activeTab === "complaint"
-                                ? "rounded-t-xl bg-gradient-to-r from-[#FE512E] to-[#F09619] text-white"
-                                : "rounded-t-xl border border-[#D9DCE5] bg-white text-[#202224] hover:bg-gray-50"
+                                ? "z-10 rounded-t-xl bg-gradient-to-r from-[#FE512E] to-[#F09619] text-white border-0"
+                                : "z-0 rounded-t-xl border border-[#D9DCE5] border-b-0 bg-[#F6F8FB] text-[#6F7786] hover:bg-gray-50 hover:text-[#202224]"
                         )}
                     >
                         Complaint Submission
@@ -207,10 +207,10 @@ export default function CreateComplaint() {
                         type="button"
                         onClick={() => setActiveTab("request")}
                         className={cn(
-                            "min-h-12 shrink-0 px-4 py-3 text-xs font-semibold transition-all sm:min-h-14 sm:px-5 sm:py-4 sm:text-sm",
+                            "relative flex-1 sm:flex-none -ml-[1px] min-h-12 px-1 sm:px-10 py-3 text-[11px] sm:text-sm font-bold transition-all flex items-center justify-center text-center leading-tight shrink-0",
                             activeTab === "request"
-                                ? "rounded-t-xl bg-gradient-to-r from-[#FE512E] to-[#F09619] text-white"
-                                : "rounded-t-xl border border-[#D9DCE5] bg-white text-[#202224] hover:bg-gray-50"
+                                ? "z-10 rounded-t-xl bg-gradient-to-r from-[#FE512E] to-[#F09619] text-white border-0"
+                                : "z-0 rounded-t-xl border border-[#D9DCE5] border-b-0 bg-[#F6F8FB] text-[#6F7786] hover:bg-gray-50 hover:text-[#202224]"
                         )}
                     >
                         Request Submission
@@ -221,7 +221,7 @@ export default function CreateComplaint() {
             {/* Content */}
             <div className={cn(
                 "border border-[#D9DCE5] bg-white p-3 sm:p-5",
-                currentUser?.role !== "admin" ? "-mt-px rounded-2xl rounded-tl-none" : "rounded-2xl"
+                currentUser?.role !== "admin" ? "-mt-px rounded-2xl rounded-tl-none rounded-tr-none" : "rounded-2xl"
             )}>
                 <div className="mb-5 flex flex-col gap-3 sm:mb-6 sm:flex-row sm:items-center sm:justify-between">
                     <h2 className="text-lg font-bold leading-7 text-[#202224] sm:text-xl">
@@ -389,8 +389,8 @@ export default function CreateComplaint() {
                                 /* Resident Card View */
                                 <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                                     {items.map((item) => (
-                                       <div key={item.id} className="overflow-hidden rounded-2xl border border-[#D9DCE5] bg-white shadow-sm transition-shadow hover:shadow-md">
-                                           <div className="flex min-h-10 items-center justify-between bg-[#5678E9] px-3 py-2 text-white">
+                                        <div key={item.id} className="overflow-hidden rounded-2xl border border-[#D9DCE5] bg-white shadow-sm transition-shadow hover:shadow-md">
+                                            <div className="flex min-h-10 items-center justify-between bg-[#5678E9] px-3 py-2 text-white">
                                                 <h4 className="text-sm font-bold truncate pr-2">{item.title}</h4>
                                                 <div className="relative group">
                                                     <button className="p-1 rounded-full hover:bg-white/20 transition-colors">

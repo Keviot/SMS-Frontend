@@ -181,19 +181,19 @@ export default function ComplaintFormModal({
                             Priority<span className="text-[#FE512E]">*</span>
                         </label>
 
-                        <div className="grid grid-cols-3 gap-3">
+                        <div className="grid grid-cols-3 gap-2 sm:gap-3">
                             {(["High", "Medium", "Low"] as const).map((priority) => (
                                 <button
                                     key={priority}
                                     type="button"
                                     onClick={() => handleInputChange("priority", priority)}
-                                    className={`flex h-12 items-center justify-center gap-2 rounded-[10px] border text-sm font-medium transition ${formData.priority === priority
+                                    className={`flex h-12 items-center justify-center gap-1 sm:gap-2 rounded-[10px] border text-xs sm:text-sm font-medium transition ${formData.priority === priority
                                         ? "border-[#FE512E] bg-[#FFF7F3] text-[#202224]"
                                         : "border-[#D9D9D9] bg-white text-[#A7A7A7] hover:border-[#FE512E]"
                                         }`}
                                 >
                                     <span
-                                        className={`flex size-4 items-center justify-center rounded-full border-2 ${formData.priority === priority
+                                        className={`flex size-4 shrink-0 items-center justify-center rounded-full border-2 ${formData.priority === priority
                                             ? "border-[#FE512E]"
                                             : "border-[#D9D9D9]"
                                             }`}
@@ -214,19 +214,19 @@ export default function ComplaintFormModal({
                             Status<span className="text-[#FE512E]">*</span>
                         </label>
 
-                        <div className="grid grid-cols-3 gap-3">
+                        <div className="grid grid-cols-3 gap-2 sm:gap-3">
                             {(["Open", "Pending", "Closed"] as const).map((status) => (
                                 <button
                                     key={status}
                                     type="button"
                                     onClick={() => handleInputChange("status", status)}
-                                    className={`flex h-12 items-center justify-center gap-2 rounded-[10px] border text-sm font-medium transition ${formData.status === status
+                                    className={`flex h-12 items-center justify-center gap-1 sm:gap-2 rounded-[10px] border text-xs sm:text-sm font-medium transition ${formData.status === status
                                         ? "border-[#FE512E] bg-[#FFF7F3] text-[#202224]"
                                         : "border-[#D9D9D9] bg-white text-[#A7A7A7] hover:border-[#FE512E]"
                                         }`}
                                 >
                                     <span
-                                        className={`flex size-4 items-center justify-center rounded-full border-2 ${formData.status === status
+                                        className={`flex size-4 shrink-0 items-center justify-center rounded-full border-2 ${formData.status === status
                                             ? "border-[#FE512E]"
                                             : "border-[#D9D9D9]"
                                             }`}

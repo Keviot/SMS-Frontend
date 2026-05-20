@@ -207,7 +207,7 @@ export default function RequestFormModal({
                 Priority<span className={requiredClass}>*</span>
               </label>
 
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+              <div className="grid grid-cols-3 gap-2 sm:gap-3">
                 {(["High", "Medium", "Low"] as const).map((priority) => {
                   const selected = formData.priority === priority;
 
@@ -216,14 +216,14 @@ export default function RequestFormModal({
                       key={priority}
                       type="button"
                       onClick={() => handleInputChange("priority", priority)}
-                      className={`flex min-h-12 items-center justify-center gap-2 rounded-[10px] border px-3 py-2 text-sm font-medium transition ${
+                      className={`flex min-h-12 items-center justify-center gap-1 sm:gap-2 rounded-[10px] border px-1 sm:px-3 py-2 text-xs sm:text-sm font-medium transition ${
                         selected
                           ? "border-[#FE512E] bg-[#FFF7F3] text-[#202224]"
                           : "border-[#D9D9D9] bg-white text-[#A7A7A7] hover:border-[#FE512E]"
                       }`}
                     >
                       <span
-                        className={`flex size-4 items-center justify-center rounded-full border-2 ${
+                        className={`flex size-4 shrink-0 items-center justify-center rounded-full border-2 ${
                           selected ? "border-[#FE512E]" : "border-[#D9D9D9]"
                         }`}
                       >
@@ -244,7 +244,7 @@ export default function RequestFormModal({
                 Status<span className={requiredClass}>*</span>
               </label>
 
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+              <div className="grid grid-cols-3 gap-2 sm:gap-3">
                 {(["Open", "Pending", "Solved"] as const).map((status) => {
                   const selected = formData.status === status;
 
@@ -253,14 +253,14 @@ export default function RequestFormModal({
                       key={status}
                       type="button"
                       onClick={() => handleInputChange("status", status)}
-                      className={`flex min-h-12 items-center justify-center gap-2 rounded-[10px] border px-3 py-2 text-sm font-medium transition ${
+                      className={`flex min-h-12 items-center justify-center gap-1 sm:gap-2 rounded-[10px] border px-1 sm:px-3 py-2 text-xs sm:text-sm font-medium transition ${
                         selected
                           ? "border-[#FE512E] bg-[#FFF7F3] text-[#202224]"
                           : "border-[#D9D9D9] bg-white text-[#A7A7A7] hover:border-[#FE512E]"
                       }`}
                     >
                       <span
-                        className={`flex size-4 items-center justify-center rounded-full border-2 ${
+                        className={`flex size-4 shrink-0 items-center justify-center rounded-full border-2 ${
                           selected ? "border-[#FE512E]" : "border-[#D9D9D9]"
                         }`}
                       >
