@@ -98,8 +98,6 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   }, [socket, currentUser]);
 
   useEffect(() => {
-    fetchInitialNotifications();
-
     const socketInstance = io(BASE_URL, {
       withCredentials: true,
     });
@@ -121,7 +119,7 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       fetchInitialNotifications();
     });
 
-    socketInstance.on('new-message', (msg: any) => {  
+    socketInstance.on('new-message', (msg: any) => {
       console.log('Received new-message:', msg);
       const currentU = currentUserRef.current;
 
