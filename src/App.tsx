@@ -26,6 +26,7 @@ import CreateComplaint from './features/complaintTracking/pages/CreateComplaint'
 import RequestTracking from './features/complaintTracking/pages/RequestTracking'
 
 import { SocketProvider } from './context/SocketContext'
+import GlobalCallHandler from './components/GlobalCallHandler'
 import VisitorLogs from './features/securityManagement/pages/VisitorLogs'
 import SecurityProtocols from './features/securityManagement/pages/SecurityProtocols'
 import ResidentSecurityProtocols from './features/securityManagement/pages/ResidentSecurityProtocols'
@@ -200,10 +201,12 @@ function App() {
             </Route>
           </Routes>
         </Router>
-      </SocketProvider>
+        <GlobalCallHandler />
+    </SocketProvider>
     </AuthProvider>
   )
 }
 
 
 export default App
+
