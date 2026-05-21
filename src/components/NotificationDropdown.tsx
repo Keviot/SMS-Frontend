@@ -8,6 +8,7 @@ import {
   NotificationCashIcon,
   NotificationGaneshIcon,
 } from "../assets/icons/admin-dashboard-icons";
+import { cn } from "../lib/cn";
 
 type NotificationItem = {
   id: string | number;
@@ -82,7 +83,12 @@ export default function NotificationDropdown({ onClose }: NotificationDropdownPr
           <div
             key={item.id}
             onClick={() => handleNotificationClick(item)}
-            className="border-b border-[#F4F4F4] py-5 last:border-b-0 cursor-pointer hover:bg-gray-50/50 transition-colors rounded-lg px-2 -mx-2"
+            className={cn(
+              "border-b border-[#F4F4F4] py-5 last:border-b-0 cursor-pointer transition-all rounded-lg px-2 -mx-2 mb-1",
+              (item.title.toLowerCase().includes("emergency") || item.type === "error")
+                ? "bg-[#FFF1F1] hover:bg-[#FFE5E5] border-l-4 border-l-[#E74C3C]"
+                : "hover:bg-gray-50/50"
+            )}
           >
             <div className="flex items-start gap-4">
               {/* Icon Section */}
