@@ -21,8 +21,8 @@ const AuthContext = createContext<AuthContextValue>({
   user: null,
   role: null,
   loading: true,
-  refetch: async () => {},
-  logout: () => {},
+  refetch: async () => { },
+  logout: () => { },
 });
 
 export const useAuth = () => useContext(AuthContext);
@@ -49,7 +49,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // Token invalid / expired
       setUser(null);
       setRole(null);
-      localStorage.removeItem("token");
+      // localStorage.removeItem("token");
     } finally {
       setLoading(false);
     }
