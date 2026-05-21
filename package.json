@@ -14,6 +14,7 @@
     "@fontsource/poppins": "^5.2.7",
     "@stream-io/video-react-sdk": "^1.36.1",
     "@tailwindcss/vite": "^4.2.4",
+    "@zegocloud/zego-uikit-prebuilt": "^2.17.3",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "crypto": "^1.0.1",

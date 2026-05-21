@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import {
     X,
     Search,
@@ -32,566 +32,77 @@ import Avatar from "../../../components/Avatar";
 import { chatApi, authApi, videoApi } from "../../../services/api";
 import { useSocket } from "../../../context/SocketContext";
 import EmojiPicker from 'emoji-picker-react';
-import {
-    StreamVideoClient,
-    StreamVideo,
-    StreamCall,
-    SpeakerLayout,
-    CallControls,
-    Call,
-    useCallStateHooks,
-    useCall,
-    useCalls,
-    CallingState,
-    ParticipantView
-} from "@stream-io/video-react-sdk";
 
-const apiKey = import.meta.env.VITE_STREAM_API_KEY || "YOUR_STREAM_API_KEY";
+import { ZegoUIKitPrebuilt } from '@zegocloud/zego-uikit-prebuilt';
 
-// Dedicated Video Call UI Component (Google Meet Style)
-// Helper component for Responsive Layout (Moved outside to prevent infinite re-renders)
-const ResponsiveVideoLayout = ({
-    participants: rawParticipants,
-    localParticipant,
-    isMicMuted,
-    pinnedParticipantId,
-    onParticipantClick
-}: {
-    participants: any[],
-    localParticipant: any,
-    isMicMuted: boolean,
-    pinnedParticipantId: string | null,
-    onParticipantClick: (id: string) => void
-}) => {
-    const isParticipantScreenSharing = (p: any) => p && (p.hasScreenShare || !!p.screenShareStream || (p.publishedTracks && (p.publishedTracks.includes('screenShareTrack') || p.publishedTracks.includes('screenShare'))));
+const APP_ID = Number(import.meta.env.VITE_ZEGO_APP_ID || "0");
+const SERVER_SECRET = import.meta.env.VITE_ZEGO_SERVER_SECRET || "";
 
-    // Deduplicate participants by userId to prevent "ghost" sessions or double-rendering of same user
-    const participants = (() => {
-        const sorted = [...rawParticipants].sort((a, b) => {
-            const aIsLocal = a.sessionId === localParticipant?.sessionId ? 1 : 0;
-            const bIsLocal = b.sessionId === localParticipant?.sessionId ? 1 : 0;
-            if (aIsLocal !== bIsLocal) return bIsLocal - aIsLocal;
-
-            const aIsScreen = isParticipantScreenSharing(a) ? 1 : 0;
-            const bIsScreen = isParticipantScreenSharing(b) ? 1 : 0;
-            if (aIsScreen !== bIsScreen) return bIsScreen - aIsScreen;
-
-            const aActive = (a.isSpeaking || !a.isMuted) ? 1 : 0;
-            const bActive = (b.isSpeaking || !b.isMuted) ? 1 : 0;
-            if (aActive !== bActive) return bActive - aActive;
-
-            return 0;
-        });
-
-        const seen = new Set<string>();
-        const filtered: any[] = [];
-        for (const p of sorted) {
-            if (!p.userId) {
-                filtered.push(p);
-                continue;
-            }
-            if (!seen.has(p.userId)) {
-                seen.add(p.userId);
-                filtered.push(p);
-            }
-        }
-        
-        return rawParticipants.filter(p => filtered.some(f => f.sessionId === p.sessionId));
-    })();
-
-    const remoteParticipants = participants.filter(p => p.sessionId !== localParticipant?.sessionId);
-    const screenSharingParticipant = participants.find(isParticipantScreenSharing);
-
-    // Determine the main participant for Spotlight mode
-    const pinnedParticipant = participants.find(p => p.sessionId === pinnedParticipantId);
-    const handRaisedParticipant = participants.find(p => p.reaction?.type === 'raised-hand' && p.sessionId !== localParticipant?.sessionId);
-    const speaker = participants.find(p => p.isSpeaking && !p.isLocal);
-
-    // 1-on-1 Layout (PiP style like the image)
-    if (participants.length <= 2 && !pinnedParticipantId) {
-        const otherParticipant = remoteParticipants[0];
-
-        return (
-            <div className="relative h-full w-full bg-[#1a1b1e] rounded-[32px] overflow-hidden shadow-2xl border border-white/5 transition-all duration-500">
-                {/* Remote Participant (Main Screen) */}
-                {otherParticipant ? (
-                    <div className="h-full w-full">
-                        <ParticipantView
-                            participant={otherParticipant}
-                            className={cn("h-full w-full [&_video]:w-full [&_video]:h-full", isParticipantScreenSharing(otherParticipant) ? "[&_video]:object-contain" : "[&_video]:object-cover")}
-                        />
-                        <div className="absolute bottom-8 left-8 bg-black/40 backdrop-blur-xl px-4 py-2 rounded-2xl text-white font-medium flex items-center gap-3 border border-white/10 shadow-xl">
-                            {otherParticipant.isSpeaking && (
-                                <div className="flex gap-0.5 items-end h-4 mb-0.5">
-                                    <div className="w-1 bg-[#00A3FF] animate-pulse" style={{ height: '60%', animationDuration: '0.5s' }} />
-                                    <div className="w-1 bg-[#00A3FF] animate-pulse" style={{ height: '100%', animationDuration: '0.7s' }} />
-                                    <div className="w-1 bg-[#00A3FF] animate-pulse" style={{ height: '80%', animationDuration: '0.4s' }} />
-                                </div>
-                            )}
-                            <span className="text-sm font-semibold tracking-wide">{otherParticipant.name}</span>
-                            {otherParticipant.reaction?.type === 'raised-hand' && (
-                                <div className="ml-2 bg-yellow-500 p-1 rounded-full animate-bounce">
-                                    <Hand size={14} className="text-black" />
-                                </div>
-                            )}
-                        </div>
-                    </div>
-                ) : (
-                    <div className="h-full w-full flex flex-col items-center justify-center text-white/20 gap-8">
-                        <div className="w-40 h-40 rounded-full bg-white/5 flex items-center justify-center border border-white/5 animate-pulse">
-                            <Users size={80} className="opacity-10" />
-                        </div>
-                        <div className="flex flex-col items-center gap-3">
-                            <p className="text-2xl font-bold text-white/40 tracking-tight">Waiting for others to join</p>
-                            <p className="text-sm text-white/20 font-medium bg-white/5 px-4 py-1.5 rounded-full border border-white/5">The community meeting will begin shortly</p>
-                        </div>
-                    </div>
-                )}
-
-                {/* Local Participant (PiP Overlay) */}
-                {localParticipant && (
-                    <div
-                        onClick={() => onParticipantClick(localParticipant.sessionId)}
-                        className="absolute bottom-8 right-8 w-72 aspect-video rounded-3xl overflow-hidden border-[3px] border-[#00A3FF] shadow-[0_20px_60px_rgba(0,0,0,0.6)] z-20 group transition-all duration-500 hover:scale-[1.05] cursor-pointer"
-                    >
-                        <ParticipantView
-                            participant={localParticipant}
-                            className="h-full w-full [&_video]:object-cover [&_video]:w-full [&_video]:h-full"
-                        />
-
-                        {/* Mic status indicator on PiP (Matches image style) */}
-                        <div className="absolute bottom-4 right-4 bg-white rounded-full p-2.5 shadow-2xl flex items-center justify-center group-hover:scale-110 transition-transform">
-                            {isMicMuted ? (
-                                <MicOff size={18} className="text-[#EA4335]" />
-                            ) : (
-                                <Mic size={18} className="text-[#00A3FF]" />
-                            )}
-                        </div>
-
-                        <div className="absolute top-4 left-4 bg-black/40 backdrop-blur-md px-3 py-1 rounded-xl text-white text-[11px] font-bold opacity-0 group-hover:opacity-100 transition-opacity tracking-widest uppercase">
-                            You
-                        </div>
-                    </div>
-                )}
-            </div>
-        );
-    }
-
-    // Spotlight/Pinned Layout
-    const mainParticipant = screenSharingParticipant || pinnedParticipant || handRaisedParticipant || speaker;
-
-    if (mainParticipant && (participants.length > 2 || pinnedParticipantId || screenSharingParticipant)) {
-        const others = participants.filter(p => p.sessionId !== mainParticipant.sessionId);
-        const isHandRaised = mainParticipant.reaction?.type === 'raised-hand';
-
-        return (
-            <div className="flex flex-col lg:flex-row h-full w-full gap-6 p-2">
-                {/* Spotlight: Main Screen */}
-                <div className="flex-[3] relative rounded-[40px] overflow-hidden bg-[#2d2e31] border-4 border-[#00A3FF] shadow-[0_0_40px_rgba(0,163,255,0.2)] transition-all duration-700">
-                    <ParticipantView
-                        participant={mainParticipant}
-                        className={cn("h-full w-full [&_video]:w-full [&_video]:h-full bg-black/50", isParticipantScreenSharing(mainParticipant) ? "[&_video]:object-contain" : "[&_video]:object-cover")}
-                    />
-                    <div className={cn(
-                        "absolute bottom-8 left-8 px-5 py-2.5 rounded-2xl text-white font-bold flex items-center gap-3 shadow-2xl animate-in slide-in-from-left-4",
-                        isHandRaised ? "bg-yellow-500 text-black" : "bg-[#00A3FF]"
-                    )}>
-                        {isHandRaised ? (
-                            <Hand size={18} className="animate-bounce" />
-                        ) : (
-                            <div className="flex gap-1 items-end h-4 mb-0.5">
-                                <div className="w-1.5 bg-white animate-pulse" style={{ height: '60%', animationDuration: '0.4s' }} />
-                                <div className="w-1.5 bg-white animate-pulse" style={{ height: '100%', animationDuration: '0.6s' }} />
-                                <div className="w-1.5 bg-white animate-pulse" style={{ height: '80%', animationDuration: '0.3s' }} />
-                            </div>
-                        )}
-                        <span className="text-sm tracking-wide">
-                            {mainParticipant.name} {isHandRaised ? "has raised hand" : screenSharingParticipant?.sessionId === mainParticipant.sessionId ? "is sharing screen" : pinnedParticipantId === mainParticipant.sessionId ? "is pinned" : "is speaking..."}
-                        </span>
-                    </div>
-                    {pinnedParticipantId === mainParticipant.sessionId && (
-                        <button
-                            onClick={() => onParticipantClick("")}
-                            className="absolute top-8 right-8 bg-black/40 backdrop-blur-md p-3 rounded-full text-white hover:bg-black/60 transition-colors border border-white/10"
-                            title="Unpin"
-                        >
-                            <Maximize size={20} />
-                        </button>
-                    )}
-                </div>
-
-                {/* Sidebar: Other Participants */}
-                <div className="flex-1 flex lg:flex-col gap-4 overflow-x-auto lg:overflow-y-auto custom-scrollbar pr-2 min-h-[160px] pb-2">
-                    {others.map(p => (
-                        <div
-                            key={p.sessionId}
-                            onClick={() => onParticipantClick(p.sessionId)}
-                            className={cn(
-                                "relative rounded-3xl overflow-hidden bg-[#2d2e31] border-2 aspect-video shrink-0 shadow-xl transition-all hover:scale-105 cursor-pointer group",
-                                p.sessionId === pinnedParticipantId ? "border-[#00A3FF]" : "border-white/5"
-                            )}
-                        >
-                            <ParticipantView
-                                participant={p}
-                                className="h-full w-full [&_video]:object-cover [&_video]:w-full [&_video]:h-full"
-                            />
-                            <div className="absolute bottom-3 left-3 bg-black/60 backdrop-blur-md px-3 py-1 rounded-xl text-white text-[10px] font-bold border border-white/10">
-                                {p.name} {p.sessionId === localParticipant?.sessionId && "(You)"}
-                            </div>
-                            {p.reaction?.type === 'raised-hand' && (
-                                <div className="absolute top-3 left-3 bg-yellow-500 p-1.5 rounded-full shadow-lg border border-white/20 animate-bounce">
-                                    <Hand size={12} className="text-black" />
-                                </div>
-                            )}
-                            {p.isMuted && (
-                                <div className="absolute top-3 right-3 bg-black/40 p-1.5 rounded-full border border-white/5">
-                                    <MicOff size={12} className="text-white/60" />
-                                </div>
-                            )}
-                        </div>
-                    ))}
-                </div>
-            </div>
-        );
-    }
-
-    // Default: Adaptive Grid (Google Meet style)
-    return (
-        <div className={cn(
-            "h-full w-full grid gap-6 p-2 transition-all duration-700",
-            participants.length === 3 ? "grid-cols-1 md:grid-cols-2" :
-                participants.length === 4 ? "grid-cols-2" :
-                    participants.length <= 6 ? "grid-cols-2 lg:grid-cols-3" :
-                        "grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
-        )}>
-            {participants.map((p) => {
-                const isLocal = p.sessionId === localParticipant?.sessionId;
-                return (
-                    <div
-                        key={p.sessionId}
-                        onClick={() => onParticipantClick(p.sessionId)}
-                        className={cn(
-                            "relative rounded-[32px] overflow-hidden bg-[#2d2e31] border-2 transition-all duration-700 shadow-2xl cursor-pointer hover:scale-[1.02]",
-                            p.isSpeaking ? "border-[#00A3FF] ring-8 ring-[#00A3FF]/10 z-10" : "border-white/5",
-                            p.sessionId === pinnedParticipantId && "border-[#00A3FF]"
-                        )}
-                    >
-                        <ParticipantView
-                            participant={p}
-                            className={cn("h-full w-full [&_video]:w-full [&_video]:h-full", isParticipantScreenSharing(p) ? "[&_video]:object-contain" : "[&_video]:object-cover")}
-                        />
-
-                        <div className="absolute bottom-5 left-5 bg-black/50 backdrop-blur-xl px-4 py-2 rounded-2xl text-white text-xs font-bold flex items-center gap-3 border border-white/10 shadow-2xl">
-                            {p.isSpeaking && (
-                                <div className="flex gap-0.5 items-end h-3.5 mb-0.5">
-                                    <div className="w-1 bg-[#00A3FF] animate-bounce" style={{ height: '60%', animationDuration: '0.5s' }} />
-                                    <div className="w-1 bg-[#00A3FF] animate-bounce" style={{ height: '100%', animationDuration: '0.7s' }} />
-                                    <div className="w-1 bg-[#00A3FF] animate-bounce" style={{ height: '80%', animationDuration: '0.4s' }} />
-                                </div>
-                            )}
-                            <span className="tracking-wide">{p.name} {isLocal && "(You)"}</span>
-                        </div>
-
-                        {p.reaction?.type === 'raised-hand' && (
-                            <div className="absolute top-5 left-5 bg-yellow-500 p-2 rounded-2xl shadow-2xl border border-white/20 animate-bounce">
-                                <Hand size={18} className="text-black" />
-                            </div>
-                        )}
-
-                        {p.isMuted && !p.isSpeaking && (
-                            <div className="absolute top-5 right-5 bg-black/40 backdrop-blur-md p-2.5 rounded-full text-white/60 border border-white/5 shadow-xl">
-                                <MicOff size={16} />
-                            </div>
-                        )}
-                    </div>
-                );
-            })}
-        </div>
-    );
-};
-
-function VideoCallUI({ onLeave, onMinimize }: { onLeave: () => void, onMinimize: () => void }) {
-    const call = useCall();
-    const {
-        useMicrophoneState,
-        useCameraState,
-        useLocalParticipant,
-        useCallCallingState,
-        useParticipants
-    } = useCallStateHooks();
-
-    const { isMute: isMicMuted } = useMicrophoneState();
-    const { isMute: isCamMuted } = useCameraState();
-    const localParticipant = useLocalParticipant();
-    const callingState = useCallCallingState();
-    const participants = useParticipants();
-
-    const [isHandRaised, setIsHandRaised] = useState(false);
-    const [pinnedParticipantId, setPinnedParticipantId] = useState<string | null>(null);
-    const [startTime] = useState(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
-
-    // Show loader only if we are truly in a transient state
-    const isJoined = callingState === CallingState.JOINED;
-    const isBusy = callingState === CallingState.JOINING || callingState === CallingState.MIGRATING;
-    const isRinging = callingState === CallingState.RINGING || (callingState === CallingState.JOINING && participants.length <= 1);
-
-    if (!isJoined && !isRinging && isBusy) {
-        return (
-            <div className="flex h-full items-center justify-center bg-[#202124] text-white">
-                <div className="flex flex-col items-center gap-6">
-                    <div className="relative">
-                        <div className="h-20 w-20 rounded-full border-4 border-t-[#00A3FF] border-white/10 animate-spin" />
-                        <div className="absolute inset-0 flex items-center justify-center">
-                            <Video size={32} className="text-[#00A3FF]" />
-                        </div>
-                    </div>
-                    <div className="flex flex-col items-center gap-2 text-center">
-                        <p className="text-2xl font-bold tracking-tight">Initializing Meeting</p>
-                        <p className="text-white/40 text-sm font-medium">Securing connection to the community hub...</p>
-                    </div>
-                </div>
-            </div>
-        );
-    }
-
-    const toggleMute = async () => {
-        await call?.microphone.toggle();
-    };
-
-    const toggleCamera = async () => {
-        await call?.camera.toggle();
-    };
-
-    const toggleScreenShare = async () => {
-        try {
-            await call?.screenShare.toggle();
-        } catch (err) {
-            toast.error("Screen sharing failed");
-        }
-    };
-
-    const toggleHandRaise = async () => {
-        try {
-            const newHandRaised = !isHandRaised;
-            setIsHandRaised(newHandRaised);
-
-            if (newHandRaised) {
-                await call?.sendReaction({ type: "raised-hand" });
-                toast.success("You raised your hand", { position: "bottom-left" });
-            }
-        } catch (err) {
-            console.error(err);
-        }
-    };
-
-    return (
-        <div className="fixed inset-0 z-[100] flex flex-col bg-[#202124]">
-            {/* Top Bar */}
-            <div className="flex items-center justify-between px-8 py-6 text-white bg-gradient-to-b from-black/40 to-transparent">
-                <div className="flex flex-col gap-0.5">
-                    <div className="flex items-center gap-3">
-                        <div className={cn(
-                            "h-2.5 w-2.5 rounded-full animate-pulse shadow-[0_0_10px_rgba(234,67,53,0.5)]",
-                            isRinging ? "bg-yellow-500 shadow-yellow-500/50" : "bg-[#EA4335]"
-                        )} />
-                        <span className="text-base font-semibold tracking-tight">
-                            {isRinging ? "Calling members..." : "Meeting in progress"}
-                        </span>
-                    </div>
-                    {!isRinging && <span className="text-[11px] text-white/50 font-medium ml-5">Meeting started at {startTime}</span>}
-                </div>
-
-                <div className="flex items-center gap-6">
-                    <button
-                        onClick={onMinimize}
-                        className="p-2.5 rounded-full bg-white/5 hover:bg-white/10 text-white/70 hover:text-white transition-all border border-white/5"
-                        title="Minimize to chat"
-                    >
-                        <ChevronLeft size={20} />
-                    </button>
-                    {isRinging && (
-                        <div className="flex items-center gap-4 px-4 py-2 bg-white/10 backdrop-blur-md rounded-2xl border border-white/10 animate-in fade-in slide-in-from-top-2">
-                            <div className="relative">
-                                <AlertCircle size={16} className="text-[#8AB4F8]" />
-                                <div className="absolute inset-0 bg-[#8AB4F8]/20 rounded-full animate-ping" />
-                            </div>
-                            <span className="text-xs font-semibold text-white/90">Ringing {participants.length - 1 || 1} member</span>
-                            <button
-                                onClick={onLeave}
-                                className="h-8 w-8 rounded-full bg-[#EA4335] flex items-center justify-center hover:bg-[#D93025] transition-all hover:scale-110 shadow-lg"
-                            >
-                                <Phone size={14} className="text-white rotate-[135deg]" />
-                            </button>
-                        </div>
-                    )}
-                    <div className="flex items-center gap-2 px-3 py-1.5 bg-white/5 rounded-full border border-white/10">
-                        <Users size={14} className="text-[#8AB4F8]" />
-                        <span className="text-xs font-medium text-white/80">{participants.length} participants</span>
-                    </div>
-                </div>
-            </div>
-
-            {/* Main Video Area */}
-            <div className="flex-1 relative overflow-hidden">
-                <ResponsiveVideoLayout
-                    participants={participants}
-                    localParticipant={localParticipant}
-                    isMicMuted={isMicMuted}
-                    pinnedParticipantId={pinnedParticipantId}
-                    onParticipantClick={(id) => setPinnedParticipantId(id === pinnedParticipantId ? null : id)}
-                />
-            </div>
-
-            {/* Bottom Control Bar (Google Meet Style) */}
-            <div className="h-20 sm:h-24 bg-[#202124] flex items-center justify-center lg:justify-between px-4 sm:px-12 border-t border-white/5 w-full">
-                {/* Left side: Time/Code */}
-                <div className="hidden lg:flex items-center text-white/80 text-sm font-medium tracking-wide">
-                    {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} | Community Meeting
-                </div>
-
-                {/* Center: Controls */}
-                <div className="flex items-center gap-2 sm:gap-5">
-                    {/* Mute */}
-                    <button
-                        onClick={toggleMute}
-                        className={cn(
-                            "group flex h-11 w-11 sm:h-14 sm:w-14 items-center justify-center rounded-full transition-all duration-300 shadow-xl shrink-0",
-                            isMicMuted ? "bg-[#EA4335] hover:bg-[#D93025] scale-110" : "bg-[#3C4043] hover:bg-[#4c4f52]"
-                        )}
-                        title={isMicMuted ? "Unmute" : "Mute"}
-                    >
-                        {isMicMuted ? <MicOff className="w-5 h-5 sm:w-[22px] sm:h-[22px] text-white" /> : <Mic className="w-5 h-5 sm:w-[22px] sm:h-[22px] text-white" />}
-                    </button>
-
-                    {/* Camera */}
-                    <button
-                        onClick={toggleCamera}
-                        className={cn(
-                            "group flex h-11 w-11 sm:h-14 sm:w-14 items-center justify-center rounded-full transition-all duration-300 shadow-xl shrink-0",
-                            isCamMuted ? "bg-[#EA4335] hover:bg-[#D93025] scale-110" : "bg-[#3C4043] hover:bg-[#4c4f52]"
-                        )}
-                        title={isCamMuted ? "Turn on camera" : "Turn off camera"}
-                    >
-                        {isCamMuted ? <VideoOff className="w-5 h-5 sm:w-[22px] sm:h-[22px] text-white" /> : <Video className="w-5 h-5 sm:w-[22px] sm:h-[22px] text-white" />}
-                    </button>
-
-                    {/* Hand Raise */}
-                    <button
-                        onClick={toggleHandRaise}
-                        className={cn(
-                            "flex h-11 w-11 sm:h-14 sm:w-14 items-center justify-center rounded-full transition-all duration-300 bg-[#3C4043] hover:bg-[#4c4f52] shadow-xl shrink-0",
-                            isHandRaised && "bg-white hover:bg-white text-black"
-                        )}
-                        title="Raise hand"
-                    >
-                        <Hand className={cn("w-5 h-5 sm:w-[22px] sm:h-[22px]", isHandRaised ? "text-yellow-500" : "text-white")} />
-                    </button>
-
-                    {/* Screen Share */}
-                    <button
-                        onClick={toggleScreenShare}
-                        className="flex h-11 w-11 sm:h-14 sm:w-14 items-center justify-center rounded-full transition-all duration-300 bg-[#3C4043] hover:bg-[#4c4f52] shadow-xl shrink-0"
-                        title="Present now"
-                    >
-                        <MonitorUp className="w-5 h-5 sm:w-[22px] sm:h-[22px] text-white" />
-                    </button>
-
-                    {/* End Call */}
-                    <button
-                        onClick={onLeave}
-                        className="flex h-11 w-16 sm:h-14 sm:w-20 items-center justify-center rounded-[28px] bg-[#EA4335] hover:bg-[#D93025] transition-all duration-300 ml-2 sm:ml-4 shadow-[0_10px_25px_rgba(234,67,53,0.4)] shrink-0"
-                        title="Leave call"
-                    >
-                        <Phone className="w-6 h-6 sm:w-[26px] sm:h-[26px] text-white rotate-[135deg]" />
-                    </button>
-                </div>
-
-                {/* Right side: Meeting Info */}
-                <div className="hidden lg:flex items-center gap-8 text-white/70">
-                    <div className="flex flex-col items-center gap-1.5 cursor-pointer hover:text-white transition-colors group">
-                        <div className="p-2 rounded-lg group-hover:bg-white/5">
-                            <AlertCircle size={22} />
-                        </div>
-                        <span className="text-[10px] font-bold">Info</span>
-                    </div>
-                    <div className="flex flex-col items-center gap-1.5 cursor-pointer hover:text-white transition-colors group">
-                        <div className="p-2 rounded-lg group-hover:bg-white/5 relative">
-                            <Users size={22} />
-                            <div className="absolute top-1 right-1 w-2 h-2 bg-[#00A3FF] rounded-full border-2 border-[#202124]" />
-                        </div>
-                        <span className="text-[10px] font-bold">People</span>
-                    </div>
-                    <div className="flex flex-col items-center gap-1.5 cursor-pointer hover:text-white transition-colors group">
-                        <div className="p-2 rounded-lg group-hover:bg-white/5">
-                            <MessageSquare size={22} />
-                        </div>
-                        <span className="text-[10px] font-bold">Chat</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-    );
-}
-
-// Helper component for Incoming Call Notification
-const IncomingCallNotification = ({ call, onAccept, onReject }: { call: Call, onAccept: () => void, onReject: () => void }) => {
-    const [callingState, setCallingState] = useState(call.state.callingState);
-    const [caller, setCaller] = useState<any>(null);
-
+// --- ZEGO CLOUD UI INTEGRATION ---
+const IncomingCallNotification = ({ callData, onAccept, onReject }: { callData: any, onAccept: () => void, onReject: (isTimeout: boolean) => void }) => {
     useEffect(() => {
-        const subscription = call.state.callingState$.subscribe((state) => {
-            setCallingState(state);
-        });
-        return () => subscription.unsubscribe();
-    }, [call]);
-
-    useEffect(() => {
-        setCaller(call.state.createdBy);
-
-        // Play ringing sound (using a public URL for simplicity)
         const audio = new Audio("https://assets.mixkit.co/active_storage/sfx/2358/2358-preview.mp3");
         audio.loop = true;
         audio.play().catch(e => console.log("Audio play blocked", e));
 
+        // 30 seconds timeout
+        const timeout = setTimeout(() => {
+            onReject(true); // true means timeout
+        }, 30000);
+
         return () => {
             audio.pause();
             audio.currentTime = 0;
+            clearTimeout(timeout);
         };
-    }, [call]);
+    }, [onReject]);
 
-    if (callingState !== CallingState.RINGING) return null;
+    useEffect(() => {
+        if ("Notification" in window && Notification.permission !== "denied" && callData) {
+            Notification.requestPermission().then(perm => {
+                if (perm === "granted") {
+                    new Notification(callData.isCommunity ? "Society Group Call" : `Incoming ${callData.type} call`, {
+                        body: callData.isCommunity ? `Started by ${callData.callerName}` : `From: ${callData.callerName}`,
+                        icon: callData.callerImage || '/images/default-avatar.png'
+                    });
+                }
+            });
+        }
+    }, [callData]);
+
+    if (!callData) return null;
 
     return (
         <div className="fixed inset-0 z-[1000] flex items-start justify-center pt-20 px-4 pointer-events-none">
             <div className="w-full max-w-sm bg-[#1a1b1e]/90 backdrop-blur-2xl rounded-[32px] p-6 border border-white/10 shadow-[0_20px_50px_rgba(0,0,0,0.5)] flex flex-col items-center gap-6 animate-in slide-in-from-top-10 duration-500 pointer-events-auto">
                 <div className="relative">
                     <div className="w-24 h-24 rounded-full overflow-hidden border-4 border-[#5678E9]/20 p-1">
-                        <Avatar src={caller?.image} name={caller?.name || "User"} className="w-full h-full rounded-full" />
+                        <Avatar src={callData.callerImage} name={callData.callerName || "User"} className="w-full h-full rounded-full" />
                     </div>
                     <div className="absolute -bottom-2 -right-2 bg-[#5678E9] p-2 rounded-full shadow-lg animate-bounce">
-                        <Video size={16} className="text-white" />
+                        {callData.type === 'video' ? <Video size={16} className="text-white" /> : <Phone size={16} className="text-white" />}
                     </div>
                 </div>
 
                 <div className="text-center">
-                    <h3 className="text-xl font-bold text-white mb-1">{caller?.name || "Incoming Call"}</h3>
-                    <p className="text-white/60 text-sm font-medium animate-pulse">Incoming video call...</p>
+                    <h3 className="text-xl font-bold text-white mb-1">{callData.isCommunity ? "Community Group Call" : (callData.callerName || "Incoming Call")}</h3>
+                    <p className="text-white/60 text-sm font-medium animate-pulse">{callData.isCommunity ? `Started by ${callData.callerName}` : `Incoming ${callData.type} call...`}</p>
                 </div>
 
                 <div className="flex items-center gap-4 w-full">
                     <button
-                        onClick={onReject}
+                        onClick={() => onReject(false)}
                         className="flex-1 h-14 rounded-2xl bg-[#EA4335] flex items-center justify-center gap-2 text-white font-bold hover:bg-[#D93025] transition-all hover:scale-105 active:scale-95 shadow-lg"
                     >
                         <Phone size={20} className="rotate-[135deg]" />
-                        Reject
+                        {callData.isCommunity ? "Ignore" : "Reject"}
                     </button>
                     <button
                         onClick={onAccept}
                         className="flex-1 h-14 rounded-2xl bg-[#34A853] flex items-center justify-center gap-2 text-white font-bold hover:bg-[#2D9249] transition-all hover:scale-105 active:scale-95 shadow-lg"
                     >
-                        <Video size={20} />
-                        Accept
+                        {callData.type === 'video' ? <Video size={20} /> : <Phone size={20} />}
+                        {callData.isCommunity ? "Join" : "Accept"}
                     </button>
                 </div>
             </div>
@@ -599,129 +110,74 @@ const IncomingCallNotification = ({ call, onAccept, onReject }: { call: Call, on
     );
 };
 
-// Component to discover and manage incoming calls within the StreamVideo context
-const CallDiscovery = ({ client, currentUser, activeCall, onAccept, onReject, socket }: any) => {
-    const calls = useCalls();
-    const [incomingCall, setIncomingCall] = useState<Call | null>(null);
-    const [manualCalls, setManualCalls] = useState<Call[]>([]);
+// ZegoCloud Call UI Wrapper
+const ZegoCallUI = ({
+    roomId,
+    user,
+    isCommunity,
+    isVideo,
+    onLeave
+}: {
+    roomId: string,
+    user: any,
+    isCommunity: boolean,
+    isVideo: boolean,
+    onLeave: () => void
+}) => {
+    const containerRef = useRef<HTMLDivElement>(null);
 
-    // 1. Listen for new calls directly from the client (more reliable than useCalls alone)
     useEffect(() => {
-        if (!client || !currentUser) return;
+        if (!containerRef.current || !user || !roomId) return;
 
-        const handleCallEvent = async (event: any) => {
-            const callId = event.call_id || (event.call && event.call.id);
-            const callType = event.call_type || (event.call && event.call.type) || 'default';
+        let zp: any;
+        const initCall = async () => {
+            const currentUserId = String(user._id).trim();
+            const userName = `${user.firstname} ${user.lastname}`.trim();
 
-            if (callId) {
-                console.log("[CallDiscovery] Aggressive discovery for call:", callId);
-                try {
-                    const { calls: queriedCalls } = await client.queryCalls({
-                        filter_conditions: { id: { $eq: callId } },
-                        watch: true
-                    });
-
-                    if (queriedCalls.length > 0) {
-                        setManualCalls(prev => {
-                            if (prev.find(c => c.id === callId)) return prev;
-                            return [...prev, queriedCalls[0]];
-                        });
-                    }
-                } catch (err) {
-                    console.error("[CallDiscovery] Query failed:", err);
-                }
-            }
-        };
-
-        const unsubscribeCreated = client.on('call.created', handleCallEvent);
-        const unsubscribeRing = client.on('call.ring', handleCallEvent);
-        const unsubscribeNotification = client.on('notification.message_new', handleCallEvent);
-
-        return () => {
-            unsubscribeCreated();
-            unsubscribeRing();
-            unsubscribeNotification();
-        };
-    }, [client, currentUser]);
-
-    const [communityIncoming, setCommunityIncoming] = useState<Call | null>(null);
-
-    // Custom socket listener for community calls
-    useEffect(() => {
-        if (!socket || !client || !currentUser) return;
-
-        const handleCommunitySignal = async (data: any) => {
-            const currentUserId = String(currentUser._id).trim();
-            if (data.from !== currentUserId) {
-                try {
-                    const { calls: queriedCalls } = await client.queryCalls({
-                        filter_conditions: { id: { $eq: data.callId } },
-                        watch: true
-                    });
-                    if (queriedCalls.length > 0) {
-                        setCommunityIncoming(queriedCalls[0]);
-                    }
-                } catch (err) {
-                    console.error("[CallDiscovery] Failed to query community call:", err);
-                }
-            }
-        };
-
-        socket.on("call:community-incoming", handleCommunitySignal);
-        return () => {
-            socket.off("call:community-incoming", handleCommunitySignal);
-        };
-    }, [socket, client, currentUser]);
-
-    // 2. Monitor both useCalls() and manualCalls to find the one ringing for us
-    useEffect(() => {
-        const currentUserId = String(currentUser?._id || "").trim();
-        const allAvailableCalls = [...calls, ...manualCalls];
-
-        const ringingCall = allAvailableCalls.find(c => {
-            const callingState = c.state.callingState;
-            const createdById = String(c.state.createdBy?.id || "").trim();
-
-            const isRinging = callingState === CallingState.RINGING;
-            const isNotFromMe = createdById !== currentUserId;
-
-            // Check membership
-            const myMemberEntry = c.state.members.find(m =>
-                String(m.user?.id || m.user_id || "").trim() === currentUserId
+            const kitToken = ZegoUIKitPrebuilt.generateKitTokenForTest(
+                APP_ID,
+                SERVER_SECRET,
+                roomId,
+                currentUserId,
+                userName
             );
 
-            if (isRinging && isNotFromMe && !!myMemberEntry) {
-                return true;
-            }
-            return false;
-        });
+            zp = ZegoUIKitPrebuilt.create(kitToken);
 
-        if (communityIncoming) {
-            setIncomingCall(communityIncoming);
-        } else if (ringingCall) {
-            setIncomingCall(ringingCall);
-        } else if (incomingCall && incomingCall.state.callingState !== CallingState.RINGING) {
-            setIncomingCall(null);
+            zp.joinRoom({
+                container: containerRef.current,
+                scenario: {
+                    mode: isCommunity ? ZegoUIKitPrebuilt.GroupCall : ZegoUIKitPrebuilt.OneONoneCall,
+                },
+                turnOnCameraWhenJoining: isVideo,
+                showPreJoinView: false,
+                onLeaveRoom: () => {
+                    onLeave();
+                }
+            });
+        };
+
+        if (APP_ID && SERVER_SECRET) {
+            initCall();
+        } else {
+            console.error("Zego credentials missing");
+            toast.error("Zego credentials missing");
         }
-    }, [calls, manualCalls, currentUser, incomingCall, communityIncoming]);
 
-    // If we are already in a call, don't show the incoming call popup
-    if (!incomingCall || activeCall) return null;
+        return () => {
+            if (zp) {
+                zp.destroy();
+            }
+        };
+    }, [roomId, user, isCommunity, isVideo]);
 
     return (
-        <IncomingCallNotification
-            call={incomingCall}
-            onAccept={() => {
-                console.log("[CallDiscovery] Accepting call:", incomingCall.id);
-                setCommunityIncoming(null);
-                onAccept(incomingCall);
-            }}
-            onReject={() => {
-                console.log("[CallDiscovery] Rejecting call:", incomingCall.id);
-                setCommunityIncoming(null);
-                onReject(incomingCall);
-            }}
-        />
+        <div className="fixed inset-0 z-[500] bg-[#1a1b1e]">
+            <button onClick={onLeave} className="absolute top-6 left-[60px] z-[600] bg-black/50 p-3 rounded-full text-white hover:bg-black/70 border border-white/10 backdrop-blur-md">
+                <ChevronLeft size={24} />
+            </button>
+            <div ref={containerRef} className="w-full h-full" />
+        </div>
     );
 };
 
@@ -735,8 +191,11 @@ export default function AccessForums() {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const [loading, setLoading] = useState(true);
     const [currentUser, setCurrentUser] = useState<any>(null);
-    const [videoClient, setVideoClient] = useState<StreamVideoClient | null>(null);
-    const [activeCall, setActiveCall] = useState<Call | null>(null);
+
+    const [activeRoomId, setActiveRoomId] = useState<string | null>(null);
+    const [incomingCallData, setIncomingCallData] = useState<any>(null);
+    const [callIsVideo, setCallIsVideo] = useState(true);
+    const [isCommunityCall, setIsCommunityCall] = useState(false);
     const [isCallMinimized, setIsCallMinimized] = useState(false);
     const [isScreenShared, setIsScreenShared] = useState(false);
     const [showEmojiPicker, setShowEmojiPicker] = useState(false);
@@ -757,49 +216,27 @@ export default function AccessForums() {
     const cameraInputRef = useRef<HTMLInputElement>(null);
     const videoRef = useRef<HTMLVideoElement>(null);
 
-    const handleAcceptCall = async (call: Call) => {
-        try {
-            console.log("[AccessForums] Refreshing call state before accept:", call.id);
-            // Force a refresh from server to ensure membership is synced
-            await call.get();
+    const handleAcceptCall = useCallback(() => {
+        if (incomingCallData) {
+            setCallIsVideo(incomingCallData.type === 'video');
+            setIsCommunityCall(incomingCallData.isCommunity);
+            setActiveRoomId(incomingCallData.callId);
+            setIncomingCallData(null);
+        }
+    }, [incomingCallData]);
 
-            const myId = String(currentUser?._id || "").trim();
-            const memberIds = call.state.members.map(m => String(m.user?.id || m.user_id || "").trim());
-            console.log("[AccessForums] Refreshed members:", memberIds);
-            console.log("[AccessForums] My ID:", myId);
-
-            if (!memberIds.includes(myId)) {
-                console.log("[AccessForums] Adding myself to call members dynamically:", myId);
-                await call.updateCallMembers({
-                    update_members: [{ user_id: myId, role: 'user' }]
+    const handleRejectCall = useCallback(() => {
+        setIncomingCallData((prev: any) => {
+            if (prev && !prev.isCommunity && socket && currentUser) {
+                socket.emit('call:rejected', {
+                    to: prev.from,
+                    from: currentUser._id,
+                    callId: prev.callId
                 });
-                await call.get();
             }
-
-            // Accept and then explicitly JOIN to establish the media connection
-            await call.accept();
-            await call.join({ create: true });
-
-            if (call.state.custom?.type === 'audio') {
-                await call.camera.disable();
-            }
-
-            setActiveCall(call);
-            setIsCallMinimized(false);
-        } catch (error: any) {
-            console.error("Failed to accept call:", error);
-            toast.error(`Failed to accept call: ${error.message || "Unknown error"}`);
-        }
-    };
-
-    const handleRejectCall = async (call: Call) => {
-        try {
-            console.log("[AccessForums] Rejecting call:", call.id);
-            await call.reject();
-        } catch (error) {
-            console.error("Failed to reject call:", error);
-        }
-    };
+            return null;
+        });
+    }, [socket, currentUser]);
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const typingTimeoutRef = useRef<any>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
@@ -812,62 +249,54 @@ export default function AccessForums() {
         scrollToBottom();
     }, [messages]);
 
-    // Initialize Video Client (Stable initialization)
-    const videoClientRef = useRef<StreamVideoClient | null>(null);
-    const videoClientIdRef = useRef<string | null>(null);
-
+    // Listen for incoming calls via Socket
     useEffect(() => {
-        const initVideo = async () => {
-            try {
-                const profile = await authApi.getProfile();
-                const user = profile.user;
-                if (!user) return;
+        if (!socket || !currentUser) return;
 
-                // Prevent duplicate initialization
-                const currentUserIdStr = String(user._id);
-                if (videoClientRef.current) {
-                    if (videoClientIdRef.current === currentUserIdStr) {
-                        return; // Already initialized for this user
-                    }
-                    await videoClientRef.current.disconnectUser();
-                }
-
-                const userName = `${user.firstname} ${user.lastname}`.trim();
-                const tokenData = await videoApi.generateToken(user._id, userName, user.profileImage);
-
-                if (!tokenData.token) {
-                    throw new Error("Server returned an empty Stream token.");
-                }
-
-                const client = new StreamVideoClient({
-                    apiKey,
-                    user: {
-                        id: String(user._id),
-                        name: userName,
-                        image: user.profileImage,
-                    },
-                    token: tokenData.token,
-                });
-
-                videoClientRef.current = client;
-                videoClientIdRef.current = currentUserIdStr;
-                setVideoClient(client);
-            } catch (error) {
-                console.error("Video initialization failed:", error);
+        const handleIncoming = (data: any) => {
+            console.log('[Socket] Incoming ring received for user:', data);
+            const currentUserId = String(currentUser._id).trim();
+            if (data.from !== currentUserId) {
+                setIncomingCallData(data);
             }
         };
 
-        initVideo();
+        const handleRejected = (data: any) => {
+            setActiveRoomId((prev: any) => {
+                if (prev === data.callId) {
+                    toast.error('Call was rejected');
+                    return null;
+                }
+                return prev;
+            });
+        };
+
+        const handleEnded = (data: any) => {
+            setIncomingCallData((prev: any) => {
+                if (prev?.callId === data.callId) return null;
+                return prev;
+            });
+            setActiveRoomId((prev: any) => {
+                if (prev === data.callId && !data.isCommunity) {
+                    toast('Call ended', { icon: '?' });
+                    return null;
+                }
+                return prev;
+            });
+        };
+
+        socket.on('call:incoming', handleIncoming);
+        socket.on('call:community-incoming', handleIncoming);
+        socket.on('call:rejected', handleRejected);
+        socket.on('call:ended', handleEnded);
 
         return () => {
-            if (videoClientRef.current) {
-                videoClientRef.current.disconnectUser().catch(console.error);
-                videoClientRef.current = null;
-                videoClientIdRef.current = null;
-                setVideoClient(null);
-            }
+            socket.off('call:incoming', handleIncoming);
+            socket.off('call:community-incoming', handleIncoming);
+            socket.off('call:rejected', handleRejected);
+            socket.off('call:ended', handleEnded);
         };
-    }, []);
+    }, [socket, currentUser]);
 
     // Initial Data Fetch (Runs exactly once on mount)
     useEffect(() => {
@@ -1199,20 +628,20 @@ export default function AccessForums() {
         socket.on("user-stop-typing", handleTypingStop);
         socket.on("user-status-change", handleStatusChange);
 
-        socket.on("call:incoming", async (data: any) => {
-            console.log("[Socket] Incoming call signal received:", data.callId);
-            if (videoClientRef.current) {
-                try {
-                    await videoClientRef.current.queryCalls({
-                        filter_conditions: { id: { $eq: data.callId } },
-                        watch: true
-                    });
-                    console.log("[Socket] Call queried and watched successfully after signal:", data.callId);
-                } catch (err) {
-                    console.error("[Socket] Failed to query call after signal:", err);
-                }
-            }
-        });
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
         return () => {
             socket.off("new-message", handleNewMessage);
@@ -1543,152 +972,110 @@ export default function AccessForums() {
         setSelectedMessageIds([]);
     };
 
+    useEffect(() => {
+        if (!socket || !currentUser) return;
+
+        const handleIncoming = (data: any) => {
+            console.log("[Socket] Incoming ring received for user:", data);
+            const currentUserId = String(currentUser._id).trim();
+            if (data.from !== currentUserId) {
+                setIncomingCallData(data);
+            }
+        };
+
+        socket.on("call:incoming", handleIncoming);
+        socket.on("call:community-incoming", handleIncoming);
+
+        return () => {
+            socket.off("call:incoming", handleIncoming);
+            socket.off("call:community-incoming", handleIncoming);
+        };
+    }, [socket, currentUser]);
+
     const startCall = async () => {
-        if (!videoClient || !activeContact || !currentUser || !socket) {
-            toast.error("Video client not ready or no contact selected");
+        if (!activeContact || !currentUser || !socket) {
+            toast.error("No contact selected");
             return;
         }
 
-        try {
-            const isCommunity = activeContact.id === "community";
-            let callId: string;
-            const currentUserId = String(currentUser._id).trim();
-            const contactId = String(activeContact.id).trim();
+        const isCommunity = activeContact.id === "community";
+        let callId = '';
+        const currentUserId = String(currentUser._id).trim();
+        const contactId = String(activeContact.id).trim();
 
-            const members: { user_id: string; role?: string }[] = [
-                { user_id: currentUserId, role: 'admin' }
-            ];
-
-            if (isCommunity) {
-                const societyId = String(currentUser.society?._id || currentUser.society || currentUser.societies?.[0]?._id || "").trim();
-                callId = `society_${societyId}`;
-                // We don't push societyMembers to `members` here anymore, because Stream throws an error
-                // if any of them haven't been upserted yet. The `call:community-incoming` socket event handles ringing.
-            } else {
-                const ids = [currentUserId, contactId].sort();
-                callId = `personal_${ids[0]}_${ids[1]}`;
-                members.push({ user_id: contactId, role: 'user' });
-            }
-
-            const call = videoClient.call("default", callId);
-            setActiveCall(call);
-
-            console.log("[AccessForums] Starting call:", callId, "with members count:", members.length);
-
-            // Notify via socket for faster signaling
-            if (!isCommunity) {
-                socket.emit('call:incoming', {
-                    to: contactId,
-                    from: currentUserId,
-                    callId,
-                    type: 'video'
-                });
-            } else {
-                const societyId = String(currentUser.society?._id || currentUser.society || currentUser.societies?.[0]?._id || "").trim();
-                socket.emit('call:community-incoming', {
-                    societyId,
-                    from: currentUserId,
-                    callId,
-                    type: 'video'
-                });
-            }
-
-            // Use getOrCreate with ring for personal calls only
-            await call.getOrCreate({
-                ring: !isCommunity,
-                data: {
-                    members,
-                    custom: { type: 'video' }
-                },
-            });
-
-            if (!isCommunity) {
-                await call.updateCallMembers({ update_members: members });
-            }
-
-            await call.join({ create: true });
-        } catch (error: any) {
-            console.error("Failed to start call:", error);
-            setActiveCall(null);
-            if (error.message?.includes("no users to ring")) {
-                toast.error("The other user isn't online on Stream yet. They need to open the app first.");
-            } else if (error.isWSFailure || error.message?.includes("WS connection")) {
-                toast.error("Connection failed: Please check STREAM_SECRET in backend .env");
-            } else {
-                toast.error(`Failed to start video call: ${error.message || "Unknown error"}`);
-            }
+        if (isCommunity) {
+            const societyId = String(currentUser.society?._id || currentUser.society || currentUser.societies?.[0]?._id || "").trim();
+            callId = 'society_' + societyId;
+        } else {
+            const ids = [currentUserId, contactId].sort();
+            callId = 'personal_' + ids[0] + '_' + ids[1];
         }
+
+        // Notify via socket
+        const callerName = `${currentUser.firstname} ${currentUser.lastname}`;
+        const callData: any = {
+            callId,
+            to: contactId,
+            from: currentUserId,
+            type: 'video',
+            isCommunity,
+            callerName,
+            callerImage: currentUser.profileImage
+        };
+
+        if (!isCommunity) {
+            socket.emit('call:incoming', callData);
+        } else {
+            callData.societyId = isCommunity ? (currentUser.society?._id || currentUser.society || currentUser.societies?.[0]?._id) : '';
+            socket.emit('call:community-incoming', callData);
+        }
+
+        setCallIsVideo(true);
+        setIsCommunityCall(isCommunity);
+        setActiveRoomId(callId);
     };
 
     const startAudioCall = async () => {
-        if (!videoClient || !activeContact || !currentUser || !socket) {
-            toast.error("Call client not ready or no contact selected");
+        if (!activeContact || !currentUser || !socket) {
+            toast.error("No contact selected");
             return;
         }
 
-        try {
-            const isCommunity = activeContact.id === "community";
-            let callId: string;
-            const currentUserId = String(currentUser._id).trim();
-            const contactId = String(activeContact.id).trim();
+        const isCommunity = activeContact.id === "community";
+        let callId = '';
+        const currentUserId = String(currentUser._id).trim();
+        const contactId = String(activeContact.id).trim();
 
-            const members: { user_id: string; role?: string }[] = [
-                { user_id: currentUserId, role: 'admin' }
-            ];
-
-            if (isCommunity) {
-                const societyId = String(currentUser.society?._id || currentUser.society || currentUser.societies?.[0]?._id || "").trim();
-                callId = `society_audio_${societyId}`;
-                // We don't push societyMembers to `members` here anymore. The `call:community-incoming` socket event handles ringing.
-            } else {
-                const ids = [currentUserId, contactId].sort();
-                callId = `personal_audio_${ids[0]}_${ids[1]}`;
-                members.push({ user_id: contactId, role: 'admin' });
-            }
-
-            const call = videoClient.call("default", callId);
-            setActiveCall(call);
-
-            console.log("[AccessForums] Starting audio call:", callId, "with members count:", members.length);
-
-            // Notify via socket
-            if (!isCommunity) {
-                socket.emit('call:incoming', {
-                    to: contactId,
-                    from: currentUserId,
-                    callId,
-                    type: 'audio'
-                });
-            } else {
-                const societyId = String(currentUser.society?._id || currentUser.society || currentUser.societies?.[0]?._id || "").trim();
-                socket.emit('call:community-incoming', {
-                    societyId,
-                    from: currentUserId,
-                    callId,
-                    type: 'audio'
-                });
-            }
-
-            await call.getOrCreate({
-                ring: !isCommunity,
-                data: { members },
-            });
-
-            if (!isCommunity) {
-                await call.updateCallMembers({ update_members: members });
-            }
-
-            await call.join({ create: true });
-            await call.camera.disable();
-        } catch (error: any) {
-            console.error("Failed to start audio call:", error);
-            setActiveCall(null);
-            if (error.message?.includes("no users to ring")) {
-                toast.error("The other user isn't online on Stream yet. They need to open the app first.");
-            } else {
-                toast.error(`Failed to start audio call: ${error.message || "Unknown error"}`);
-            }
+        if (isCommunity) {
+            const societyId = String(currentUser.society?._id || currentUser.society || currentUser.societies?.[0]?._id || "").trim();
+            callId = 'society_audio_' + societyId;
+        } else {
+            const ids = [currentUserId, contactId].sort();
+            callId = 'personal_audio_' + ids[0] + '_' + ids[1];
         }
+
+        // Notify via socket
+        const callerName = `${currentUser.firstname} ${currentUser.lastname}`;
+        const callData: any = {
+            callId,
+            to: contactId,
+            from: currentUserId,
+            type: 'audio',
+            isCommunity,
+            callerName,
+            callerImage: currentUser.profileImage
+        };
+
+        if (!isCommunity) {
+            socket.emit('call:incoming', callData);
+        } else {
+            callData.societyId = isCommunity ? (currentUser.society?._id || currentUser.society || currentUser.societies?.[0]?._id) : '';
+            socket.emit('call:community-incoming', callData);
+        }
+
+        setCallIsVideo(false);
+        setIsCommunityCall(isCommunity);
+        setActiveRoomId(callId);
     };
 
     if (loading) {
@@ -1808,7 +1195,7 @@ export default function AccessForums() {
                                     </div>
 
                                     {/* Minimised call pill (show when call is active but minimised) */}
-                                    {activeCall && isCallMinimized && (
+                                    {activeRoomId && isCallMinimized && (
                                         <div
                                             onClick={() => setIsCallMinimized(false)}
                                             className="flex items-center gap-3 px-4 py-2 bg-[#1a1b1e] rounded-2xl border border-white/10 shadow-2xl cursor-pointer hover:scale-105 transition-all animate-in slide-in-from-top-2"
@@ -1820,8 +1207,8 @@ export default function AccessForums() {
                                             <button
                                                 onClick={(e) => {
                                                     e.stopPropagation();
-                                                    activeCall.leave().catch(console.warn);
-                                                    setActiveCall(null);
+
+                                                    setActiveRoomId(null);
                                                     setIsCallMinimized(false);
                                                 }}
                                                 className="h-7 w-7 rounded-full bg-[#EA4335] flex items-center justify-center hover:bg-[#D93025] transition-all shadow-lg"
@@ -1834,7 +1221,7 @@ export default function AccessForums() {
                                     <div className="flex items-center gap-2 sm:gap-4 shrink-0 ml-2">
                                         <button
                                             onClick={startCall}
-                                            disabled={!videoClient}
+
                                             className="rounded-full flex justify-center items-center shrink-0 h-9 w-9 sm:h-10 sm:w-10 text-[#202224] bg-[#F6F8FB] transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
                                             title="Video call"
                                         >
@@ -1842,7 +1229,7 @@ export default function AccessForums() {
                                         </button>
                                         <button
                                             onClick={startAudioCall}
-                                            disabled={!videoClient}
+
                                             className="rounded-full flex justify-center items-center shrink-0 h-9 w-9 sm:h-10 sm:w-10 text-[#202224] bg-[#F6F8FB] transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
                                             title="Voice call"
                                         >
@@ -2092,38 +1479,26 @@ export default function AccessForums() {
         </div>
     );
 
-    // ─── If video client is not ready yet, render chat-only (no Stream context) ─
-    if (!videoClient) {
-        return chatUI;
-    }
-
-    // ─── Full render with Stream Video context ────────────────────────────────
     return (
-        <StreamVideo client={videoClient}>
-            {/* ── Incoming call discovery (must be inside StreamVideo) ── */}
-            <CallDiscovery
-                client={videoClient}
-                currentUser={currentUser}
-                activeCall={activeCall}
-                onAccept={handleAcceptCall}
-                onReject={handleRejectCall}
-                socket={socket}
-            />
+        <>
+            {/* Zego Incoming Call Model */}
+            {incomingCallData && (
+                <IncomingCallNotification
+                    callData={incomingCallData}
+                    onAccept={handleAcceptCall}
+                    onReject={handleRejectCall}
+                />
+            )}
 
-            {/* ── Full-screen video call (Google Meet style) ── */}
-            {activeCall && !isCallMinimized && (
-                <div className="fixed inset-0 z-[500]">
-                    <StreamCall call={activeCall}>
-                        <VideoCallUI
-                            onMinimize={() => setIsCallMinimized(true)}
-                            onLeave={() => {
-                                activeCall.leave().catch(console.warn);
-                                setActiveCall(null);
-                                setIsCallMinimized(false);
-                            }}
-                        />
-                    </StreamCall>
-                </div>
+            {/* Zego Full-Screen Call UI */}
+            {activeRoomId && (
+                <ZegoCallUI
+                    roomId={activeRoomId}
+                    user={currentUser}
+                    isCommunity={isCommunityCall}
+                    isVideo={callIsVideo}
+                    onLeave={() => setActiveRoomId(null)}
+                />
             )}
 
             {/* ── Camera Modal for Desktop ── */}
@@ -2151,63 +1526,12 @@ export default function AccessForums() {
                 </div>
             )}
 
-            {/* ── Forward Modal ── */}
-            {isForwardModalOpen && (
-                <div className="fixed inset-0 z-[700] flex items-center justify-center bg-black/50 p-4">
-                    <div className="w-full max-w-md bg-white rounded-2xl shadow-2xl border border-[#F4F4F4] overflow-hidden animate-in zoom-in-95 duration-200">
-                        {/* Header */}
-                        <div className="flex items-center justify-between p-4 border-b border-[#F4F4F4]">
-                            <h3 className="font-bold text-[#202224] text-lg">Forward message to</h3>
-                            <button
-                                onClick={() => setIsForwardModalOpen(false)}
-                                className="text-gray-400 hover:text-gray-600 p-1.5 rounded-full hover:bg-gray-100 transition-colors"
-                            >
-                                <X size={20} />
-                            </button>
-                        </div>
-
-                        {/* Search */}
-                        <div className="p-4 border-b border-[#F4F4F4]">
-                            <div className="relative">
-                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-[#A7A7A7]" size={16} />
-                                <input
-                                    type="text"
-                                    placeholder="Search contact..."
-                                    value={forwardSearchQuery}
-                                    onChange={(e) => setForwardSearchQuery(e.target.value)}
-                                    className="w-full rounded-xl bg-[#F6F8FB] py-2 pl-9 pr-4 text-sm outline-none focus:ring-1 focus:ring-[#5678E9]/30 transition-all"
-                                />
-                            </div>
-                        </div>
-
-                        {/* Contacts List */}
-                        <div className="max-h-60 overflow-y-auto p-2 space-y-1 custom-scrollbar">
-                            {contacts
-                                .filter(c => c.name.toLowerCase().includes(forwardSearchQuery.toLowerCase()))
-                                .map(c => (
-                                    <div
-                                        key={c.id}
-                                        className="flex items-center justify-between p-2 hover:bg-[#F9FAFB] rounded-xl transition-all"
-                                    >
-                                        <div className="flex items-center gap-3 font-bold text-[#202224]">
-                                            <Avatar src={c.avatar} name={c.name} />
-                                            <span className="text-sm font-bold text-[#202224]">{c.name}</span>
-                                        </div>
-                                        <button
-                                            onClick={() => handleForwardSelected(c)}
-                                            className="px-3 py-1.5 rounded-lg bg-[#5678E9] text-white text-xs font-bold hover:bg-[#4361CD] transition-colors"
-                                        >
-                                            Send
-                                        </button>
-                                    </div>
-                                ))}
-                        </div>
-                    </div>
-                </div>
-            )}
-
-            {/* ── Chat UI (always visible, call minimises over it) ── */}
             {chatUI}
-        </StreamVideo>
+        </>
     );
 }
+
+
+
+
+
