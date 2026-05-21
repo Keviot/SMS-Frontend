@@ -119,6 +119,12 @@ export default function AddSecurityModal({ open, onClose, onSuccess, initialData
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (mode === "view") return;
+
+    if (mode === "add" && !files.uploadAadhar) {
+      toast.error("Please upload an Aadhaar Card");
+      return;
+    }
+
     setLoading(true);
     try {
       const profile = await authApi.getProfile();
