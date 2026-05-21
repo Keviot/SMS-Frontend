@@ -23,7 +23,9 @@ import {
     MessageSquare,
     Check,
     CheckCheck,
-    Clock
+    Clock,
+    Play,
+    Pause
 } from "lucide-react";
 import toast from "react-hot-toast";
 import { cn } from "../../../lib/cn";
@@ -37,6 +39,91 @@ import { ZegoUIKitPrebuilt } from '@zegocloud/zego-uikit-prebuilt';
 
 const APP_ID = Number(import.meta.env.VITE_ZEGO_APP_ID || "0");
 const SERVER_SECRET = import.meta.env.VITE_ZEGO_SERVER_SECRET || "";
+
+const VoicePlayer = ({ src, isMe }: { src: string; isMe: boolean }) => {
+    const [isPlaying, setIsPlaying] = useState(false);
+    const [currentTime, setCurrentTime] = useState(0);
+    const [duration, setDuration] = useState(0);
+    const audioRef = useRef<HTMLAudioElement | null>(null);
+
+    const togglePlay = () => {
+        if (audioRef.current) {
+            if (isPlaying) {
+                audioRef.current.pause();
+            } else {
+                audioRef.current.play().catch(err => console.error("Playback error", err));
+            }
+            setIsPlaying(!isPlaying);
+        }
+    };
+
+    const onTimeUpdate = () => {
+        if (audioRef.current) setCurrentTime(audioRef.current.currentTime);
+    };
+
+    const onLoadedMetadata = () => {
+        if (audioRef.current) setDuration(audioRef.current.duration);
+    };
+
+    const formatTime = (time: number | undefined) => {
+        if (time === undefined || isNaN(time)) return "0:00";
+        const minutes = Math.floor(time / 60);
+        const seconds = Math.floor(time % 60);
+        return `${minutes}:${seconds.toString().padStart(2, "0")}`;
+    };
+
+    const handleScrub = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const time = parseFloat(e.target.value);
+        if (audioRef.current) {
+            audioRef.current.currentTime = time;
+            setCurrentTime(time);
+        }
+    };
+
+    return (
+        <div className={cn("flex items-center gap-3 min-w-[200px] sm:min-w-[240px] py-1 select-none", isMe ? "text-white" : "text-[#202224]")}>
+            <audio
+                ref={audioRef}
+                src={src}
+                onTimeUpdate={onTimeUpdate}
+                onLoadedMetadata={onLoadedMetadata}
+                onEnded={() => setIsPlaying(false)}
+                preload="metadata"
+            />
+            <button
+                type="button"
+                onClick={togglePlay}
+                className={cn(
+                    "flex items-center justify-center h-8 w-8 rounded-full transition-all hover:scale-110 active:scale-90 shrink-0 shadow-sm",
+                    isMe ? "bg-white text-[#5678E9]" : "bg-[#5678E9] text-white"
+                )}
+            >
+                {isPlaying ? <Pause size={14} fill="currentColor" /> : <Play size={14} fill="currentColor" className="ml-0.5" />}
+            </button>
+            <div className="flex-1 flex items-center gap-3">
+                <div className="relative flex-1 h-1 flex items-center">
+                    <input
+                        type="range"
+                        min="0"
+                        max={duration || 0}
+                        value={currentTime}
+                        onChange={handleScrub}
+                        className={cn(
+                            "absolute inset-0 w-full h-1 appearance-none bg-transparent cursor-pointer z-10",
+                            "[&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:shadow-md",
+                            "[&::-moz-range-thumb]:w-3 [&::-moz-range-thumb]:h-3 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:border-0 [&::-moz-range-thumb]:bg-white [&::-moz-range-thumb]:shadow-md"
+                        )}
+                    />
+                    <div className={cn("absolute left-0 top-0 h-full rounded-full pointer-events-none", isMe ? "bg-white/20" : "bg-gray-300")} style={{ width: '100%' }} />
+                    <div className={cn("absolute left-0 top-0 h-full rounded-full pointer-events-none", isMe ? "bg-white" : "bg-[#5678E9]")} style={{ width: `${(currentTime / (duration || 1)) * 100}%` }} />
+                </div>
+                <span className="text-[11px] font-bold opacity-80 whitespace-nowrap">
+                    {isPlaying ? formatTime(currentTime) : formatTime(duration)}
+                </span>
+            </div>
+        </div>
+    );
+};
 
 
 
@@ -325,7 +412,7 @@ export default function AccessForums() {
                         fileUrl: msg.fileUrl,
                         fileType: msg.fileType,
                         time: new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-                        type: msg.fileUrl ? msg.fileType : "text",
+                        type: msg.fileUrl ? msg.fileType || "text" : "text",
                         senderName: `${msg.sender.firstname} ${msg.sender.lastname}`,
                         senderAvatar: msg.sender.profileImage,
                         status: msg.sender._id === currentU?._id ? (msg.status || "sent") : undefined
@@ -534,8 +621,10 @@ export default function AccessForums() {
             };
 
             mediaRecorder.onstop = async () => {
-                const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
-                const audioFile = new File([audioBlob], `Voice_Message_${Date.now()}.webm`, { type: 'audio/webm' });
+                const mimeType = mediaRecorder.mimeType || 'audio/webm';
+                const extension = mimeType.includes('mp4') ? 'mp4' : 'webm';
+                const audioBlob = new Blob(audioChunksRef.current, { type: mimeType });
+                const audioFile = new File([audioBlob], `voice_${Date.now()}.${extension}`, { type: mimeType });
 
                 stream.getTracks().forEach(track => track.stop());
 
@@ -751,7 +840,7 @@ export default function AccessForums() {
                     fileUrl: msg.fileUrl,
                     fileType: msg.fileType,
                     time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-                    type: msg.fileUrl ? msg.fileType : "text",
+                    type: msg.fileUrl ? msg.fileType || "text" : "text",
                     senderName: `${currentUser.firstname} ${currentUser.lastname}`,
                     senderAvatar: currentUser.profileImage
                 }]);
@@ -767,6 +856,13 @@ export default function AccessForums() {
 
 
     const startCall = async () => {
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+            stream.getTracks().forEach(track => track.stop());
+        } catch (error) {
+            toast.error("Camera/Microphone permissions required for video calls");
+            return;
+        }
         if (!activeContact || !currentUser || !socket) {
             toast.error("No contact selected");
             return;
@@ -808,6 +904,13 @@ export default function AccessForums() {
     };
 
     const startAudioCall = async () => {
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            stream.getTracks().forEach(track => track.stop());
+        } catch (error) {
+            toast.error("Microphone permissions required for voice calls");
+            return;
+        }
         if (!activeContact || !currentUser || !socket) {
             toast.error("No contact selected");
             return;
@@ -1077,39 +1180,54 @@ export default function AccessForums() {
                                                             : "bg-[#ECEEF3] text-[#202224]"
                                                     )}
                                                 >
-                                                    {msg.type === "text" && <p>{msg.text}</p>}
-                                                    {msg.type === "audio" && (
-                                                        <div className="flex flex-col gap-2 min-w-[200px]">
-                                                            <p className="text-xs font-bold opacity-80">Voice Message</p>
-                                                            <audio controls src={msg.fileUrl} className="h-10 w-full" />
-                                                        </div>
-                                                    )}
-                                                    {msg.type === "image" && (
-                                                        <div className="overflow-hidden rounded-xl border border-[#F1F1F1] bg-white p-1">
-                                                            <a href={msg.fileUrl} target="_blank" rel="noopener noreferrer">
-                                                                <img src={msg.fileUrl} alt="Sent" className="max-h-60 w-full rounded-lg object-cover cursor-pointer" />
-                                                            </a>
-                                                        </div>
-                                                    )}
-                                                    {(msg.type === "pdf" || msg.type === "file") && (
-                                                        <a
-                                                            href={msg.fileUrl}
-                                                            target="_blank"
-                                                            rel="noopener noreferrer"
-                                                            className={cn(
-                                                                "flex items-center gap-3 rounded-xl p-2 hover:opacity-80 transition-opacity",
-                                                                msg.sender === "me" ? "bg-white/10" : "bg-white"
-                                                            )}
-                                                        >
-                                                            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#FEECEC] text-[#E74C3C]">
-                                                                <FileText size={20} />
-                                                            </div>
-                                                            <div className="flex-1 overflow-hidden pr-4">
-                                                                <p className={cn("truncate font-bold text-sm", msg.sender === "me" ? "text-white" : "text-[#202224]")}>{msg.text || "Document"}</p>
-                                                                <p className={cn("text-[10px]", msg.sender === "me" ? "text-white/70" : "text-[#A7A7A7]")}>Click to view</p>
-                                                            </div>
-                                                        </a>
-                                                    )}
+                                                    {(() => {
+                                                        const isVoiceMessage =
+                                                            msg.type === "audio" ||
+                                                            msg.fileType === "audio" ||
+                                                            (msg.text && msg.text.toLowerCase().trim() === "voice message") ||
+                                                            (msg.fileUrl && (msg.fileUrl.includes(".webm") || msg.fileUrl.includes(".mp3") || msg.fileUrl.includes(".wav") || msg.fileUrl.includes(".ogg") || msg.fileUrl.includes(".m4a")));
+
+                                                        if (isVoiceMessage) {
+                                                            return (
+                                                                <VoicePlayer src={msg.fileUrl} isMe={msg.sender === "me"} />
+                                                            );
+                                                        }
+
+                                                        if (msg.type === "image") {
+                                                            return (
+                                                                <div className="overflow-hidden rounded-xl border border-[#F1F1F1] bg-white p-1">
+                                                                    <a href={msg.fileUrl} target="_blank" rel="noopener noreferrer">
+                                                                        <img src={msg.fileUrl} alt="Sent" className="max-h-60 w-full rounded-lg object-cover cursor-pointer" />
+                                                                    </a>
+                                                                </div>
+                                                            );
+                                                        }
+
+                                                        if (msg.type === "pdf" || msg.type === "file") {
+                                                            return (
+                                                                <a
+                                                                    href={msg.fileUrl}
+                                                                    target="_blank"
+                                                                    rel="noopener noreferrer"
+                                                                    className={cn(
+                                                                        "flex items-center gap-3 rounded-xl p-2 hover:opacity-80 transition-opacity",
+                                                                        msg.sender === "me" ? "bg-white/10" : "bg-white"
+                                                                    )}
+                                                                >
+                                                                    <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#FEECEC] text-[#E74C3C]">
+                                                                        <FileText size={20} />
+                                                                    </div>
+                                                                    <div className="flex-1 overflow-hidden pr-4">
+                                                                        <p className={cn("truncate font-bold text-sm", msg.sender === "me" ? "text-white" : "text-[#202224]")}>{msg.text || "Document"}</p>
+                                                                        <p className={cn("text-[10px]", msg.sender === "me" ? "text-white/70" : "text-[#A7A7A7]")}>Click to view</p>
+                                                                    </div>
+                                                                </a>
+                                                            );
+                                                        }
+
+                                                        // Default to text
+                                                        return msg.text ? <p>{msg.text}</p> : null;
+                                                    })()}
                                                 </div>
                                                 <div className={cn("mt-1 flex items-center gap-1", msg.sender === "me" ? "justify-end" : "justify-start")}>
                                                     <span className="text-xs text-[#A7A7A7]">{msg.time}</span>
