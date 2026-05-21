@@ -54,6 +54,14 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   }, [currentUser]);
 
   useEffect(() => {
+    if (socket && currentUser) {
+      const societyId = currentUser.society?._id || currentUser.society || currentUser.societies?.[0]?._id;
+      if (societyId) socket.emit('join-room', societyId);
+      socket.emit('join-private', currentUser._id);
+    }
+  }, [socket, currentUser]);
+
+  useEffect(() => {
     activeChatIdRef.current = activeChatId;
   }, [activeChatId]);
 
@@ -80,6 +88,14 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       fetchInitialNotifications();
     }
   }, [currentUser]);
+
+  useEffect(() => {
+    if (socket && currentUser) {
+      const societyId = currentUser.society?._id || currentUser.society || currentUser.societies?.[0]?._id;
+      if (societyId) socket.emit('join-room', societyId);
+      socket.emit('join-private', currentUser._id);
+    }
+  }, [socket, currentUser]);
 
   useEffect(() => {
     fetchInitialNotifications();
@@ -226,3 +242,4 @@ function formatAgo(date: string) {
   if (diffInHours < 24) return `${diffInHours}h ago`;
   return `${diffInDays}d ago`;
 }
+
