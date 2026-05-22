@@ -51,7 +51,12 @@ export default function RequestViewModal({
     if (!open || !data) return null;
 
     return (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 px-4">
+        <div 
+            className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 px-4"
+            onClick={(e) => {
+                if (e.target === e.currentTarget) onClose();
+            }}
+        >
             <div className="w-[418px] rounded-[15px] bg-white p-6 shadow-[0_12px_35px_rgba(0,0,0,0.18)]">
                 {/* Header */}
                 <div className="mb-5 flex items-center justify-between">

@@ -1,5 +1,5 @@
 import { ChevronDown, X } from "lucide-react";
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { adminNavigation, residentNavigation, securityNavigation, footerNavigation, type NavItem } from "../constants/navigation";
 import { cn } from "../lib/cn";
@@ -20,6 +20,17 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
   const [expanded, setExpanded] = useState<string[]>([]);
   const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
   const { role, logout: contextLogout } = useAuth();
+  const sidebarRef = useRef<HTMLElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (sidebarRef.current && !sidebarRef.current.contains(event.target as Node)) {
+        setExpanded([]);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   const toggleExpand = (label: string) => {
     setExpanded((prev) =>
@@ -71,6 +82,7 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
 
   return (
     <aside
+      ref={sidebarRef}
       className={cn(
         "fixed inset-y-0 left-0 z-50 flex h-screen w-[280px] flex-col border-r border-(--border-light) bg-white transition-transform duration-300",
         open ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
@@ -98,36 +110,38 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
           const isActive = location.pathname === item.path || (hasChildren && item.children?.some(child => location.pathname === child.path));
 
           return (
-            <div key={item.label} className="mb-1 relative">
-              {isActive && (
-                <div className="absolute -left-[15px] top-[3px] bottom-[3px] w-[6px] rounded-r-[10px] bg-gradient-to-b from-[#FE512E] to-[#F09633]" />
-              )}
-              <button
-                type="button"
-                onClick={() => handleNavClick(item.path, hasChildren, item.label)}
-                className={cn(
-                  "flex h-[46px] w-full items-center justify-between rounded-[10px] px-[15px] text-[14px] font-semibold transition-all duration-200",
-                  isActive
-                    ? "bg-linear-to-r from-(--primary-gradient-start) to-(--primary-gradient-end) text-white shadow-[0_10px_18px_rgba(255,107,53,0.22)]"
-                    : "text-(--text-light) hover:bg-(--accent-peach) hover:text-(--primary)"
+            <div key={item.label} className="mb-1">
+              <div className="relative">
+                {isActive && (
+                  <div className="absolute -left-[15px] top-[3px] bottom-[3px] w-[6px] rounded-r-[10px] bg-gradient-to-b from-[#FE512E] to-[#F09633]" />
                 )}
-              >
-                <span className="flex items-center gap-[10px] text-left">
-                  <Icon className="h-4.5 w-4.5 [&>path]:fill-current" />
-                  <span>{item.label}</span>
-                </span>
+                <button
+                  type="button"
+                  onClick={() => handleNavClick(item.path, hasChildren, item.label)}
+                  className={cn(
+                    "flex h-[46px] w-full items-center justify-between rounded-[10px] px-[15px] text-[14px] font-semibold transition-all duration-200",
+                    isActive
+                      ? "bg-linear-to-r from-(--primary-gradient-start) to-(--primary-gradient-end) text-white shadow-[0_10px_18px_rgba(255,107,53,0.22)]"
+                      : "text-(--text-light) hover:bg-(--accent-peach) hover:text-(--primary)"
+                  )}
+                >
+                  <span className="flex items-center gap-[10px] text-left">
+                    <Icon className="h-4.5 w-4.5 [&>path]:fill-current" />
+                    <span>{item.label}</span>
+                  </span>
 
-                {hasChildren && (
-                  <ChevronDown
-                    size={14}
-                    strokeWidth={2.5}
-                    className={cn(
-                      "transition-transform duration-200",
-                      isExpanded && "rotate-180"
-                    )}
-                  />
-                )}
-              </button>
+                  {hasChildren && (
+                    <ChevronDown
+                      size={14}
+                      strokeWidth={2.5}
+                      className={cn(
+                        "transition-transform duration-200",
+                        isExpanded && "rotate-180"
+                      )}
+                    />
+                  )}
+                </button>
+              </div>
 
               {hasChildren && isExpanded && (
                 <div className="space-y-1 py-2 pl-10.5">

@@ -83,7 +83,12 @@ export default function RequestFormModal({
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 px-4 py-6">
+    <div 
+      className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 px-4 py-6"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onClose();
+      }}
+    >
       <div className="w-full max-w-md rounded-[15px] bg-white p-5 shadow-[0_12px_35px_rgba(0,0,0,0.18)]">
         <div className="max-h-[calc(100vh-3rem)] overflow-y-auto pr-1">
           {/* Header */}

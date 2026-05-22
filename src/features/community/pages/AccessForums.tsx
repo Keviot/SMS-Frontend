@@ -45,28 +45,62 @@ const VoicePlayer = ({ src, isMe }: { src: string; isMe: boolean }) => {
     const [currentTime, setCurrentTime] = useState(0);
     const [duration, setDuration] = useState(0);
     const audioRef = useRef<HTMLAudioElement | null>(null);
+    const rafRef = useRef<number | null>(null);
+
+    const updateProgress = useCallback(() => {
+        if (audioRef.current && !audioRef.current.paused) {
+            setCurrentTime(audioRef.current.currentTime);
+            rafRef.current = requestAnimationFrame(updateProgress);
+        }
+    }, []);
 
     const togglePlay = () => {
         if (audioRef.current) {
             if (isPlaying) {
                 audioRef.current.pause();
+                if (rafRef.current) cancelAnimationFrame(rafRef.current);
             } else {
                 audioRef.current.play().catch(err => console.error("Playback error", err));
+                rafRef.current = requestAnimationFrame(updateProgress);
             }
             setIsPlaying(!isPlaying);
         }
     };
 
-    const onTimeUpdate = () => {
-        if (audioRef.current) setCurrentTime(audioRef.current.currentTime);
-    };
+    useEffect(() => {
+        const audio = audioRef.current;
+        const handleEnded = () => {
+            setIsPlaying(false);
+            if (rafRef.current) cancelAnimationFrame(rafRef.current);
+            setCurrentTime(0); // Reset to start
+        };
+        if (audio) {
+            audio.addEventListener("ended", handleEnded);
+        }
+        return () => {
+            if (audio) {
+                audio.removeEventListener("ended", handleEnded);
+            }
+            if (rafRef.current) cancelAnimationFrame(rafRef.current);
+        };
+    }, []);
 
     const onLoadedMetadata = () => {
-        if (audioRef.current) setDuration(audioRef.current.duration);
+        if (audioRef.current) {
+            setDuration(audioRef.current.duration);
+            if (audioRef.current.duration === Infinity) {
+                audioRef.current.currentTime = 1e101;
+                audioRef.current.ontimeupdate = () => {
+                    audioRef.current!.ontimeupdate = null;
+                    setDuration(audioRef.current!.duration);
+                    audioRef.current!.currentTime = 0;
+                };
+            }
+        }
     };
 
     const formatTime = (time: number | undefined) => {
-        if (time === undefined || isNaN(time)) return "0:00";
+        if (time === undefined || isNaN(time) || !isFinite(time)) return "0:00";
         const minutes = Math.floor(time / 60);
         const seconds = Math.floor(time % 60);
         return `${minutes}:${seconds.toString().padStart(2, "0")}`;
@@ -80,14 +114,16 @@ const VoicePlayer = ({ src, isMe }: { src: string; isMe: boolean }) => {
         }
     };
 
+    const progressPercent = duration > 0 ? (currentTime / duration) * 100 : 0;
+    const progressColor = isMe ? "white" : "#5678E9";
+    const trackColor = isMe ? "rgba(255, 255, 255, 0.2)" : "#E5E7EB";
+
     return (
         <div className={cn("flex items-center gap-3 min-w-[200px] sm:min-w-[240px] py-1 select-none", isMe ? "text-white" : "text-[#202224]")}>
             <audio
                 ref={audioRef}
                 src={src}
-                onTimeUpdate={onTimeUpdate}
                 onLoadedMetadata={onLoadedMetadata}
-                onEnded={() => setIsPlaying(false)}
                 preload="metadata"
             />
             <button
@@ -101,23 +137,26 @@ const VoicePlayer = ({ src, isMe }: { src: string; isMe: boolean }) => {
                 {isPlaying ? <Pause size={14} fill="currentColor" /> : <Play size={14} fill="currentColor" className="ml-0.5" />}
             </button>
             <div className="flex-1 flex items-center gap-3">
-                <div className="relative flex-1 h-1 flex items-center">
-                    <input
-                        type="range"
-                        min="0"
-                        max={duration || 0}
-                        value={currentTime}
-                        onChange={handleScrub}
-                        className={cn(
-                            "absolute inset-0 w-full h-1 appearance-none bg-transparent cursor-pointer z-10",
-                            "[&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:shadow-md",
-                            "[&::-moz-range-thumb]:w-3 [&::-moz-range-thumb]:h-3 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:border-0 [&::-moz-range-thumb]:bg-white [&::-moz-range-thumb]:shadow-md"
-                        )}
-                    />
-                    <div className={cn("absolute left-0 top-0 h-full rounded-full pointer-events-none", isMe ? "bg-white/20" : "bg-gray-300")} style={{ width: '100%' }} />
-                    <div className={cn("absolute left-0 top-0 h-full rounded-full pointer-events-none", isMe ? "bg-white" : "bg-[#5678E9]")} style={{ width: `${(currentTime / (duration || 1)) * 100}%` }} />
-                </div>
-                <span className="text-[11px] font-bold opacity-80 whitespace-nowrap">
+                <input
+                    type="range"
+                    min="0"
+                    max={duration || 100}
+                    value={currentTime}
+                    step="0.01"
+                    onChange={handleScrub}
+                    className={cn(
+                        "flex-1 h-1 appearance-none cursor-pointer rounded-full outline-none",
+                        "[&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-[14px] [&::-webkit-slider-thumb]:h-[14px] [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:shadow-[0_2px_4px_rgba(0,0,0,0.15)] [&::-webkit-slider-thumb]:border-[3px] [&::-webkit-slider-thumb]:border-white",
+                        "[&::-moz-range-thumb]:w-[14px] [&::-moz-range-thumb]:h-[14px] [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:border-[3px] [&::-moz-range-thumb]:border-white [&::-moz-range-thumb]:shadow-[0_2px_4px_rgba(0,0,0,0.15)]",
+                        isMe 
+                            ? "[&::-webkit-slider-thumb]:bg-[#5678E9] [&::-moz-range-thumb]:bg-[#5678E9]" 
+                            : "[&::-webkit-slider-thumb]:bg-[#5678E9] [&::-moz-range-thumb]:bg-[#5678E9]"
+                    )}
+                    style={{
+                        background: `linear-gradient(to right, ${progressColor} ${progressPercent}%, ${trackColor} ${progressPercent}%)`
+                    }}
+                />
+                <span className="text-[11px] font-bold opacity-80 whitespace-nowrap min-w-[28px] text-right">
                     {isPlaying ? formatTime(currentTime) : formatTime(duration)}
                 </span>
             </div>
