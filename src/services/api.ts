@@ -5,9 +5,17 @@ const API_URL =
   import.meta.env.VITE_API_URL ||
   `${window.location.protocol}//${window.location.hostname}:5000/api`;
 
-// Helper to get token from local storage
+const getStoredToken = () =>
+  localStorage.getItem("token") || sessionStorage.getItem("token");
+
+const clearStoredToken = () => {
+  localStorage.removeItem("token");
+  sessionStorage.removeItem("token");
+};
+
+// Helper to get token from browser storage
 const getAuthHeader = (): Record<string, string> => {
-  const token = localStorage.getItem("token");
+  const token = getStoredToken();
   return token ? { Authorization: `Bearer ${token}` } : {};
 };
 
@@ -34,6 +42,7 @@ export const authApi = {
   login: async (credentials: any) => {
     console.log("api url:", API_URL);
     console.log("vite api url:", import.meta.env.VITE_API_URL);
+    const { rememberMe } = credentials;
 
     const response = await fetch(`${API_URL}/auth/login`, {
       method: "POST",
@@ -43,7 +52,9 @@ export const authApi = {
     });
     const data = await handleResponse(response);
     if (data.token) {
-      localStorage.setItem("token", data.token);
+      clearStoredToken();
+      const storage = rememberMe ? localStorage : sessionStorage;
+      storage.setItem("token", data.token);
     }
     return data;
   },
@@ -57,7 +68,7 @@ export const authApi = {
         ...getAuthHeader(),
       },
     });
-    localStorage.removeItem("token");
+    clearStoredToken();
     return handleResponse(response);
   },
 

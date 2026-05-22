@@ -27,13 +27,21 @@ const AuthContext = createContext<AuthContextValue>({
 
 export const useAuth = () => useContext(AuthContext);
 
+const getStoredToken = () =>
+  localStorage.getItem("token") || sessionStorage.getItem("token");
+
+const clearStoredToken = () => {
+  localStorage.removeItem("token");
+  sessionStorage.removeItem("token");
+};
+
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [role, setRole] = useState<UserRole | null>(null);
   const [loading, setLoading] = useState(true);
 
   const fetchProfile = async () => {
-    const token = localStorage.getItem("token");
+    const token = getStoredToken();
     if (!token) {
       setUser(null);
       setRole(null);
@@ -56,7 +64,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const handleLogout = () => {
-    localStorage.removeItem("token");
+    clearStoredToken();
     setUser(null);
     setRole(null);
   };

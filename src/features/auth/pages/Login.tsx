@@ -16,11 +16,15 @@ export default function Login() {
   const [formData, setFormData] = useState({
     email: "",
     password: "",
+    rememberMe: false,
   });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    const { name, type, value, checked } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: type === "checkbox" ? checked : value,
+    }));
     if (error) setError(null);
   };
 
@@ -29,7 +33,14 @@ export default function Login() {
     setLoading(true);
     setError(null);
     try {
-      const data = await authApi.login(formData);
+      const emailOrPhone = formData.email.trim();
+      const data = await authApi.login({
+        password: formData.password,
+        rememberMe: formData.rememberMe,
+        ...(emailOrPhone.includes("@")
+          ? { email: emailOrPhone }
+          : { phoneNumber: emailOrPhone }),
+      });
       if (data.success || data.token) {
         toast.success("Login Successful!");
         // Refetch profile to update AuthContext state
@@ -109,6 +120,9 @@ export default function Login() {
             <input
               type="checkbox"
               id="remember"
+              name="rememberMe"
+              checked={formData.rememberMe}
+              onChange={handleChange}
               className="w-4 h-4 rounded border-gray-300 text-[#EE641D] focus:ring-[#EE641D] cursor-pointer"
             />
             <label htmlFor="remember" className="text-sm text-gray-500 cursor-pointer select-none">
