@@ -1,52 +1,56 @@
+import { Suspense, lazy } from 'react'
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
 import { Toaster } from 'react-hot-toast'
 import './App.css'
-import Register from './features/auth/pages/Register'
-import Login from './features/auth/pages/Login'
-import ForgotPassword from './features/auth/pages/ForgotPassword'
-import VerifyOtp from './features/auth/pages/VerifyOtp'
-import ResetPassword from './features/auth/pages/ResetPassword'
-import Dashboard from './features/dashboard/pages/Dashboard'
 import AppLayout from './layout/AppLayout'
 import AuthLayout from './layout/AuthLayout'
 import collab from './assets/images/collab.png'
 import reset from './assets/images/reset.png'
 
-import ResidentManagement from './features/residentManagement/pages/ResidentManagement'
-import ResidentForm from './features/residentManagement/pages/ResidentForm'
-import FacilityManagement from './features/facilityManagement/pages/FacilityManagement'
-import SecurityManagement from './features/securityManagement/pages/SecurityProtocols'
-import Announcement from './features/announcement/pages/Announcement'
-import ProfileSelector from './features/profile/pages/ProfileSelector'
-import Income from './features/financialManagement/pages/Income'
-import CreatePassword from './features/auth/pages/CreatePassword'
-import Expense from './features/financialManagement/pages/Expense'
-import Note from './features/financialManagement/pages/Note'
-import CreateComplaint from './features/complaintTracking/pages/CreateComplaint'
-import RequestTracking from './features/complaintTracking/pages/RequestTracking'
-
 import { SocketProvider } from './context/SocketContext'
-import GlobalCallHandler from './components/GlobalCallHandler'
-import VisitorLogs from './features/securityManagement/pages/VisitorLogs'
-import SecurityProtocols from './features/securityManagement/pages/SecurityProtocols'
-import ResidentSecurityProtocols from './features/securityManagement/pages/ResidentSecurityProtocols'
-import SecurityGuard from './features/securityManagement/pages/SecurityGuard'
-import EventsParticipation from './features/eventsParticipation/pages/EventsParticipation'
-import ShowMaintenanceDetails from './features/paymentPortal/pages/ShowMaintenanceDetails'
-import MaintenanceInvoices from './features/paymentPortal/pages/MaintenanceInvoices'
-import OtherInvoices from './features/paymentPortal/pages/OtherInvoices'
-import EventInvoices from './features/paymentPortal/pages/EventInvoices'
-
-
-import EmergencyManagement from './features/securityManagement/pages/EmergencyManagement'
-import AccessForums from './features/community/pages/AccessForums'
-import Polls from './features/community/pages/Polls'
-import CommunitiesDiscussion from './features/community/pages/CommunitiesDiscussion'
-
 import { AuthProvider, useAuth } from './context/AuthContext'
 import ProtectedRoute from './components/ProtectedRoute'
 import PublicRoute from './components/PublicRoute'
 import { getRoleHomePath } from './utils/roleRoutes'
+
+const Register = lazy(() => import('./features/auth/pages/Register'))
+const Login = lazy(() => import('./features/auth/pages/Login'))
+const ForgotPassword = lazy(() => import('./features/auth/pages/ForgotPassword'))
+const VerifyOtp = lazy(() => import('./features/auth/pages/VerifyOtp'))
+const ResetPassword = lazy(() => import('./features/auth/pages/ResetPassword'))
+const CreatePassword = lazy(() => import('./features/auth/pages/CreatePassword'))
+const Dashboard = lazy(() => import('./features/dashboard/pages/Dashboard'))
+const ResidentManagement = lazy(() => import('./features/residentManagement/pages/ResidentManagement'))
+const ResidentForm = lazy(() => import('./features/residentManagement/pages/ResidentForm'))
+const FacilityManagement = lazy(() => import('./features/facilityManagement/pages/FacilityManagement'))
+const SecurityManagement = lazy(() => import('./features/securityManagement/pages/SecurityProtocols'))
+const Announcement = lazy(() => import('./features/announcement/pages/Announcement'))
+const ProfileSelector = lazy(() => import('./features/profile/pages/ProfileSelector'))
+const Income = lazy(() => import('./features/financialManagement/pages/Income'))
+const Expense = lazy(() => import('./features/financialManagement/pages/Expense'))
+const Note = lazy(() => import('./features/financialManagement/pages/Note'))
+const CreateComplaint = lazy(() => import('./features/complaintTracking/pages/CreateComplaint'))
+const RequestTracking = lazy(() => import('./features/complaintTracking/pages/RequestTracking'))
+const VisitorLogs = lazy(() => import('./features/securityManagement/pages/VisitorLogs'))
+const SecurityProtocols = lazy(() => import('./features/securityManagement/pages/SecurityProtocols'))
+const ResidentSecurityProtocols = lazy(() => import('./features/securityManagement/pages/ResidentSecurityProtocols'))
+const SecurityGuard = lazy(() => import('./features/securityManagement/pages/SecurityGuard'))
+const EventsParticipation = lazy(() => import('./features/eventsParticipation/pages/EventsParticipation'))
+const ShowMaintenanceDetails = lazy(() => import('./features/paymentPortal/pages/ShowMaintenanceDetails'))
+const MaintenanceInvoices = lazy(() => import('./features/paymentPortal/pages/MaintenanceInvoices'))
+const OtherInvoices = lazy(() => import('./features/paymentPortal/pages/OtherInvoices'))
+const EventInvoices = lazy(() => import('./features/paymentPortal/pages/EventInvoices'))
+const EmergencyManagement = lazy(() => import('./features/securityManagement/pages/EmergencyManagement'))
+const AccessForums = lazy(() => import('./features/community/pages/AccessForums'))
+const Polls = lazy(() => import('./features/community/pages/Polls'))
+const CommunitiesDiscussion = lazy(() => import('./features/community/pages/CommunitiesDiscussion'))
+const GlobalCallHandler = lazy(() => import('./components/GlobalCallHandler'))
+
+const RouteLoader = () => (
+  <div className="flex items-center justify-center min-h-screen">
+    <div className="h-10 w-10 animate-spin rounded-full border-4 border-[#FE512E] border-t-transparent" />
+  </div>
+);
 
 const RootRedirect = () => {
   const { user, role, loading } = useAuth();
@@ -64,8 +68,9 @@ function App() {
       <SocketProvider>
         <Router>
           <Toaster position="top-right" reverseOrder={false} />
-          <Routes>
-            <Route path="/" element={<RootRedirect />} />
+          <Suspense fallback={<RouteLoader />}>
+            <Routes>
+              <Route path="/" element={<RootRedirect />} />
 
             {/* Public Auth Routes */}
             <Route element={<PublicRoute />}>
@@ -199,9 +204,12 @@ function App() {
                 <Route path="/security-management/visitor-logs" element={<VisitorLogs />} />
               </Route>
             </Route>
-          </Routes>
+            </Routes>
+          </Suspense>
         </Router>
-        <GlobalCallHandler />
+        <Suspense fallback={null}>
+          <GlobalCallHandler />
+        </Suspense>
     </SocketProvider>
     </AuthProvider>
   )

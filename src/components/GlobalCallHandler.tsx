@@ -1,7 +1,6 @@
 import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { Phone, Video, ChevronLeft } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { ZegoUIKitPrebuilt } from '@zegocloud/zego-uikit-prebuilt';
 import { useSocket } from '../context/SocketContext';
 import { useAuth } from '../context/AuthContext';
 import Avatar from './Avatar';
@@ -71,7 +70,10 @@ const ZegoCallUI = ({ roomId, user, isCommunity, isVideo, onLeave }: any) => {
     useEffect(() => {
         if (!containerRef.current || !user || !roomId) return;
         let zp: any;
+        let disposed = false;
         const initCall = async () => {
+            const { ZegoUIKitPrebuilt } = await import('@zegocloud/zego-uikit-prebuilt');
+            if (disposed || !containerRef.current) return;
             const currentUserId = String(user._id).trim();
             const userName = `${user.firstname} ${user.lastname}`.trim();
             const kitToken = ZegoUIKitPrebuilt.generateKitTokenForTest(APP_ID, SERVER_SECRET, roomId, currentUserId, userName);
@@ -85,7 +87,10 @@ const ZegoCallUI = ({ roomId, user, isCommunity, isVideo, onLeave }: any) => {
             });
         };
         if (APP_ID && SERVER_SECRET) initCall();
-        return () => { if (zp) zp.destroy(); };
+        return () => {
+            disposed = true;
+            if (zp) zp.destroy();
+        };
     }, [roomId, user, isCommunity, isVideo]);
 
     return (

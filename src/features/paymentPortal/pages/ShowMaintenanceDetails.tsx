@@ -7,6 +7,7 @@ import PaymentMethodModal from "../components/PaymentMethodModal";
 import CardPaymentModal from "../components/CardPaymentModal";
 import { financialApi, paymentApi } from "../../../services/api";
 import toast from "react-hot-toast";
+import { loadRazorpay } from "../../../utils/loadRazorpay";
 
 interface MaintenanceRecord {
   _id: string;
@@ -146,6 +147,7 @@ export default function ShowMaintenanceDetails() {
             },
           };
 
+          await loadRazorpay();
           const razor = new (window as any).Razorpay(options);
           razor.open();
         } catch (error: any) {

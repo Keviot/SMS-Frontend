@@ -7,10 +7,12 @@ import ImportantNumbersCard from "../components/ImportantNumbersCard";
 import { Loader2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
-import { authApi, complaintApi, importantNumberApi, financialApi, announcementApi, dashboardApi } from "../../../services/api";
+import { complaintApi, importantNumberApi, financialApi, announcementApi, dashboardApi } from "../../../services/api";
+import { useAuth } from "../../../context/AuthContext";
 
 export default function Dashboard() {
   const navigate = useNavigate();
+  const { user } = useAuth();
 
   const [role, setRole] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -29,17 +31,16 @@ export default function Dashboard() {
   });
 
   const fetchDashboardData = async () => {
+    if (!user) return;
+
     try {
       setLoading(true);
-      const profileData = await authApi.getProfile();
-
-      if (profileData.user) {
-        const userRole = profileData.user.role?.toLowerCase();
+        const userRole = user.role?.toLowerCase();
         setRole(userRole);
 
-        let societyId = profileData.user.society?._id || profileData.user.society;
-        if (!societyId && profileData.user.societies && profileData.user.societies.length > 0) {
-          societyId = profileData.user.societies[0]._id;
+        let societyId = user.society?._id || user.society;
+        if (!societyId && user.societies && user.societies.length > 0) {
+          societyId = user.societies[0]._id;
         }
 
         const fetchWithFallback = async (apiCall: Promise<any>, fallback: any = []) => {
@@ -146,7 +147,6 @@ export default function Dashboard() {
             totalUnit
           }
         });
-      }
     } catch (error) {
       console.error("Dashboard data fetch failed:", error);
     } finally {
@@ -156,7 +156,7 @@ export default function Dashboard() {
 
   useEffect(() => {
     fetchDashboardData();
-  }, []);
+  }, [user]);
 
   if (loading) {
     return (

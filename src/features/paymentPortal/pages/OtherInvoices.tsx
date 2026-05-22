@@ -4,6 +4,7 @@ import InvoiceDetailsModal from "../components/InvoiceDetailsModal";
 import { announcementApi, authApi, paymentApi } from "../../../services/api";
 import toast from "react-hot-toast";
 import { Loader2 } from "lucide-react";
+import { loadRazorpay } from "../../../utils/loadRazorpay";
 
 interface EventInvoice {
   _id: string;
@@ -122,6 +123,7 @@ export default function OtherInvoices() {
         },
       };
 
+      await loadRazorpay();
       const razor = new (window as any).Razorpay(options);
       razor.open();
     } catch (error: any) {

@@ -4,6 +4,7 @@ import { authApi, announcementApi, financialApi, paymentApi } from "../../../ser
 import toast from "react-hot-toast";
 import Avatar from "../../../components/Avatar";
 import { cn } from "../../../lib/cn";
+import { loadRazorpay } from "../../../utils/loadRazorpay";
 
 
 export default function PersonalDetail() {
@@ -78,6 +79,7 @@ export default function PersonalDetail() {
         },
       };
 
+      await loadRazorpay();
       const razor = new (window as any).Razorpay(options);
       razor.open();
     } catch (error: any) {
@@ -125,6 +127,7 @@ export default function PersonalDetail() {
         },
       };
 
+      await loadRazorpay();
       const razor = new (window as any).Razorpay(options);
       razor.open();
     } catch (error: any) {
