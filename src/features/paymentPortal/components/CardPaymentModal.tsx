@@ -2,6 +2,7 @@ import { useState } from "react";
 import Button from "../../../ui/Button";
 import FormDatePicker from "../../../ui/FormDatePicker";
 import { MastercardIcon } from "../../../assets/icons/admin-dashboard-icons";
+import AppModal from "../../../components/modals/AppModal";
 
 interface CardPaymentModalProps {
   open: boolean;
@@ -42,13 +43,15 @@ export default function CardPaymentModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4 py-6">
-      <div className="w-full max-w-[410px] rounded-[15px] bg-white p-[20px] shadow-[0_8px_24px_rgba(0,0,0,0.18)]">
-        <h2 className="text-[22px] font-semibold leading-[28px] text-[#202224]">
-          Payment Method
-        </h2>
-
-        <div className="mt-[14px] h-px w-full bg-[#F1F1F1]" />
+    <AppModal
+      open={open}
+      onClose={onClose}
+      title="Payment Method"
+      widthClassName="w-full max-w-[410px]"
+      titleClassName="text-[22px] font-semibold leading-[28px] text-[#202224]"
+      showHeaderDivider={true}
+      panelClassName="p-[20px]"
+    >
 
         <form onSubmit={handleSubmit} className="mt-[20px]">
           <div className="flex h-[96px] flex-col gap-[5px]">
@@ -145,7 +148,6 @@ export default function CardPaymentModal({
             </Button>
           </div>
         </form>
-      </div>
-    </div>
+    </AppModal>
   );
 }

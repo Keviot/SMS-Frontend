@@ -4,6 +4,7 @@ import Input from "../../../ui/Input";
 import FormDatePicker from "../../../ui/FormDatePicker";
 import FormTimePicker from "../../../ui/FormTimePicker";
 import toast from "react-hot-toast";
+import AppModal from "../../../components/modals/AppModal";
 import { useEffect, useState } from "react";
 import { announcementApi, authApi } from "../../../services/api";
 import FormSelect from "../../../ui/FormSelect";
@@ -118,20 +119,14 @@ export default function CreateAnnouncementModal({ open, onClose, announcement, o
   };
 
   return (
-    <div className="fixed inset-0 z-60 flex items-center justify-center p-4 sm:p-6">
-      {/* Backdrop */}
-      <div
-        className="absolute inset-0 bg-black/60 backdrop-blur-sm"
-        onClick={onClose}
-      />
-
-      {/* Modal Content */}
-      <div className="relative w-full max-w-sm rounded-2xl bg-white shadow-2xl animate-in zoom-in-95 duration-200">
-        <div className="flex items-center justify-between border-b border-[#F4F4F4] px-4 py-3">
-          <h2 className="text-base font-semibold text-[#202224]">{isEdit ? "Edit Announcement" : "Add Announcement"}</h2>
-
-        </div>
-
+    <AppModal
+      open={open}
+      onClose={onClose}
+      title={isEdit ? "Edit Announcement" : "Add Announcement"}
+      widthClassName="w-full max-w-sm"
+      titleClassName="text-base font-semibold text-[#202224]"
+      showHeaderDivider={true}
+    >
         <div className="max-h-[calc(100vh-7rem)] overflow-y-auto sm:overflow-visible sm:max-h-none">
           <form className="px-4 py-4 space-y-3" onSubmit={handleSubmit}>
             <div className="space-y-4">
@@ -236,7 +231,6 @@ export default function CreateAnnouncementModal({ open, onClose, announcement, o
             </div>
           </form>
         </div>
-      </div>
-    </div>
+    </AppModal>
   );
 }

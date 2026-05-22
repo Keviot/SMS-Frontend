@@ -1,4 +1,5 @@
 import { Eye, FileImage, X } from "lucide-react";
+import AppModal from "../../../components/modals/AppModal";
 
 type ExpenseViewData = {
   id: string;
@@ -25,25 +26,14 @@ export default function ExpenseViewModal({
   if (!open || !data) return null;
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 px-4">
-      <div className="w-full max-w-[410px] rounded-[15px] bg-white p-5 shadow-[0_12px_35px_rgba(0,0,0,0.18)]">
-        {/* Header */}
-        <div className="flex items-center justify-between border-b border-[#E5E7EB] pb-4">
-          <h2 className="text-xl font-bold leading-6 text-[#202224]">
-            View Expense Details
-          </h2>
-
-          <button
-            type="button"
-            onClick={onClose}
-            className="flex size-8 items-center justify-center rounded-full text-[#202224] transition hover:bg-[#F6F8FB]"
-            aria-label="Close view expense modal"
-          >
-            <X size={24} />
-          </button>
-        </div>
-
-        <div className="mt-5 flex flex-col gap-5">
+    <AppModal
+      open={open}
+      onClose={onClose}
+      title="View Expense Details"
+      widthClassName="w-full max-w-[410px]"
+      showHeaderDivider
+    >
+      <div className="flex flex-col gap-5 pt-1">
           {/* Title */}
           <div className="flex flex-col gap-2">
             <p className="text-base font-medium leading-5 text-[#A7A7A7]">
@@ -148,7 +138,6 @@ export default function ExpenseViewModal({
             )}
           </div>
         </div>
-      </div>
-    </div>
+    </AppModal>
   );
 }

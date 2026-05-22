@@ -1,5 +1,6 @@
-import { X, Sun, Moon, User as UserIcon, Clock } from "lucide-react";
+import { Sun, Moon, User as UserIcon, Clock } from "lucide-react";
 import Avatar from "../../../components/Avatar";
+import AppModal from "../../../components/modals/AppModal";
 
 interface ViewSecurityModalProps {
   open: boolean;
@@ -20,18 +21,16 @@ export default function ViewSecurityModal({ open, onClose, data }: ViewSecurityM
   };
 
   return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
-      
-      <div className="relative w-full max-w-md bg-white rounded-[20px] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
-        <div className="p-6 border-b border-gray-50 flex justify-between items-center">
-          <h2 className="text-xl font-bold text-gray-900">View Security Guard Details</h2>
-          <button onClick={onClose} className="p-1 hover:bg-gray-100 rounded-full transition-colors">
-            <X size={20} className="text-gray-400" />
-          </button>
-        </div>
-
-        <div className="p-8 space-y-8">
+    <AppModal
+      open={open}
+      onClose={onClose}
+      title="View Security Guard Details"
+      widthClassName="w-full max-w-md"
+      titleClassName="text-xl font-bold text-gray-900"
+      showHeaderDivider={true}
+      panelClassName="overflow-hidden"
+    >
+      <div className="px-2 pb-2 space-y-8 mt-2">
           {/* Profile Header */}
           <div className="flex items-center gap-4">
             <div className="h-16 w-16 flex-shrink-0">
@@ -78,8 +77,7 @@ export default function ViewSecurityModal({ open, onClose, data }: ViewSecurityM
               </span>
             </div>
           </div>
-        </div>
       </div>
-    </div>
+    </AppModal>
   );
 }

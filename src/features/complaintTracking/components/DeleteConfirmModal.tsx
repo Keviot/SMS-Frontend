@@ -1,4 +1,5 @@
 import Button from "../../../ui/Button";
+import AppModal from "../../../components/modals/AppModal";
 
 interface DeleteConfirmModalProps {
     open: boolean;
@@ -18,18 +19,13 @@ export default function DeleteConfirmModal({
     if (!open) return null;
 
     return (
-        <div 
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4"
-            onClick={(e) => {
-                if (e.target === e.currentTarget) onClose();
-            }}
+        <AppModal
+            open={open}
+            onClose={onClose}
+            title={title}
+            widthClassName="w-full max-w-[410px]"
+            showHeaderDivider
         >
-            <div className="w-full max-w-[410px] rounded-2xl bg-white p-5 shadow-[0_12px_35px_rgba(0,0,0,0.18)]">
-                <div className="border-b border-[#E5E7EB] pb-4">
-                    <h2 className="text-xl font-bold leading-6 text-[#202224]">
-                        {title}
-                    </h2>
-                </div>
 
                 <p className="mt-5 text-sm font-normal leading-5 text-[#4F4F4F]">
                     {message}
@@ -52,7 +48,6 @@ export default function DeleteConfirmModal({
                         Delete
                     </Button>
                 </div>
-            </div>
-        </div>
+        </AppModal>
     );
 }

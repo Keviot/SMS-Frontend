@@ -5,6 +5,7 @@ import {
   VisacardIcon,
   NotificationCashIcon,
 } from "../../../assets/icons/admin-dashboard-icons";
+import AppModal from "../../../components/modals/AppModal";
 
 interface PaymentMethodModalProps {
   open: boolean;
@@ -43,13 +44,15 @@ export default function PaymentMethodModal({
   ];
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-[16px] py-[24px]">
-      <div className="w-full max-w-[410px] rounded-[15px] bg-white p-[20px] shadow-[0_8px_24px_rgba(0,0,0,0.18)]">
-        <h2 className="text-[24px] font-semibold leading-[30px] text-[#202224]">
-          Payment Method
-        </h2>
-
-        <div className="mt-[18px] h-px w-full bg-[#F1F1F1]" />
+    <AppModal
+      open={open}
+      onClose={onClose}
+      title="Payment Method"
+      widthClassName="w-full max-w-[410px]"
+      titleClassName="text-[24px] font-semibold leading-[30px] text-[#202224]"
+      showHeaderDivider={true}
+      panelClassName="p-[20px]"
+    >
 
         <div className="mt-[20px] flex flex-col gap-[10px]">
           {paymentMethods.map(({ id, name, Icon }) => {
@@ -114,7 +117,6 @@ export default function PaymentMethodModal({
             Pay Now
           </Button>
         </div>
-      </div>
-    </div>
+    </AppModal>
   );
 }

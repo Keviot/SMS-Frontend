@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Eye, EyeOff } from "lucide-react";
 import Button from "../../../ui/Button";
 import { financialApi } from "../../../services/api";
+import AppModal from "../../../components/modals/AppModal";
 
 interface SetMaintenancePasswordModalProps {
   open: boolean;
@@ -63,14 +64,15 @@ export default function SetMaintenancePasswordModal({
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
-      <div className="w-full max-w-md rounded-2xl bg-white p-5 shadow-xl sm:max-w-lg">
-        {/* Header */}
-        <div className="border-b border-[#E5E7EB] pb-4">
-          <h2 className="text-2xl font-bold leading-8 text-[#202224]">
-            Set Maintenance
-          </h2>
-        </div>
+    <AppModal
+      open={open}
+      onClose={handleClose}
+      title="Set Maintenance"
+      widthClassName="w-full max-w-md sm:max-w-lg"
+      titleClassName="text-2xl font-bold leading-8 text-[#202224]"
+      showHeaderDivider
+    >
+      <div className="pt-1">
 
         {/* Password Input */}
         <div className="mt-5">
@@ -131,6 +133,6 @@ export default function SetMaintenancePasswordModal({
           </Button>
         </div>
       </div>
-    </div>
+    </AppModal>
   );
 }

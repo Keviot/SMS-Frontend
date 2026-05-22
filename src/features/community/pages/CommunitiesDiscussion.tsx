@@ -175,7 +175,10 @@ export default function CommunitiesDiscussion() {
     };
 
     const renderAskModal = () => (
-        <div className="fixed inset-0 z-100 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm transition-all">
+        <div 
+            className="fixed inset-0 z-100 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm transition-all"
+            onClick={(e) => { if (e.target === e.currentTarget) setShowAskModal(false); }}
+        >
             <div className="w-full max-w-lg overflow-hidden rounded-3xl bg-white shadow-2xl transition-all scale-100">
                 <div className="flex items-center justify-between border-b border-[#F4F4F4] px-8 py-6">
                     <h2 className="text-xl font-bold text-[#202224]">Ask a Question</h2>

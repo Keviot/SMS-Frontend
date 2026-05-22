@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { X } from "lucide-react";
 import Button from "../../../ui/Button";
+import AppModal from "../../../components/modals/AppModal";
 
 export interface ComplaintFormData {
     complainerName: string;
@@ -75,32 +76,15 @@ export default function ComplaintFormModal({
     if (!open) return null;
 
     return (
-        <div 
-            className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 px-4"
-            onClick={(e) => {
-                if (e.target === e.currentTarget) onClose();
-            }}
+        <AppModal
+            open={open}
+            onClose={onClose}
+            title={isEdit ? "Edit Complaint" : "Create Complaint"}
+            widthClassName="max-w-[410px]"
+            panelClassName="max-h-[92vh] overflow-y-auto"
+            showHeaderDivider
         >
-            <div className="max-h-[92vh] w-full max-w-[410px] overflow-y-auto rounded-[15px] bg-white p-5 shadow-[0_12px_35px_rgba(0,0,0,0.18)]">
-                {/* Header */}
-                <div className="border-b border-[#E5E7EB] pb-4">
-                    <div className="flex items-center justify-between gap-4">
-                        <h2 className="text-xl font-bold leading-6 text-[#202224]">
-                            {isEdit ? "Edit Complaint" : "Create Complaint"}
-                        </h2>
-
-                        <button
-                            type="button"
-                            onClick={onClose}
-                            className="flex size-8 shrink-0 items-center justify-center rounded-full bg-[#F6F8FB] text-[#6F7786] transition hover:bg-[#FFEDE6] hover:text-[#FE512E] sm:hidden"
-                            aria-label="Close modal"
-                        >
-                            <X size={17} />
-                        </button>
-                    </div>
-                </div>
-
-                <div className="mt-5 flex flex-col gap-4">
+            <div className="flex flex-col gap-4 pt-1">
                     {/* Complainer Name */}
                     <div className="flex flex-col gap-[5px]">
                         <label className="text-sm font-semibold leading-5 text-[#202224]">
@@ -270,7 +254,6 @@ export default function ComplaintFormModal({
                         </Button>
                     </div>
                 </div>
-            </div>
-        </div>
+        </AppModal>
     );
 }

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import Button from "../../../ui/Button";
 import FormDatePicker from "../../../ui/FormDatePicker";
+import AppModal from "../../../components/modals/AppModal";
 
 export interface NoteFormData {
     title: string;
@@ -64,16 +65,14 @@ export default function NoteFormModal({
     if (!open) return null;
 
     return (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 px-4">
-            <div className="w-full max-w-[410px] rounded-[15px] bg-white p-5 shadow-[0_12px_35px_rgba(0,0,0,0.18)]">
-                {/* Header */}
-                <div className="border-b border-[#E5E7EB] pb-4">
-                    <h2 className="text-xl font-bold leading-6 text-[#202224]">
-                        {isEdit ? "Edit Note" : "Add Note"}
-                    </h2>
-                </div>
-
-                <div className="mt-5 flex flex-col gap-4">
+        <AppModal
+            open={open}
+            onClose={onClose}
+            title={isEdit ? "Edit Note" : "Add Note"}
+            widthClassName="w-full max-w-[410px]"
+            showHeaderDivider
+        >
+            <div className="flex flex-col gap-4 pt-1">
                     {/* Title */}
                     <div className="flex flex-col gap-[5px]">
                         <label className="text-sm font-semibold leading-5 text-[#202224]">
@@ -141,7 +140,6 @@ export default function NoteFormModal({
                         </button>
                     </div>
                 </div>
-            </div>
-        </div>
+        </AppModal>
     );
 }

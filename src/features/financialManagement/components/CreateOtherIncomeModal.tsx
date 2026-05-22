@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import Button from "../../../ui/Button";
 import FormDatePicker from "../../../ui/FormDatePicker";
+import AppModal from "../../../components/modals/AppModal";
 
 interface CreateOtherIncomeModalProps {
   open: boolean;
@@ -68,15 +69,14 @@ export default function CreateOtherIncomeModal({
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
-      <div className="w-full max-w-md rounded-2xl bg-white p-5 shadow-[0_12px_35px_rgba(0,0,0,0.18)] sm:max-w-[410px]">
-        <div className="border-b border-[#E5E7EB] pb-4">
-          <h2 className="text-xl font-bold leading-6 text-[#202224]">
-            {isEdit ? `Edit ${formData.title || "Other Income"}` : "Create Other Income"}
-          </h2>
-        </div>
-
-        <div className="mt-5 flex flex-col gap-4">
+    <AppModal
+      open={open}
+      onClose={onClose}
+      title={isEdit ? `Edit ${formData.title || "Other Income"}` : "Create Other Income"}
+      widthClassName="w-full max-w-[410px] sm:max-w-[410px]"
+      showHeaderDivider
+    >
+      <div className="flex flex-col gap-4 pt-1">
           <div className="flex flex-col gap-2">
             <label className="text-sm font-medium leading-5 text-[#202224]">
               Title<span className="text-[#FE512E]">*</span>
@@ -179,7 +179,6 @@ export default function CreateOtherIncomeModal({
             </Button>
           </div>
         </div>
-      </div>
-    </div>
+    </AppModal>
   );
 }

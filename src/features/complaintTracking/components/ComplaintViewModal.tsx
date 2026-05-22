@@ -1,5 +1,5 @@
-import { X } from "lucide-react";
 import Avatar from "../../../components/Avatar";
+import AppModal from "../../../components/modals/AppModal";
 
 interface ComplaintViewData {
     complainerName: string;
@@ -51,29 +51,13 @@ export default function ComplaintViewModal({
     if (!open || !data) return null;
 
     return (
-        <div 
-            className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 px-4"
-            onClick={(e) => {
-                if (e.target === e.currentTarget) onClose();
-            }}
+        <AppModal
+            open={open}
+            onClose={onClose}
+            title="View Complaint"
+            widthClassName="max-w-[418px]"
         >
-            <div className="w-[418px] rounded-[15px] bg-white p-6 shadow-[0_12px_35px_rgba(0,0,0,0.18)]">
-                {/* Header */}
-                <div className="mb-5 flex items-center justify-between">
-                    <h2 className="text-xl font-bold leading-7 text-[#202224]">
-                        View Complaint
-                    </h2>
-
-                    <button
-                        type="button"
-                        onClick={onClose}
-                        className="flex size-8 items-center justify-center rounded-full bg-transparent text-[#202224] transition hover:bg-[#F6F8FB]"
-                        aria-label="Close modal"
-                    >
-                        <X size={20} strokeWidth={2} />
-                    </button>
-                </div>
-
+            <div className="flex flex-col gap-5 pt-1">
                 {/* Avatar + Name + Date */}
                 <div className="mb-5 flex items-center gap-4">
                     <Avatar
@@ -153,6 +137,6 @@ export default function ComplaintViewModal({
                     </div>
                 </div>
             </div>
-        </div>
+        </AppModal>
     );
 }

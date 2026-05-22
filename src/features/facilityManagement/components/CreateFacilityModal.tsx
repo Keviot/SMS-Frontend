@@ -3,6 +3,7 @@ import Input from "../../../ui/Input";
 import FormSelect from "../../../ui/FormSelect";
 import FormDatePicker from "../../../ui/FormDatePicker";
 import toast from "react-hot-toast";
+import AppModal from "../../../components/modals/AppModal";
 import { useEffect, useState } from "react";
 import { facilityApi, authApi } from "../../../services/api";
 
@@ -99,21 +100,14 @@ export default function CreateFacilityModal({ open, onClose, facility, onSuccess
   };
 
   return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 sm:p-6">
-      {/* Backdrop */}
-      <div
-        className="absolute inset-0 bg-black/60 backdrop-blur-sm"
-        onClick={onClose}
-      />
-
-      {/* Modal Content */}
-      <div className="relative w-full max-w-[410px] rounded-[10px] bg-white shadow-2xl animate-in zoom-in-95 duration-200">
-        <div className="flex h-[64px] items-center justify-between border-b border-gray-100 px-6">
-          <h2 className="text-xl font-bold text-gray-900">{isEdit ? "Edit Facility" : "Create Facility"}</h2>
-          <button onClick={onClose} className="p-1 hover:bg-gray-100 rounded-full transition-colors">
-            <X size={20} className="text-gray-400" />
-          </button>
-        </div>
+    <AppModal
+      open={open}
+      onClose={onClose}
+      title={isEdit ? "Edit Facility" : "Create Facility"}
+      widthClassName="w-full max-w-[410px]"
+      titleClassName="text-xl font-bold text-gray-900"
+      showHeaderDivider={true}
+    >
 
         <form className="space-y-4 px-6 py-5" onSubmit={handleSubmit}>
           <div className="space-y-4">
@@ -179,7 +173,6 @@ export default function CreateFacilityModal({ open, onClose, facility, onSuccess
             </button>
           </div>
         </form>
-      </div>
-    </div>
+    </AppModal>
   );
 }

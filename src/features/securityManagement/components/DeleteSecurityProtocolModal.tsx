@@ -1,4 +1,5 @@
 import Button from "../../../ui/Button";
+import AppModal from "../../../components/modals/AppModal";
 
 type DeleteSecurityProtocolModalProps = {
   open: boolean;
@@ -14,13 +15,13 @@ export default function DeleteSecurityProtocolModal({
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 px-4 py-6">
-      <div className="w-full max-w-md rounded-2xl bg-white p-5 shadow-[0_12px_35px_rgba(0,0,0,0.18)]">
-        <div className="border-b border-[#E5E7EB] pb-4">
-          <h2 className="text-xl font-bold leading-6 text-[#202224]">
-            Delete Protocol?
-          </h2>
-        </div>
+    <AppModal
+      open={open}
+      onClose={onClose}
+      title="Delete Protocol?"
+      widthClassName="w-full max-w-md"
+      showHeaderDivider
+    >
 
         <p className="mt-5 text-sm font-normal leading-5 text-[#A7A7A7]">
           Are you sure you want to delete this Protocol?
@@ -43,7 +44,6 @@ export default function DeleteSecurityProtocolModal({
             Delete
           </Button>
         </div>
-      </div>
-    </div>
+    </AppModal>
   );
 }

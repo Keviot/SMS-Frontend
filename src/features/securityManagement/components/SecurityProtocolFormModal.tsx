@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import FormDatePicker from "../../../ui/FormDatePicker";
 import FormTimePicker from "../../../ui/FormTimePicker";
 import Button from "../../../ui/Button";
+import AppModal from "../../../components/modals/AppModal";
 
 type SecurityProtocolFormData = {
     title: string;
@@ -80,19 +81,15 @@ export default function SecurityProtocolFormModal({
     };
 
     return (
-        <div 
-            className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 px-4 py-6"
-            onClick={onClose}
+        <AppModal
+            open={open}
+            onClose={onClose}
+            title={isEdit ? "Edit Security Protocols" : "Security Protocol"}
+            widthClassName="w-full max-w-md"
+            titleClassName="text-base font-bold leading-5 text-[#202224]"
+            showHeaderDivider={true}
         >
-            <div 
-                className="w-full max-w-md rounded-2xl bg-white p-5 shadow-[0_12px_35px_rgba(0,0,0,0.18)]"
-                onClick={(e) => e.stopPropagation()}
-            >
-                <div className="border-b border-[#E5E7EB] pb-4">
-                    <h2 className="text-base font-bold leading-5 text-[#202224]">
-                        {isEdit ? "Edit Security Protocols" : "Security Protocol"}
-                    </h2>
-                </div>
+            <div className="pt-2">
 
                 <div className="mt-4 space-y-4">
                     <div className="space-y-1.5">
@@ -175,6 +172,6 @@ export default function SecurityProtocolFormModal({
                     </Button>
                 </div>
             </div>
-        </div>
+        </AppModal>
     );
 }

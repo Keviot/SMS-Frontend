@@ -1,6 +1,7 @@
 import { X, Download } from "lucide-react";
 import Button from "../../../ui/Button";
 import jsPDF from "jspdf";
+import AppModal from "../../../components/modals/AppModal";
 
 interface Invoice {
   _id: string;
@@ -229,19 +230,17 @@ export default function InvoiceDetailsModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/50 px-4 py-[60px]">
-      <div className="relative w-full max-w-[410px] rounded-[15px] bg-white p-[20px] shadow-[0_8px_24px_rgba(0,0,0,0.18)]">
-        <button
-          type="button"
-          onClick={onClose}
-          className="absolute right-[14px] top-[14px] flex h-[28px] w-[28px] items-center justify-center rounded-[8px] text-[#202224]"
-        >
-          <X size={20} strokeWidth={2} />
-        </button>
-
-        <h2 className="mb-[20px] pr-[36px] text-[18px] font-semibold leading-[24px] text-[#202224]">
-          {title}
-        </h2>
+    <AppModal
+      open={open}
+      onClose={onClose}
+      title={title}
+      widthClassName="w-full max-w-[410px]"
+      titleClassName="text-[18px] font-semibold leading-[24px] text-[#202224]"
+      showHeaderDivider={false}
+      panelClassName="p-[20px]"
+      overlayClassName="items-start py-[60px]"
+    >
+      <div className="pt-2">
 
         <div className="rounded-[10px] bg-[#F6F8FB] px-[14px] py-[12px]">
           <div className="grid grid-cols-2 gap-x-[24px] gap-y-[16px]">
@@ -337,7 +336,7 @@ export default function InvoiceDetailsModal({
           Download Invoice
         </Button>
       </div>
-    </div>
+    </AppModal>
   );
 }
 

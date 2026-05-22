@@ -7,6 +7,7 @@ import FormTimePicker from "../../../ui/FormTimePicker";
 import { useState, useRef, useEffect } from "react";
 import { securityGuardApi, authApi, BASE_URL } from "../../../services/api";
 import toast from "react-hot-toast";
+import AppModal from "../../../components/modals/AppModal";
 
 interface AddSecurityModalProps {
   open: boolean;
@@ -179,21 +180,17 @@ export default function AddSecurityModal({ open, onClose, onSuccess, initialData
   };
 
   return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center px-4 py-6">
-      <div className="absolute inset-0 bg-black/55" onClick={onClose} />
-
-      <div className="relative flex w-full max-w-sm flex-col rounded-2xl bg-white shadow-2xl overflow-visible">
-        <div className="flex items-center justify-between border-b border-[#F4F4F4] px-4 py-3">
-          <h2 className="text-base font-semibold text-[#202224]">
-            {mode === "edit" ? "Edit Security" : mode === "view" ? "View Security" : "Add Security"}
-          </h2>
-          <button onClick={onClose} className="rounded-full p-1 text-[#A7A7A7] hover:bg-gray-100">
-            <X className="size-5" />
-          </button>
-        </div>
-
+    <AppModal
+      open={open}
+      onClose={onClose}
+      title={mode === "edit" ? "Edit Security" : mode === "view" ? "View Security" : "Add Security"}
+      widthClassName="w-full max-w-sm"
+      titleClassName="text-base font-semibold text-[#202224]"
+      showHeaderDivider={true}
+      panelClassName="overflow-visible"
+    >
         <form
-          className="px-4 py-4 space-y-3 max-h-[calc(100vh-7rem)] overflow-y-auto lg:max-h-none lg:overflow-visible"
+          className="pt-4 space-y-3 max-h-[calc(100vh-7rem)] overflow-y-auto lg:max-h-none lg:overflow-visible"
           onSubmit={handleSubmit}
         >
           {/* Photo Section */}
@@ -417,7 +414,6 @@ export default function AddSecurityModal({ open, onClose, onSuccess, initialData
             )}
           </div>
         </form>
-      </div>
-    </div>
+    </AppModal>
   );
 }

@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { ImagePlus, Trash2, X, Loader2 } from "lucide-react";
 import Button from "../../../ui/Button";
 import FormDatePicker from "../../../ui/FormDatePicker";
+import AppModal from "../../../components/modals/AppModal";
 
 export interface ExpenseFormData {
     title: string;
@@ -113,29 +114,15 @@ export default function ExpenseFormModal({
     if (!open) return null;
 
     return (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 px-4">
-            <div className="max-h-[92vh] w-full max-w-[410px] overflow-y-auto rounded-[15px] bg-white p-5 shadow-[0_12px_35px_rgba(0,0,0,0.18)]">
-                {/* Header */}
-                <div className="border-b border-[#E5E7EB] pb-4">
-                    <div className="flex items-center justify-between gap-4">
-                        <h2 className="text-xl font-bold leading-6 text-[#202224]">
-                            {isEdit ? "Edit Expenses" : "Add Expenses Details"}
-                        </h2>
-
-                        <button
-                            type="button"
-                            onClick={onClose}
-                            disabled={loader}
-                            className={`flex size-8 shrink-0 items-center justify-center rounded-full bg-[#F6F8FB] text-[#6F7786] transition hover:bg-[#FFEDE6] hover:text-[#FE512E] sm:hidden ${loader ? "opacity-50 cursor-not-allowed" : ""
-                                }`}
-                            aria-label="Close modal"
-                        >
-                            <X size={17} />
-                        </button>
-                    </div>
-                </div>
-
-                <div className="mt-5 flex flex-col gap-4">
+        <AppModal
+            open={open}
+            onClose={onClose}
+            title={isEdit ? "Edit Expenses" : "Add Expenses Details"}
+            widthClassName="w-full max-w-[410px]"
+            panelClassName="max-h-[92vh] overflow-y-auto"
+            showHeaderDivider
+        >
+            <div className="mt-5 flex flex-col gap-4">
                     {/* Title */}
                     <div className="flex flex-col gap-[5px]">
                         <label className="text-sm font-semibold leading-5 text-[#202224]">
@@ -298,7 +285,6 @@ export default function ExpenseFormModal({
                         </Button>
                     </div>
                 </div>
-            </div>
-        </div>
+        </AppModal>
     );
 }

@@ -23,6 +23,7 @@ export default function ConfirmPopup({
     <AppModal
       open={open}
       title={title}
+      onClose={onCancel}
       widthClassName="w-full max-w-[410px]"
       centerTitle
     >

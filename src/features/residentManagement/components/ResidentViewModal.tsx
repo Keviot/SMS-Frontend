@@ -1,6 +1,7 @@
 import { cn } from "../../../lib/cn";
 import Avatar from "../../../components/Avatar";
-import { ChevronLeft, Eye, FileText } from "lucide-react";
+import { Eye, FileText } from "lucide-react";
+import AppModal from "../../../components/modals/AppModal";
 
 interface ResidentViewModalProps {
   isOpen: boolean;
@@ -12,35 +13,15 @@ export default function ResidentViewModal({ isOpen, onClose, resident }: Residen
   if (!resident) return null;
 
   return (
-    <>
-      {/* Overlay */}
-      <div
-        className={cn(
-          "fixed inset-0 bg-black/50 z-[100] transition-opacity duration-300",
-          isOpen ? "opacity-100" : "opacity-0 pointer-events-none"
-        )}
-        onClick={onClose}
-      />
-
-      {/* Side Panel */}
-      <div
-        className={cn(
-          "fixed top-0 right-0 h-full w-full max-w-[450px] bg-white z-[110] shadow-2xl transition-transform duration-300 transform flex flex-col",
-          isOpen ? "translate-x-0" : "translate-x-full"
-        )}
-      >
-        {/* Header */}
-        <div className="flex items-center gap-4 p-6 border-b border-gray-100">
-          <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-full transition-colors">
-            <ChevronLeft size={24} className="text-gray-600" />
-          </button>
-          <h2 className="text-xl font-bold text-gray-900">
-            View {resident.residentStatus === "owner" ? "Owner" : "Tenant"} Details
-          </h2>
-        </div>
-
-        {/* Content - Scrollable */}
-        <div className="flex-1 overflow-y-auto custom-scrollbar">
+    <AppModal
+      open={isOpen}
+      onClose={onClose}
+      title={`View ${resident.residentStatus === "owner" ? "Owner" : "Tenant"} Details`}
+      widthClassName="w-full max-w-[450px]"
+      showHeaderDivider={true}
+      panelClassName="max-h-[90vh] overflow-y-auto custom-scrollbar p-0"
+    >
+      <div className="flex-1">
           {/* Profile Section */}
           <div className="flex flex-col items-center py-8">
             <Avatar
@@ -161,7 +142,6 @@ export default function ResidentViewModal({ isOpen, onClose, resident }: Residen
             )}
           </div>
         </div>
-      </div>
-    </>
+    </AppModal>
   );
 }

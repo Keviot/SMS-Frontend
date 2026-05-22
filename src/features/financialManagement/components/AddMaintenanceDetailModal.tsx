@@ -2,6 +2,7 @@ import { useState } from "react";
 import Button from "../../../ui/Button";
 import FormDatePicker from "../../../ui/FormDatePicker";
 import FormSelect from "../../../ui/FormSelect";
+import AppModal from "../../../components/modals/AppModal";
 
 interface AddMaintenanceDetailModalProps {
   open: boolean;
@@ -49,16 +50,14 @@ export default function AddMaintenanceDetailModal({
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
-      <div className="w-full max-w-[410px] rounded-2xl bg-white p-5 shadow-xl">
-        {/* Header */}
-        <div className="border-b border-[#E5E7EB] pb-4">
-          <h2 className="text-xl font-bold leading-6 text-[#202224]">
-            Add Maintenance Detail
-          </h2>
-        </div>
-
-        <div className="mt-5 flex flex-col gap-5">
+    <AppModal
+      open={open}
+      onClose={onClose}
+      title="Add Maintenance Detail"
+      widthClassName="w-full max-w-[410px]"
+      showHeaderDivider
+    >
+      <div className="flex flex-col gap-5 pt-1">
           {/* Maintenance Amount and Penalty Amount Row */}
           <div className="grid grid-cols-2 gap-4">
             {/* Maintenance Amount */}
@@ -183,7 +182,6 @@ export default function AddMaintenanceDetailModal({
             </Button>
           </div>
         </div>
-      </div>
-    </div>
+    </AppModal>
   );
 }
